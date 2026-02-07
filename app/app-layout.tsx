@@ -25,7 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 
 const NAV_SECTIONS = [
     {
@@ -145,7 +145,7 @@ function SidebarContent() {
             </ScrollArea>
 
             {/* Theme Toggle */}
-            <div className="pt-4 mt-4 border-t border-border">
+            <div className="pt-4 border-t border-border">
                 <button
                     onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                     className="w-full flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-all"
@@ -171,9 +171,9 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
 
     return (
         <TooltipProvider delayDuration={0}>
-            <div className="min-h-screen flex w-full bg-background">
+            <div className="flex w-full bg-background">
                 {/* Desktop Sidebar */}
-                <aside className="hidden lg:flex w-64 min-w-[256px] flex-col p-4 shrink-0 border-r border-border bg-card">
+                <aside className="hidden lg:flex sticky top-0 h-screen w-64 flex-col border-r border-border bg-card p-4 overflow-y-auto shrink-0">
                     <SidebarContent />
                 </aside>
 
@@ -181,6 +181,7 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
                 <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
                     <SheetContent side="left" className="w-72 p-4">
                         <SheetTitle className="sr-only">Navigation</SheetTitle>
+                        <SheetDescription className="sr-only">Navigation</SheetDescription>
                         <SidebarContent />
                     </SheetContent>
                 </Sheet>
@@ -192,7 +193,7 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
                         <Button
                             size="sm"
                             variant="ghost"
-                            className="p-2"
+                            className="p-2 cursor-pointer"
                             onClick={() => setSidebarOpen(true)}
                         >
                             <Menu size={18} />
