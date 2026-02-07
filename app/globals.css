@@ -1,26 +1,425 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Core palette */
+    --background: 0 0% 100%;
+    --foreground: 220 20% 10%;
+  
+    --card: 0 0% 99%;
+    --card-foreground: 220 20% 10%;
+  
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 10%;
+  
+    /* Primary - Emerald accent */
+    --primary: 160 84% 39%;
+    --primary-foreground: 0 0% 100%;
+  
+    /* Secondary */
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 20% 20%;
+  
+    /* Muted */
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 10% 46%;
+  
+    /* Accent */
+    --accent: 160 60% 95%;
+    --accent-foreground: 160 84% 25%;
+  
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+  
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 160 84% 39%;
+    --ring-offset: 0 0% 100%;
+  
+    --radius: 0.625rem;
+  
+    /* Component Sizing Variables */
+    --btn-height-sm: 2.25rem;
+    --btn-height-md: 2.5rem;
+    --btn-height-lg: 2.75rem;
+    --btn-padding-x-sm: 0.75rem;
+    --btn-padding-x-md: 1rem;
+    --btn-padding-x-lg: 2rem;
+    --btn-font-size-sm: 0.75rem;
+    --btn-font-size-md: 0.875rem;
+    --btn-font-size-lg: 1rem;
+    
+    --input-height-sm: 2rem;
+    --input-height-md: 2.5rem;
+    --input-height-lg: 3rem;
+    --input-padding-x: 0.75rem;
+    
+    --card-padding: 1.5rem;
+    --card-gap: 1rem;
+    
+    --badge-padding-x: 0.625rem;
+    --badge-padding-y: 0.125rem;
+    --badge-font-size: 0.75rem;
+  
+    /* Custom Lab tokens */
+    --surface-elevated: 0 0% 100%;
+    --surface-sunken: 220 20% 97%;
+    --editor-bg: 220 20% 98%;
+    --preview-bg: 220 14% 96%;
+    --glow-primary: 160 84% 39%;
+    
+    /* Tooltip tokens */
+    --tooltip-bg: 220 20% 10%;
+    --tooltip-foreground: 0 0% 100%;
+    --tooltip-arrow-size: 0.5rem;
+    --tooltip-padding-x: 0.75rem;
+    --tooltip-padding-y: 0.375rem;
+    --tooltip-radius: 0.375rem;
+    
+    /* Progress tokens */
+    --progress-height: 0.5rem;
+    --progress-radius: 9999px;
+    --progress-track: 220 14% 90%;
+    --progress-indicator: 160 84% 39%;
+    --progress-success: 142 76% 36%;
+    --progress-warning: 38 92% 50%;
+    --progress-error: 0 72% 51%;
+    
+    /* Sidebar */
+    --sidebar-background: 0 0% 99%;
+    --sidebar-foreground: 220 10% 30%;
+    --sidebar-primary: 160 84% 39%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 160 60% 95%;
+    --sidebar-accent-foreground: 160 84% 25%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 160 84% 39%;
+  }
+
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+  
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+  
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 98%;
+  
+    /* Primary - Emerald glow */
+    --primary: 160 84% 45%;
+    --primary-foreground: 222 47% 6%;
+  
+    /* Secondary */
+    --secondary: 222 30% 14%;
+    --secondary-foreground: 210 40% 98%;
+  
+    /* Muted */
+    --muted: 222 30% 14%;
+    --muted-foreground: 215 20% 55%;
+  
+    /* Accent */
+    --accent: 160 50% 15%;
+    --accent-foreground: 160 84% 60%;
+  
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+  
+    --border: 222 30% 16%;
+    --input: 222 30% 16%;
+    --ring: 160 84% 45%;
+    --ring-offset: 222 47% 6%;
+  
+    /* Component Sizing Variables */
+    --btn-height-sm: 2.25rem;
+    --btn-height-md: 2.5rem;
+    --btn-height-lg: 2.75rem;
+    --btn-padding-x-sm: 0.75rem;
+    --btn-padding-x-md: 1rem;
+    --btn-padding-x-lg: 2rem;
+    --btn-font-size-sm: 0.75rem;
+    --btn-font-size-md: 0.875rem;
+    --btn-font-size-lg: 1rem;
+    
+    --input-height-sm: 2rem;
+    --input-height-md: 2.5rem;
+    --input-height-lg: 3rem;
+    --input-padding-x: 0.75rem;
+    
+    --card-padding: 1.5rem;
+    --card-gap: 1rem;
+    
+    --badge-padding-x: 0.625rem;
+    --badge-padding-y: 0.125rem;
+    --badge-font-size: 0.75rem;
+  
+    /* Custom Lab tokens */
+    --surface-elevated: 222 47% 10%;
+    --surface-sunken: 222 47% 5%;
+    --editor-bg: 222 47% 7%;
+    --preview-bg: 222 40% 8%;
+    --glow-primary: 160 84% 45%;
+    
+    /* Tooltip tokens */
+    --tooltip-bg: 0 0% 98%;
+    --tooltip-foreground: 222 47% 10%;
+    --tooltip-arrow-size: 0.5rem;
+    --tooltip-padding-x: 0.75rem;
+    --tooltip-padding-y: 0.375rem;
+    --tooltip-radius: 0.375rem;
+    
+    /* Progress tokens */
+    --progress-height: 0.5rem;
+    --progress-radius: 9999px;
+    --progress-track: 222 30% 20%;
+    --progress-indicator: 160 84% 45%;
+    --progress-success: 142 76% 46%;
+    --progress-warning: 38 92% 50%;
+    --progress-error: 0 62% 50%;
+    
+    /* Sidebar */
+    --sidebar-background: 222 47% 7%;
+    --sidebar-foreground: 210 30% 70%;
+    --sidebar-primary: 160 84% 45%;
+    --sidebar-primary-foreground: 222 47% 6%;
+    --sidebar-accent: 160 50% 12%;
+    --sidebar-accent-foreground: 160 84% 60%;
+    --sidebar-border: 222 30% 14%;
+    --sidebar-ring: 160 84% 45%;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@theme {
+  /* Core palette */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  
+      /* Primary - Emerald accent */
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  
+      /* Secondary */
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+      /* Muted */
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  /* Accent */
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  /* Border */
+  --color-border: hsl(var(--border));
+  /* Input */
+  --color-input: hsl(var(--input));
+  /* Ring */
+  --color-ring: hsl(var(--ring));
+  /* Ring Offset */
+  --color-ring-offset: hsl(var(--ring-offset));
+  
+  /* --- Radius --- */
+  /* Usage: .rounded-radius */
+  --radius-radius: var(--radius);
+
+  /* --- Spacing & Padding --- */
+  /* Usage: .px-btn-padding-x-md, .p-card-padding, .gap-card-gap */
+  --spacing-btn-padding-x-sm: var(--btn-padding-x-sm);
+  --spacing-btn-padding-x-md: var(--btn-padding-x-md);
+  --spacing-btn-padding-x-lg: var(--btn-padding-x-lg);
+  
+  --spacing-input-padding-x: var(--input-padding-x);
+  
+  --spacing-card-padding: var(--card-padding);
+  --spacing-card-gap: var(--card-gap);
+  
+  --spacing-badge-padding-x: var(--badge-padding-x);
+  --spacing-badge-padding-y: var(--badge-padding-y);
+
+  /* --- Heights --- */
+  /* Usage: .h-btn-height-md, .h-input-height-lg */
+  --height-btn-height-sm: var(--btn-height-sm);
+  --height-btn-height-md: var(--btn-height-md);
+  --height-btn-height-lg: var(--btn-height-lg);
+  
+  --height-input-height-sm: var(--input-height-sm);
+  --height-input-height-md: var(--input-height-md);
+  --height-input-height-lg: var(--input-height-lg);
+
+  /* --- Font Sizes --- */
+  /* Usage: .text-btn-font-size-md, .text-badge-font-size */
+  --font-size-btn-font-size-sm: var(--btn-font-size-sm);
+  --font-size-btn-font-size-md: var(--btn-font-size-md);
+  --font-size-btn-font-size-lg: var(--btn-font-size-lg);
+  --font-size-badge-font-size: var(--badge-font-size);
+
+  /* --- Custom Lab Colors --- */
+  /* Usage: .bg-surface-elevated, .text-glow-primary */
+  --color-surface-elevated: hsl(var(--surface-elevated));
+  --color-surface-sunken: hsl(var(--surface-sunken));
+  --color-editor-bg: hsl(var(--editor-bg));
+  --color-preview-bg: hsl(var(--preview-bg));
+  --color-glow-primary: hsl(var(--glow-primary));
+
+  /* --- Tooltip Tokens --- */
+  /* Usage: .bg-tooltip-bg, .p-tooltip-padding-x, .rounded-tooltip-radius */
+  --color-tooltip-bg: hsl(var(--tooltip-bg));
+  --color-tooltip-foreground: hsl(var(--tooltip-foreground));
+  
+  --spacing-tooltip-padding-x: var(--tooltip-padding-x);
+  --spacing-tooltip-padding-y: var(--tooltip-padding-y);
+  --spacing-tooltip-arrow-size: var(--tooltip-arrow-size);
+  
+  --radius-tooltip-radius: var(--tooltip-radius);
+
+  /* --- Progress Tokens --- */
+  /* Usage: .h-progress-height, .bg-progress-track, .rounded-progress-radius */
+  --height-progress-height: var(--progress-height);
+  --radius-progress-radius: var(--progress-radius);
+  
+  --color-progress-track: hsl(var(--progress-track));
+  --color-progress-indicator: hsl(var(--progress-indicator));
+  --color-progress-success: hsl(var(--progress-success));
+  --color-progress-warning: hsl(var(--progress-warning));
+  --color-progress-error: hsl(var(--progress-error));
+
+  /* --- Sidebar Tokens --- */
+  /* Usage: .bg-sidebar-background, .text-sidebar-primary, .border-sidebar-border */
+  --color-sidebar-background: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+/* Animation keyframes */
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  --animation-fade-in-up: fade-in-up 0.4s ease-out forwards;
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px -5px hsl(var(--glow-primary) / 0.4); }
+    50% { box-shadow: 0 0 30px -5px hsl(var(--glow-primary) / 0.6); }
+  }
+  --animation-pulse-glow: pulse-glow 2s ease-in-out infinite;
+
+  @keyframes logo-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  --animation-logo-spin: logo-spin 20s linear infinite;
+
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  /* Glow effects */
+  .glow-primary {
+    box-shadow: 0 0 20px -5px hsl(var(--glow-primary) / 0.4);
+  }
+
+  /* Glass morphism */
+  .glass {
+    background: hsl(var(--background) / 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.5);
+  }
+
+  .dark .glass {
+    background: hsl(var(--background) / 0.6);
+  }
+
+  /* Mono text utility */
+  .font-mono-display {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-feature-settings: "liga" 0;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
 }

@@ -1,65 +1,213 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import { PanelRightClose, PanelRightOpen } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
+import {
+  Sheet,
+  SheetTitle,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+
+import { Separator } from "@/components/ui/separator";
+import ExportPanel from "@/components/lab/ExportPanel";
+import VariableEditor from "@/components/lab/VariableEditor";
+import LanguageSelector from "@/components/lab/LanguageSelector";
+
+import TabPage from "@/(pages)/components/tab/page";
+import CardPage from "@/(pages)/components/card/page";
+import FormPage from "@/(pages)/components/form/page";
+import SheetPage from "@/(pages)/components/sheet/page";
+import AlertPage from "@/(pages)/components/alert/page";
+import BadgePage from "@/(pages)/components/badge/page";
+import InputPage from "@/(pages)/components/input/page";
+import RadioPage from "@/(pages)/components/radio/page";
+import ButtonPage from "@/(pages)/components/button/page";
+import SelectPage from "@/(pages)/components/select/page";
+import SwitchPage from "@/(pages)/components/switch/page";
+import SliderPage from "@/(pages)/components/slider/page";
+import TogglePage from "@/(pages)/components/toggle/page";
+import DialogPage from "@/(pages)/components/dialog/page";
+import TooltipPage from "@/(pages)/components/tooltip/page";
+import MenubarPage from "@/(pages)/components/menubar/page";
+import CommandPage from "@/(pages)/components/command/page";
+import PopoverPage from "@/(pages)/components/popover/page";
+import DropdownPage from "@/(pages)/components/dropdown/page";
+import CheckboxPage from "@/(pages)/components/checkbox/page";
+import ProgressPage from "@/(pages)/components/progress/page";
+import ComboboxPage from "@/(pages)/components/combobox/page";
+import CarouselPage from "@/(pages)/components/carousel/page";
+import AccordionPage from "@/(pages)/components/accordion/page";
+import SeparatorPage from "@/(pages)/components/separator/page";
+import BreadcrumbPage from "@/(pages)/components/breadcrumb/page";
+import ScrollAreaPage from "@/(pages)/components/scroll-area/page";
+import CollapsiblePage from "@/(pages)/components/collapsible/page";
+import AlertDialogPage from "@/(pages)/components/alert-dialog/page";
+import NavigationMenuPage from "@/(pages)/components/navigation-menu/page";
+import CompositeInputPage from "@/(pages)/components/composite-inout/page";
+
+export default function Index() {
+  const [editorOpen, setEditorOpen] = useState(true);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <header className="flex items-center justify-between h-14 px-4 border-b border-border bg-card/80 backdrop-blur-sm shrink-0">
+        <div>
+          <h1 className="text-sm font-semibold">All Components</h1>
+
+          <p className="text-xs text-muted-foreground hidden sm:block">
+            Edit CSS variables and see changes in real-time
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        <div className="flex items-center gap-2">
+          <LanguageSelector />
+
+          <ExportPanel />
+
+          <Button
+            size="sm"
+            variant="ghost"
+            className="hidden md:flex gap-2"
+            onClick={() => setEditorOpen(!editorOpen)}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            {editorOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
+            <span className="hidden lg:inline">{editorOpen ? "Hide" : "Show"} Editor</span>
+          </Button>
         </div>
-      </main>
+      </header>
+
+      {/* Content Area */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Preview */}
+        <div className="p-4 flex-1 overflow-hidden bg-muted/12">
+          <AccordionPage />
+          <Separator className="my-12" />
+
+          <AlertPage />
+          <Separator className="my-12" />
+
+          <AlertDialogPage />
+          <Separator className="my-12" />
+
+          <BadgePage />
+          <Separator className="my-12" />
+
+          <BreadcrumbPage />
+          <Separator className="my-12" />
+
+          <ButtonPage />
+          <Separator className="my-12" />
+
+          <CardPage />
+          <Separator className="my-12" />
+
+          <CarouselPage />
+          <Separator className="my-12" />
+
+          <CheckboxPage />
+          <Separator className="my-12" />
+
+          <CollapsiblePage />
+          <Separator className="my-12" />
+
+          <ComboboxPage />
+          <Separator className="my-12" />
+
+          <CommandPage />
+          <Separator className="my-12" />
+
+          <CompositeInputPage />
+          <Separator className="my-12" />
+
+          <DialogPage />
+          <Separator className="my-12" />
+
+          <DropdownPage />
+          <Separator className="my-12" />
+
+          <FormPage />
+          <Separator className="my-12" />
+
+          <InputPage />
+          <Separator className="my-12" />
+
+          <MenubarPage />
+          <Separator className="my-12" />
+
+          <NavigationMenuPage />
+          <Separator className="my-12" />
+
+          <PopoverPage />
+          <Separator className="my-12" />
+
+          <ProgressPage />
+          <Separator className="my-12" />
+
+          <RadioPage />
+          <Separator className="my-12" />
+
+          <ScrollAreaPage />
+          <Separator className="my-12" />
+
+          <SelectPage />
+          <Separator className="my-12" />
+
+          <SeparatorPage />
+          <Separator className="my-12" />
+
+          <SheetPage />
+          <Separator className="my-12" />
+
+          <SliderPage />
+          <Separator className="my-12" />
+
+          <SwitchPage />
+          <Separator className="my-12" />
+
+          <TabPage />
+          <Separator className="my-12" />
+
+          <TogglePage />
+          <Separator className="my-12" />
+
+          <TooltipPage />
+          <Separator className="my-12" />
+        </div>
+
+        {/* Variable Editor - Desktop */}
+        <div
+          className={cn(
+            "hidden md:block w-80 min-w-[312px] shrink-0 transition-all duration-300",
+            editorOpen ? "translate-x-0" : "translate-x-full w-0 min-w-0"
+          )}
+        >
+          {editorOpen && <VariableEditor />}
+        </div>
+      </div>
+
+      {/* Mobile Editor Sheet */}
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button
+            size="icon"
+            className="md:hidden fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg"
+          >
+            <PanelRightOpen size={12} />
+          </Button>
+        </SheetTrigger>
+
+        <SheetContent side="right" className="w-[312px] p-0">
+          <SheetTitle className="sr-only">Theme Editor</SheetTitle>
+
+          <VariableEditor />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
