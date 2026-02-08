@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "build:registry": "npx tsx scripts/build-registry.ts"
+    "build:registry": "pnpm dlx tsx scripts/build-registry.ts"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",

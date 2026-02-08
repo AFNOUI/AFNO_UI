@@ -7,7 +7,7 @@ const components = [
         name: "button",
         devDependencies: [],
         sourcePath: "app/components/ui/button.tsx",
-        dependencies: ["@radix-ui/react-slot", "class-variance-authority", "lucide-react"],
+        dependencies: ["@radix-ui/react-slot", "class-variance-authority"],
     },
     // When you add tooltip:
     // { name: "tooltip", sourcePath: "app/components/ui/tooltip.tsx", dependencies: ["@radix-ui/react-tooltip"] }
