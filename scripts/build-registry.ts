@@ -5,6 +5,7 @@ import path from "path";
 const components = [
     {
         name: "button",
+        devDependencies: [],
         sourcePath: "app/components/ui/button.tsx",
         dependencies: ["@radix-ui/react-slot", "class-variance-authority", "lucide-react"],
     },
@@ -19,14 +20,15 @@ components.forEach((component) => {
     const content = fs.readFileSync(path.join(process.cwd(), component.sourcePath), "utf8");
 
     const registryItem = {
-        name: component.name,
         type: "registry:ui",
+        name: component.name,
         dependencies: component.dependencies,
+        devDependencies: component.devDependencies,
         files: [
             {
-                path: `components/ui/${component.name}.tsx`,
                 content: content,
                 type: "registry:component",
+                path: `components/ui/${component.name}.tsx`,
             },
         ],
     };
