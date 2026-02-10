@@ -41,3 +41,19 @@ const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 CardFooter.displayName = "CardFooter";
 
 export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };
+
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --card: ...;
+//     --card-foreground: ...;
+//     --muted-foreground: ...;
+//     --border: ...;
+
+//     /* --- Layout & Spacing --- */
+//     --radius: ...;
+//     --card-padding: ...;
+//     --card-gap: ...;
+//     --shadow-sm: ...;
+//   }
+// }

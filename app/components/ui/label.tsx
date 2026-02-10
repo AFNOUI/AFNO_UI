@@ -15,3 +15,11 @@ const Label = React.forwardRef<
 Label.displayName = LabelPrimitive.Root.displayName;
 
 export { Label };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Typography --- */
+//     /* Component uses standard text-sm and font-medium classes */
+//   }
+// }

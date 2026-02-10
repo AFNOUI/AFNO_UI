@@ -25,3 +25,14 @@ const Switch = React.forwardRef<
 Switch.displayName = SwitchPrimitives.Root.displayName;
 
 export { Switch };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --background: ...;
+//     --primary: ...;
+//     --input: ...;
+//     --ring: ...;
+//   }
+// }

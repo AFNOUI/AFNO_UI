@@ -19,3 +19,17 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ classNa
 Textarea.displayName = "Textarea";
 
 export { Textarea };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --input: ...;
+//     --background: ...;
+//     --ring: ...;
+//     --muted-foreground: ...;
+
+//     /* --- Layout --- */
+//     --radius: ...;
+//   }
+// }

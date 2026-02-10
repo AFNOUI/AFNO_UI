@@ -108,3 +108,22 @@ export {
   ToastViewport,
   ToastDescription,
 };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --background: ...;
+//     --foreground: ...;
+//     --border: ...;
+//     --destructive: ...;
+//     --destructive-foreground: ...;
+//     --secondary: ...;
+//     --ring: ...;
+
+//     /* --- Animations (Tailwind v4 / @theme) --- */
+//     /* Component handles swipe transitions via CSS variables */
+//     /* --radix-toast-swipe-move-x */
+//     /* --radix-toast-swipe-end-x */
+//   }
+// }

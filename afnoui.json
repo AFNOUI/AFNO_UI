@@ -1,0 +1,8 @@
+{
+    "style": "default",
+    "aliases": {
+        "hooks": "hooks",
+        "utils": "lib/utils",
+        "components": "components"
+    }
+}

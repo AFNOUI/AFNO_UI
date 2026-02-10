@@ -21,3 +21,12 @@ const Progress = React.forwardRef<
 Progress.displayName = ProgressPrimitive.Root.displayName;
 
 export { Progress };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --primary: ...;
+//     --secondary: ...;
+//   }
+// }

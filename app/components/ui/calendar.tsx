@@ -55,3 +55,18 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
 Calendar.displayName = "Calendar";
 
 export { Calendar };
+
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --primary: ...;
+//     --primary-foreground: ...;
+//     --accent: ...;
+//     --accent-foreground: ...;
+//     --muted-foreground: ...;
+//     --border: ...;
+
+//     /* --- Layout --- */
+//     --radius: ...;
+//   }
+// }

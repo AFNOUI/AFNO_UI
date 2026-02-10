@@ -18,3 +18,11 @@ const Separator = React.forwardRef<
 Separator.displayName = SeparatorPrimitive.Root.displayName;
 
 export { Separator };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --border: ...; /* Used for the line color */
+//   }
+// }

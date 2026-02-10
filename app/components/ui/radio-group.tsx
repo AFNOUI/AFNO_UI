@@ -34,3 +34,13 @@ const RadioGroupItem = React.forwardRef<
 RadioGroupItem.displayName = RadioGroupPrimitive.Item.displayName;
 
 export { RadioGroup, RadioGroupItem };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --primary: ...;
+//     --background: ...;
+//     --ring: ...;
+//   }
+// }

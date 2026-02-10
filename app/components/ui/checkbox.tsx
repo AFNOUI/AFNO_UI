@@ -24,3 +24,14 @@ const Checkbox = React.forwardRef<
 Checkbox.displayName = CheckboxPrimitive.Root.displayName;
 
 export { Checkbox };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --primary: ...;
+//     --primary-foreground: ...;
+//     --background: ...;
+//     --ring: ...;
+//   }
+// }

@@ -278,3 +278,15 @@ export {
   CarouselContent,
   CarouselPrevious,
 };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --primary: ...;
+//     --muted-foreground: ...;
+
+//     /* --- Spacing --- */
+//     /* Note: Component uses internal 1rem (4 units) gaps for overflow management */
+//   }
+// }

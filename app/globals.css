@@ -325,7 +325,6 @@
     to { transform: rotate(360deg); }
   }
   --animation-logo-spin: logo-spin 20s linear infinite;
-
 }
 
 @layer base {

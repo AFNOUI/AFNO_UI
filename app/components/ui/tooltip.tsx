@@ -53,3 +53,18 @@ const TooltipContent = React.forwardRef<
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider, TooltipArrow };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --popover: ...;
+//     --popover-foreground: ...;
+//     --border: ...;
+
+//     /* --- Spacing/Layout --- */
+//     --tooltip-radius: 0.25rem;
+//     --tooltip-padding-x: 0.75rem;
+//     --tooltip-padding-y: 0.375rem;
+//   }
+// }

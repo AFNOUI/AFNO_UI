@@ -36,3 +36,10 @@ const AvatarFallback = React.forwardRef<
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName;
 
 export { Avatar, AvatarImage, AvatarFallback };
+
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --muted: ...;
+//   }
+// }

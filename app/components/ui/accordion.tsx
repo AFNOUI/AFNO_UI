@@ -50,3 +50,13 @@ const AccordionContent = React.forwardRef<
 AccordionContent.displayName = AccordionPrimitive.Content.displayName;
 
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent };
+
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --border: ...;
+//   }
+// }
+
+// --animation-accordion-down: ...;
+// --animation-accordion-up: ...;

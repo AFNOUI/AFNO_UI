@@ -46,45 +46,44 @@ Button.displayName = "Button";
 
 export { Button, buttonVariants };
 
-// /* Add these to your global CSS file (e.g., globals.css) */
 // @layer base {
 //   :root {
 //     /* --- Layout & Border --- */
-//     --radius: 0.5rem;               /* Used for rounded-(--radius) */
+//     --radius: ...;               /* Used for rounded-(--radius) */
 
 //     /* --- Button Sizes (Used in size variants) --- */
 //     /* Small Size */
-//     --btn-height-sm: 2rem;
-//     --btn-padding-x-sm: 0.75rem;
-//     --btn-font-size-sm: 0.875rem;
+//     --btn-height-sm: ...;
+//     --btn-padding-x-sm: ...;
+//     --btn-font-size-sm: ...;
 
 //     /* Default/Medium Size */
-//     --btn-height-md: 2.5rem;
-//     --btn-padding-x-md: 1rem;
-//     --btn-font-size-md: 0.875rem;
+//     --btn-height-md: ...;
+//     --btn-padding-x-md: ...;
+//     --btn-font-size-md: ...;
 
 //     /* Large Size */
-//     --btn-height-lg: 2.75rem;
-//     --btn-padding-x-lg: 2rem;
-//     --btn-font-size-lg: 1rem;
+//     --btn-height-lg: ...;
+//     --btn-padding-x-lg: ...;
+//     --btn-font-size-lg: ...;
 
 //     /* --- Colors (Used in variant colors) --- */
-//     --background: 0 0% 100%;
-//     --foreground: 222.2 84% 4.9%;
+//     --background: ...;
+//     --foreground: ...;
 
-//     --primary: 222.2 47.4% 11.2%;
-//     --primary-foreground: 210 40% 98%;
+//     --primary: ...;
+//     --primary-foreground: ...;
 
-//     --secondary: 210 40% 96.1%;
-//     --secondary-foreground: 222.2 47.4% 11.2%;
+//     --secondary: ...;
+//     --secondary-foreground: ...;
 
-//     --destructive: 0 84.2% 60.2%;
-//     --destructive-foreground: 210 40% 98%;
+//     --destructive: ...;
+//     --destructive-foreground: ...;
 
-//     --accent: 210 40% 96.1%;
-//     --accent-foreground: 222.2 47.4% 11.2%;
+//     --accent: ...;
+//     --accent-foreground: ...;
 
-//     --ring: 222.2 84% 4.9%;
-//     --input: 214.3 31.8% 91.4%;
+//     --ring: ...;
+//     --input: ...;
 //   }
 // }

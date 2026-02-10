@@ -201,3 +201,21 @@ export {
   MenubarRadioGroup,
   MenubarCheckboxItem,
 };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --background: ...;
+//     --popover: ...;
+//     --popover-foreground: ...;
+//     --accent: ...;
+//     --accent-foreground: ...;
+//     --muted: ...;
+//     --muted-foreground: ...;
+//     --border: ...;
+
+//     /* --- Layout --- */
+//     --radius: ...;
+//   }
+// }

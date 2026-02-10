@@ -34,8 +34,8 @@ export function PageBreadcrumb({ items }: PageBreadcrumbProps) {
           </BreadcrumbLink>
         </BreadcrumbItem>
 
-        {items.map((item,) => (
-          <div key={item.label} className="flex items-center gap-2">
+        {items.map((item, index) => (
+          <div key={item.label + index} className="flex items-center gap-2">
             <BreadcrumbSeparator />
 
             <BreadcrumbItem>

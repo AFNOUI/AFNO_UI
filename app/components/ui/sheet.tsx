@@ -11,7 +11,7 @@ const SheetPortal = SheetPrimitive.Portal;
 const SheetTrigger = SheetPrimitive.Trigger;
 
 const SheetOverlay = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Overlay>,
+  React.ComponentRef<typeof SheetPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Overlay
@@ -75,7 +75,7 @@ const SheetFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
 SheetFooter.displayName = "SheetFooter";
 
 const SheetTitle = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Title>,
+  React.ComponentRef<typeof SheetPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Title>
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Title ref={ref} className={cn("text-lg font-semibold text-foreground", className)} {...props} />
@@ -83,7 +83,7 @@ const SheetTitle = React.forwardRef<
 SheetTitle.displayName = SheetPrimitive.Title.displayName;
 
 const SheetDescription = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Description>,
+  React.ComponentRef<typeof SheetPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Description>
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Description ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />
@@ -102,3 +102,20 @@ export {
   SheetTrigger,
   SheetDescription,
 };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --background: ...;
+//     --foreground: ...;
+//     --muted-foreground: ...;
+//     --secondary: ...;
+//     --ring: ...;
+//     --border: ...;
+
+//     /* --- Animations (Tailwind v4 / @theme) --- */
+//     --animation-in: ...;
+//     --animation-out: ...;
+//   }
+// }

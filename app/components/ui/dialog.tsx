@@ -90,3 +90,23 @@ export {
   DialogContent,
   DialogDescription,
 };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --background: ...;
+//     --foreground: ...;
+//     --muted-foreground: ...;
+//     --accent: ...;
+//     --border: ...;
+//     --ring: ...;
+
+//     /* --- Layout --- */
+//     --radius: ...;
+
+//     /* --- Animations (Tailwind v4 / @theme) --- */
+//     --animation-in: ...;
+//     --animation-out: ...;
+//   }
+// }

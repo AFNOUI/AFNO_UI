@@ -1,0 +1,45 @@
+name: Build AfnoUI Registry
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      # Only run if files in these folders change
+      - 'app/components/ui/**'
+      - 'app/hooks/**'
+      - 'app/lib/**'
+      - 'scripts/build-registry.ts'
+
+# Allow the action to write back to your repository
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        # We use ci for faster, cleaner installs in automation
+        run: npm ci 
+
+      - name: Build Registry
+        # This runs your script to generate the .json files in public/registry
+        run: npx tsx scripts/build-registry.ts
+
+      - name: Commit and Push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: auto-update registry [skip ci]"
+          file_pattern: 'public/registry/*.json'
+          commit_user_name: "AfnoUI Bot"
+          commit_user_email: "actions@github.com"

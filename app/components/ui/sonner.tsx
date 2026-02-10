@@ -27,3 +27,17 @@ const Toaster = ({ ...props }: ToasterProps) => {
 };
 
 export { Toaster, toast };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --background: ...;
+//     --foreground: ...;
+//     --muted: ...;
+//     --muted-foreground: ...;
+//     --primary: ...;
+//     --primary-foreground: ...;
+//     --border: ...;
+//   }
+// }

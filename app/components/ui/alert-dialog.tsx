@@ -100,3 +100,19 @@ export {
   AlertDialogContent,
   AlertDialogDescription,
 };
+
+// :root {
+//   /* --- Colors --- */
+//   --background: ...;
+//   --foreground: ...;
+//   --muted-foreground: ...;
+//   --border: ...;
+  
+//   /* --- Layout & Shadow --- */
+//   --radius: ...;
+
+//   /* --- Animations (Tailwind v4 / @theme) --- */
+//   /* These are required for the fade and zoom transitions in your code */
+//   --animation-in: ...;
+//   --animation-out: ...;
+// }

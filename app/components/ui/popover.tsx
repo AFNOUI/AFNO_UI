@@ -7,7 +7,7 @@ const Popover = PopoverPrimitive.Root;
 const PopoverTrigger = PopoverPrimitive.Trigger;
 
 const PopoverContent = React.forwardRef<
-  React.ElementRef<typeof PopoverPrimitive.Content>,
+  React.ComponentRef<typeof PopoverPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
 >(({ className, align = "center", sideOffset = 4, ...props }, ref) => (
   <PopoverPrimitive.Portal>
@@ -26,3 +26,20 @@ const PopoverContent = React.forwardRef<
 PopoverContent.displayName = PopoverPrimitive.Content.displayName;
 
 export { Popover, PopoverTrigger, PopoverContent };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --popover: ...;
+//     --popover-foreground: ...;
+//     --border: ...;
+
+//     /* --- Layout --- */
+//     --radius: ...;
+
+//     /* --- Animations (Tailwind v4 / @theme) --- */
+//     --animation-in: ...;
+//     --animation-out: ...;
+//   }
+// }

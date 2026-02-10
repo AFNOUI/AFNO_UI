@@ -22,6 +22,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Combobox,
+  ComboboxList,
+  ComboboxItem,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxGroup,
+  ComboboxTrigger,
+  ComboboxContent,
+} from "@/components/ui/combobox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -119,6 +129,171 @@ const [value, setValue] = useState("");
   return (
     <div className="space-y-8">
       <SectionTitle>Combobox</SectionTitle>
+
+      <CodePreview title="Basic Combobox" code="// Uses modular Combobox components">
+        <div className="flex flex-wrap gap-4 items-center">
+          <Combobox value={value} onValueChange={setValue}>
+            <ComboboxTrigger className="w-[200px]">
+              {value ? frameworks.find((f) => f.value === value)?.label : "Select framework..."}
+            </ComboboxTrigger>
+            <ComboboxContent className="w-[200px]">
+              <ComboboxInput placeholder="Search framework..." />
+              <ComboboxList>
+                <ComboboxEmpty>No framework found.</ComboboxEmpty>
+                <ComboboxGroup>
+                  {frameworks.map((f) => (
+                    <ComboboxItem key={f.value} value={f.value}>
+                      {f.label}
+                    </ComboboxItem>
+                  ))}
+                </ComboboxGroup>
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
+
+          {value && <Badge variant="outline">Selected: {value}</Badge>}
+        </div>
+      </CodePreview>
+
+      {/* Country Selector with Icons */}
+      <CodePreview title="Country Selector" code="// Composition with icons">
+        <Combobox value={country} onValueChange={setCountry}>
+          <ComboboxTrigger className="w-[240px]">
+            <Globe className="mr-2 h-4 w-4 opacity-50" />
+            {country ? (
+              <span className="flex items-center gap-2">
+                {countries.find(c => c.value === country)?.flag}
+                {countries.find(c => c.value === country)?.label}
+              </span>
+            ) : "Select country..."}
+          </ComboboxTrigger>
+          <ComboboxContent className="w-[240px]">
+            <ComboboxInput placeholder="Search country..." />
+            <ComboboxList>
+              <ComboboxEmpty>No country found.</ComboboxEmpty>
+              <ComboboxGroup>
+                {countries.map((c) => (
+                  <ComboboxItem key={c.value} value={c.value}>
+                    <span className="mr-2">{c.flag}</span>
+                    {c.label}
+                  </ComboboxItem>
+                ))}
+              </ComboboxGroup>
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
+      </CodePreview>
+
+      {/* User Selector (Custom Item Layout) */}
+      <CodePreview title="User Selector" code="// Custom layout inside ComboboxItem">
+        <Combobox value={selectedUser} onValueChange={setSelectedUser}>
+          <ComboboxTrigger className="w-[280px]">
+            <User className="mr-2 h-4 w-4 opacity-50" />
+            {selectedUser ? users.find(u => u.value === selectedUser)?.name : "Assign to..."}
+          </ComboboxTrigger>
+          <ComboboxContent className="w-[280px]">
+            <ComboboxInput placeholder="Search users..." />
+            <ComboboxList>
+              <ComboboxEmpty>No user found.</ComboboxEmpty>
+              <ComboboxGroup>
+                {users.map((user) => (
+                  <ComboboxItem key={user.value} value={user.value}>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-[10px] font-medium">
+                        {user.avatar}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">{user.name}</span>
+                        <span className="text-xs text-muted-foreground">{user.email}</span>
+                      </div>
+                    </div>
+                  </ComboboxItem>
+                ))}
+              </ComboboxGroup>
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
+      </CodePreview>
+
+      {/* Multi-select Tags */}
+      <CodePreview title="Multi-select (Manual logic)" code="// Toggle behavior inside items">
+        <Combobox value="" onValueChange={() => { }}>
+          <ComboboxTrigger className="w-[300px] h-auto min-h-10">
+            <div className="flex flex-wrap gap-1">
+              {selectedTags.length > 0 ? (
+                selectedTags.map(tagValue => {
+                  const tag = tags.find(t => t.value === tagValue);
+                  return (
+                    <Badge key={tagValue} variant="secondary" className="gap-1 px-1">
+                      <span className={cn("w-2 h-2 rounded-full", tag?.color)} />
+                      {tag?.label}
+                      <X className="h-3 w-3 cursor-pointer" onClick={(e) => {
+                        e.stopPropagation();
+                        toggleTag(tagValue);
+                      }} />
+                    </Badge>
+                  );
+                })
+              ) : (
+                <span className="text-muted-foreground flex items-center gap-2">
+                  <Tag className="h-4 w-4" /> Select tags...
+                </span>
+              )}
+            </div>
+          </ComboboxTrigger>
+          <ComboboxContent className="w-[300px]">
+            <ComboboxInput placeholder="Search tags..." />
+            <ComboboxList>
+              <ComboboxGroup>
+                {tags.map((tag) => (
+                  <ComboboxItem
+                    key={tag.value}
+                    value={tag.value}
+                    onSelect={() => toggleTag(tag.value)}
+                  >
+                    <div className="flex items-center flex-1">
+                      <Check className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedTags.includes(tag.value) ? "opacity-100" : "opacity-0"
+                      )} />
+                      <span className={cn("w-3 h-3 rounded-full mr-2", tag.color)} />
+                      {tag.label}
+                    </div>
+                  </ComboboxItem>
+                ))}
+              </ComboboxGroup>
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
+      </CodePreview>
+
+      {/* Creatable Section */}
+      <CodePreview title="Creatable Content" code="// Using ComboboxEmpty for actions">
+        <Combobox value="" onValueChange={() => { }}>
+          <ComboboxTrigger className="w-[240px]">
+            <Building2 className="mr-2 h-4 w-4 opacity-50" />
+            Select or create...
+          </ComboboxTrigger>
+          <ComboboxContent className="w-[240px]">
+            <ComboboxInput placeholder="Search..." />
+            <ComboboxList>
+              <ComboboxEmpty>
+                <Button variant="ghost" className="w-full justify-start text-xs h-8 px-2" onClick={() => alert('Create logic')}>
+                  <Plus className="mr-2 h-3 w-3" /> Create &quot;New Item&quot;
+                </Button>
+              </ComboboxEmpty>
+              <ComboboxGroup heading="Existing">
+                <ComboboxItem value="acme">Acme Inc.</ComboboxItem>
+                <ComboboxItem value="globex">Globex Corp.</ComboboxItem>
+              </ComboboxGroup>
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
+      </CodePreview>
+
+
+      {/*  */}
+
 
       {/* Basic Combobox */}
       <CodePreview title="Basic Combobox" code={basicCode}>

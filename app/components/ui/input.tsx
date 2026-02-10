@@ -20,3 +20,20 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
 Input.displayName = "Input";
 
 export { Input };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --input: ...;
+//     --background: ...;
+//     --foreground: ...;
+//     --muted-foreground: ...;
+//     --ring: ...;
+
+//     /* --- Layout & Sizing --- */
+//     --radius: ...;
+//     --input-height-md: ...;
+//     --input-padding-x: ...;
+//   }
+// }

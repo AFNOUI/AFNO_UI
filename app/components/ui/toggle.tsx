@@ -35,3 +35,16 @@ const Toggle = React.forwardRef<
 Toggle.displayName = TogglePrimitive.Root.displayName;
 
 export { Toggle, toggleVariants };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --accent: ...;
+//     --accent-foreground: ...;
+//     --muted: ...;
+//     --muted-foreground: ...;
+//     --input: ...;
+//     --ring: ...;
+//   }
+// }

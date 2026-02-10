@@ -131,3 +131,20 @@ export {
   CommandShortcut,
   CommandSeparator,
 };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --popover: ...;
+//     --popover-foreground: ...;
+//     --muted-foreground: ...;
+//     --accent: ...;
+//     --accent-foreground: ...;
+//     --border: ...;
+//     --foreground: ...;
+
+//     /* --- Layout --- */
+//     --radius: ...;
+//   }
+// }

@@ -88,3 +88,11 @@ export {
   BreadcrumbEllipsis,
   BreadcrumbSeparator,
 };
+
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --foreground: ...;
+//     --muted-foreground: ...;
+//   }
+// }

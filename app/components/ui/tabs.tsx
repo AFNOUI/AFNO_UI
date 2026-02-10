@@ -51,3 +51,18 @@ const TabsContent = React.forwardRef<
 TabsContent.displayName = TabsPrimitive.Content.displayName;
 
 export { Tabs, TabsList, TabsTrigger, TabsContent };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --background: ...;
+//     --foreground: ...;
+//     --muted: ...;
+//     --muted-foreground: ...;
+//     --ring: ...;
+
+//     /* --- Layout --- */
+//     --radius: ...;
+//   }
+// }

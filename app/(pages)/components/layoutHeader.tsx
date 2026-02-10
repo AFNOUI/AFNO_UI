@@ -8,23 +8,26 @@ import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
 
 export function LayoutHeader() {
     const pathname = usePathname();
+    const isRootPage = pathname === "/components";
     const componentId = pathname.split("/").pop();
 
-    const componentName = componentId
+    const componentName = !isRootPage && componentId
         ? componentId
             .split("-")
             .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
             .join(" ")
-        : "Component";
+        : null;
 
     return (
         <>
             <div className="flex justify-between">
                 <PageBreadcrumb
-                    items={[
-                        { label: "Components", href: "/" },
-                        { label: componentName },
-                    ]}
+                    items={isRootPage
+                        ? [{ label: "Components" }]
+                        : [
+                            { label: "Components", href: "/components" },
+                            { label: componentName || "" }
+                        ]}
                 />
 
                 <LanguageSelector />

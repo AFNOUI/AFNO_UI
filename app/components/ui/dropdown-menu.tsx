@@ -172,3 +172,23 @@ export {
   DropdownMenuRadioGroup,
   DropdownMenuCheckboxItem,
 };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --popover: ...;
+//     --popover-foreground: ...;
+//     --accent: ...;
+//     --accent-foreground: ...;
+//     --muted: ...;
+//     --border: ...;
+
+//     /* --- Layout --- */
+//     --radius: ...;
+
+//     /* --- Animations (Tailwind v4 / @theme) --- */
+//     --animation-in: ...;
+//     --animation-out: ...;
+//   }
+// }

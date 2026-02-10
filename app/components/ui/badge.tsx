@@ -27,3 +27,23 @@ function Badge({ className, variant, ...props }: BadgeProps) {
 }
 
 export { Badge, badgeVariants };
+
+/* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Spacing & Typography --- */
+//     --badge-padding-x: ...;
+//     --badge-padding-y: ...;
+//     --badge-font-size: ...;
+
+//     /* --- Colors --- */
+//     --primary: ...;
+//     --primary-foreground: ...;
+//     --secondary: ...;
+//     --secondary-foreground: ...;
+//     --destructive: ...;
+//     --destructive-foreground: ...;
+//     --foreground: ...;
+//     --ring: ...;
+//   }
+// }

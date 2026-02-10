@@ -148,3 +148,24 @@ export {
   NavigationMenuIndicator,
   navigationMenuTriggerStyle,
 };
+
+// /* Add these to your global CSS file (e.g., globals.css) */
+// @layer base {
+//   :root {
+//     /* --- Colors --- */
+//     --background: ...;
+//     --popover: ...;
+//     --popover-foreground: ...;
+//     --accent: ...;
+//     --accent-foreground: ...;
+//     --muted-foreground: ...;
+//     --border: ...;
+
+//     /* --- Layout --- */
+//     --radius: ...;
+
+//     /* --- Animations (Tailwind v4 / @theme) --- */
+//     --animation-in: ...;
+//     --animation-out: ...;
+//   }
+// }
