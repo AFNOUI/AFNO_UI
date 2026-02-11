@@ -197,6 +197,12 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  afnoui-cli/afnoui-test-env:
+    dependencies:
+      tailwindcss:
+        specifier: ^4.0.0
+        version: 4.0.0
+
 packages:
 
   '@alloc/quick-lru@5.2.0':
@@ -3181,6 +3187,9 @@ packages:
 
   tailwind-merge@3.4.0:
     resolution: {integrity: sha512-uSaO4gnW+b3Y2aWoWfFpX62vn2sR3skfhbjsEnaBI81WD1wBLlHZe5sWf0AqjksNdYTbGBEd0UasQMT3SNV15g==}
+
+  tailwindcss@4.0.0:
+    resolution: {integrity: sha512-ULRPI3A+e39T7pSaf1xoi58AqqJxVCLg8F/uM5A3FadUbnyDTgltVnXJvdkTjwCOGA6NazqHVcwPJC5h2vRYVQ==}
 
   tailwindcss@4.1.18:
     resolution: {integrity: sha512-4+Z+0yiYyEtUVCScyfHCxOYP06L5Ne+JiHhY2IjR2KWMIWhJOYZKLSGZaP5HkZ8+bY0cxfzwDE5uOmzFXyIwxw==}
@@ -6465,6 +6474,8 @@ snapshots:
   supports-preserve-symlinks-flag@1.0.0: {}
 
   tailwind-merge@3.4.0: {}
+
+  tailwindcss@4.0.0: {}
 
   tailwindcss@4.1.18: {}
 

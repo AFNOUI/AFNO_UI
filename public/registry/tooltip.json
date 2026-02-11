@@ -1,0 +1,17 @@
+{
+  "name": "tooltip",
+  "dependencies": [
+    "@radix-ui/react-tooltip"
+  ],
+  "devDependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/tooltip.tsx",
+      "type": "registry:component",
+      "content": "import * as React from \"react\";\nimport * as TooltipPrimitive from \"@radix-ui/react-tooltip\";\n\nimport { cn } from \"@/lib/utils\";\n\nconst Tooltip = TooltipPrimitive.Root;\nconst TooltipTrigger = TooltipPrimitive.Trigger;\nconst TooltipProvider = TooltipPrimitive.Provider;\n\nconst TooltipArrow = React.forwardRef<\n  React.ComponentRef<typeof TooltipPrimitive.Arrow>,\n  React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Arrow>\n>(({ className, ...props }, ref) => (\n  <TooltipPrimitive.Arrow\n    ref={ref}\n    width={16}\n    height={8}\n    className={cn(\n      \"fill-popover stroke-border stroke-[1.5] -translate-y-[0.5px]\",\n      className\n    )}\n    {...props}\n  />\n));\nTooltipArrow.displayName = \"TooltipArrow\";\n\ninterface TooltipContentProps\n  extends React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content> {\n  showArrow?: boolean;\n  arrowClassName?: string;\n}\n\nconst TooltipContent = React.forwardRef<\n  React.ComponentRef<typeof TooltipPrimitive.Content>,\n  TooltipContentProps\n>(({ className, sideOffset = 4, showArrow = false, arrowClassName, children, ...props }, ref) => (\n  <TooltipPrimitive.Content\n    ref={ref}\n    sideOffset={sideOffset}\n    className={cn(\n      \"z-50 overflow-hidden rounded-tooltip-radius border border-border bg-popover px-tooltip-padding-x py-tooltip-padding-y text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2\",\n      // \"z-50 overflow-hidden rounded-(--tooltip-radius) border border-border bg-popover px-(--tooltip-padding-x) py-(--tooltip-padding-y) text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2\",\n      className,\n    )}\n    {...props}\n  >\n    {children}\n    {showArrow && (\n      <TooltipArrow className={arrowClassName} />\n    )}\n  </TooltipPrimitive.Content>\n));\nTooltipContent.displayName = TooltipPrimitive.Content.displayName;\n\nexport { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider, TooltipArrow };\n\n// /* Add these to your global CSS file (e.g., globals.css) */\n// @layer base {\n//   :root {\n//     /* --- Colors --- */\n//     --popover: ...;\n//     --popover-foreground: ...;\n//     --border: ...;\n\n//     /* --- Spacing/Layout --- */\n//     --tooltip-radius: 0.25rem;\n//     --tooltip-padding-x: 0.75rem;\n//     --tooltip-padding-y: 0.375rem;\n//   }\n// }\n"
+    }
+  ]
+}

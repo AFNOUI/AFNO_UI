@@ -1,0 +1,17 @@
+{
+  "name": "progress",
+  "dependencies": [
+    "@radix-ui/react-progress"
+  ],
+  "devDependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/progress.tsx",
+      "type": "registry:component",
+      "content": "import * as React from \"react\";\nimport * as ProgressPrimitive from \"@radix-ui/react-progress\";\n\nimport { cn } from \"@/lib/utils\";\n\nconst Progress = React.forwardRef<\n  React.ComponentRef<typeof ProgressPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>\n>(({ className, value, ...props }, ref) => (\n  <ProgressPrimitive.Root\n    ref={ref}\n    className={cn(\"relative h-4 w-full overflow-hidden rounded-full bg-secondary\", className)}\n    {...props}\n  >\n    <ProgressPrimitive.Indicator\n      className=\"h-full w-full flex-1 bg-primary transition-all\"\n      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}\n    />\n  </ProgressPrimitive.Root>\n));\nProgress.displayName = ProgressPrimitive.Root.displayName;\n\nexport { Progress };\n\n// /* Add these to your global CSS file (e.g., globals.css) */\n// @layer base {\n//   :root {\n//     /* --- Colors --- */\n//     --primary: ...;\n//     --secondary: ...;\n//   }\n// }\n"
+    }
+  ]
+}

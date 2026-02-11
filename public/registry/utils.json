@@ -1,0 +1,16 @@
+{
+  "name": "utils",
+  "dependencies": [
+    "tailwind-merge",
+    "clsx"
+  ],
+  "devDependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "lib/utils.ts",
+      "type": "registry:component",
+      "content": "import { twMerge } from \"tailwind-merge\";\nimport { clsx, type ClassValue } from \"clsx\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n"
+    }
+  ]
+}

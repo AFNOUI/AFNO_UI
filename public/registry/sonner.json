@@ -1,0 +1,18 @@
+{
+  "name": "sonner",
+  "dependencies": [
+    "sonner",
+    "next-themes"
+  ],
+  "devDependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/sonner.tsx",
+      "type": "registry:component",
+      "content": "\"use client\";\n\nimport { useTheme } from \"next-themes\";\nimport { Toaster as Sonner, toast } from \"sonner\";\n\ntype ToasterProps = React.ComponentProps<typeof Sonner>;\n\nconst Toaster = ({ ...props }: ToasterProps) => {\n  const { theme = \"system\" } = useTheme();\n\n  return (\n    <Sonner\n      theme={theme as ToasterProps[\"theme\"]}\n      className=\"toaster group\"\n      toastOptions={{\n        classNames: {\n          description: \"group-[.toast]:text-muted-foreground\",\n          cancelButton: \"group-[.toast]:bg-muted group-[.toast]:text-muted-foreground\",\n          actionButton: \"group-[.toast]:bg-primary group-[.toast]:text-primary-foreground\",\n          toast:\n            \"group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg\",\n        },\n      }}\n      {...props}\n    />\n  );\n};\n\nexport { Toaster, toast };\n\n// /* Add these to your global CSS file (e.g., globals.css) */\n// @layer base {\n//   :root {\n//     /* --- Colors --- */\n//     --background: ...;\n//     --foreground: ...;\n//     --muted: ...;\n//     --muted-foreground: ...;\n//     --primary: ...;\n//     --primary-foreground: ...;\n//     --border: ...;\n//   }\n// }\n"
+    }
+  ]
+}

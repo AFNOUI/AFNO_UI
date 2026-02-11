@@ -1,0 +1,15 @@
+{
+  "name": "collapsible",
+  "dependencies": [
+    "@radix-ui/react-collapsible"
+  ],
+  "devDependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "components/ui/collapsible.tsx",
+      "type": "registry:component",
+      "content": "import * as CollapsiblePrimitive from \"@radix-ui/react-collapsible\";\n\nconst Collapsible = CollapsiblePrimitive.Root;\nconst CollapsibleTrigger = CollapsiblePrimitive.CollapsibleTrigger;\nconst CollapsibleContent = CollapsiblePrimitive.CollapsibleContent;\n\nexport { Collapsible, CollapsibleTrigger, CollapsibleContent };\n\n// /* Add these to your global CSS file (e.g., globals.css) */\n// @layer base {\n//   :root {\n//     /* --- Animation Tokens (Tailwind v4 / @theme) --- */\n//     --animation-accordion-down: ...;\n//     --animation-accordion-up: ...;\n//   }\n// }\n"
+    }
+  ]
+}

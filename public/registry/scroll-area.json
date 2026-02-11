@@ -1,0 +1,17 @@
+{
+  "name": "scroll-area",
+  "dependencies": [
+    "@radix-ui/react-scroll-area"
+  ],
+  "devDependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/scroll-area.tsx",
+      "type": "registry:component",
+      "content": "import * as React from \"react\";\nimport * as ScrollAreaPrimitive from \"@radix-ui/react-scroll-area\";\n\nimport { cn } from \"@/lib/utils\";\n\nconst ScrollArea = React.forwardRef<\n  React.ComponentRef<typeof ScrollAreaPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root>\n>(({ className, children, ...props }, ref) => (\n  <ScrollAreaPrimitive.Root ref={ref} className={cn(\"relative overflow-hidden\", className)} {...props}>\n    <ScrollAreaPrimitive.Viewport className=\"h-full w-full rounded-[inherit]\">{children}</ScrollAreaPrimitive.Viewport>\n    <ScrollBar />\n    <ScrollAreaPrimitive.Corner />\n  </ScrollAreaPrimitive.Root>\n));\nScrollArea.displayName = ScrollAreaPrimitive.Root.displayName;\n\nconst ScrollBar = React.forwardRef<\n  React.ComponentRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>,\n  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>\n>(({ className, orientation = \"vertical\", ...props }, ref) => (\n  <ScrollAreaPrimitive.ScrollAreaScrollbar\n    ref={ref}\n    orientation={orientation}\n    className={cn(\n      \"flex touch-none select-none transition-colors\",\n      orientation === \"vertical\" && \"h-full w-2.5 border-l border-l-transparent p-px\",\n      orientation === \"horizontal\" && \"h-2.5 flex-col border-t border-t-transparent p-px\",\n      className,\n    )}\n    {...props}\n  >\n    <ScrollAreaPrimitive.ScrollAreaThumb className=\"relative flex-1 rounded-full bg-border\" />\n  </ScrollAreaPrimitive.ScrollAreaScrollbar>\n));\nScrollBar.displayName = ScrollAreaPrimitive.ScrollAreaScrollbar.displayName;\n\nexport { ScrollArea, ScrollBar };\n\n// /* Add these to your global CSS file (e.g., globals.css) */\n// @layer base {\n//   :root {\n//     /* --- Colors --- */\n//     --border: ...;\n//   }\n// }\n"
+    }
+  ]
+}

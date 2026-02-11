@@ -1,0 +1,16 @@
+{
+  "name": "toaster",
+  "dependencies": [],
+  "devDependencies": [],
+  "registryDependencies": [
+    "toast",
+    "use-toast"
+  ],
+  "files": [
+    {
+      "path": "components/ui/toaster.tsx",
+      "type": "registry:component",
+      "content": "\"use client\";\n\nimport { useToast } from \"@/hooks/use-toast\";\n\nimport { Toast, ToastClose, ToastDescription, ToastProvider, ToastTitle, ToastViewport } from \"@/components/ui/toast\";\n\nexport function Toaster() {\n  const { toasts } = useToast();\n\n  return (\n    <ToastProvider>\n      {toasts.map(function ({ id, title, description, action, ...props }) {\n        return (\n          <Toast key={id} {...props}>\n            <div className=\"grid gap-1\">\n              {title && <ToastTitle>{title}</ToastTitle>}\n              {description && <ToastDescription>{description}</ToastDescription>}\n            </div>\n            {action}\n            <ToastClose />\n          </Toast>\n        );\n      })}\n      <ToastViewport />\n    </ToastProvider>\n  );\n}\n"
+    }
+  ]
+}

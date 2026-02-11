@@ -1,0 +1,15 @@
+{
+  "name": "textarea",
+  "dependencies": [],
+  "devDependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/textarea.tsx",
+      "type": "registry:component",
+      "content": "import * as React from \"react\";\n\nimport { cn } from \"@/lib/utils\";\n\nexport type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>\n\nconst Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, ...props }, ref) => {\n  return (\n    <textarea\n      className={cn(\n        \"flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50\",\n        className,\n      )}\n      ref={ref}\n      {...props}\n    />\n  );\n});\nTextarea.displayName = \"Textarea\";\n\nexport { Textarea };\n\n// /* Add these to your global CSS file (e.g., globals.css) */\n// @layer base {\n//   :root {\n//     /* --- Colors --- */\n//     --input: ...;\n//     --background: ...;\n//     --ring: ...;\n//     --muted-foreground: ...;\n\n//     /* --- Layout --- */\n//     --radius: ...;\n//   }\n// }\n"
+    }
+  ]
+}

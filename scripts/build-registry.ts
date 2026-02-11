@@ -250,6 +250,7 @@ const components: RegistrySource[] = [
 ];
 
 const REGISTRY_PATH = path.join(process.cwd(), "public/registry");
+const MASTER_CSS_PATH = path.join(process.cwd(), "app/globals.css");
 
 function buildRegistry() {
     if (!fs.existsSync(REGISTRY_PATH)) fs.mkdirSync(REGISTRY_PATH, { recursive: true });
@@ -259,6 +260,7 @@ function buildRegistry() {
         const registryItem = {
             name: component.name,
             dependencies: component.dependencies || [],
+            devDependencies: component.devDependencies || [],
             registryDependencies: component.registryDependencies || [],
             files: component.files.map((file) => ({
                 path: file.target,
@@ -275,6 +277,57 @@ function buildRegistry() {
     console.log("🚀 Registry Built!");
 }
 
+type ColorPalette = Record<string, string>;
+function buildThemeRegistry() {
+    try {
+        if (!fs.existsSync(REGISTRY_PATH)) {
+            fs.mkdirSync(REGISTRY_PATH, { recursive: true });
+        }
+
+        const cssContent = fs.readFileSync(MASTER_CSS_PATH, "utf8");
+
+        const themeMatch = cssContent.match(/@theme\s*{([\s\S]*?)}/);
+        const themeBlock = themeMatch ? themeMatch[1] : "";
+
+        const themeColors: ColorPalette = {};
+        const varRegex = /--color-([a-z0-9-]+):\s*([^;]+);/g;
+
+        let match;
+        while ((match = varRegex.exec(themeBlock)) !== null) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const [_, key] = match;
+            themeColors[key] = `hsl(var(--${key}))`;
+        }
+
+        const themeRegistry = {
+            version: "1.0.0",
+            v4: { css: cssContent },
+            v3: {
+                variables: cssContent.match(/:root\s*{([\s\S]*?)}/)?.[0] || "",
+                config: {
+                    darkMode: ["class"],
+                    theme: {
+                        extend: {
+                            colors: themeColors
+                        }
+                    },
+                    plugins: ['require("tailwindcss-animate")']
+                }
+            }
+        };
+
+        fs.writeFileSync(
+            path.join(REGISTRY_PATH, "theme.json"),
+            JSON.stringify(themeRegistry, null, 2)
+        );
+
+        console.log("🎨 Theme Registry Built Successfully!");
+    } catch (error) {
+        console.error("❌ Registry build failed:", error);
+    }
+}
+
 buildRegistry();
+buildThemeRegistry();
 
 console.log("🚀 Afnoui Registry Built Successfully!");
