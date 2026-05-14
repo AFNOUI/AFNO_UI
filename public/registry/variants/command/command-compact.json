@@ -1,0 +1,12 @@
+{
+  "name": "command/command-compact",
+  "category": "command",
+  "variant": "command-compact",
+  "files": [
+    {
+      "path": "components/ui/command/command-compact.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { User, Settings, LogOut } from \"lucide-react\";\nimport {\n  Command,\n  CommandItem,\n  CommandList,\n  CommandGroup,\n} from \"@/components/ui/command\";\n\nconst data = {\n  \"menu1\": [\n    {\n      \"icon\": \"User\",\n      \"label\": \"Profile\"\n    },\n    {\n      \"icon\": \"Settings\",\n      \"label\": \"Settings\"\n    },\n    {\n      \"icon\": \"LogOut\",\n      \"label\": \"Logout\",\n      \"destructive\": true\n    }\n  ],\n  \"menu2\": [\n    \"Name (A-Z)\",\n    \"Name (Z-A)\",\n    \"Date Created\",\n    \"Date Modified\"\n  ]\n};\n\nexport default function CommandCompactExample() {\n  return (\n    <div className=\"flex gap-4 flex-wrap\">\n      <Command className=\"rounded-lg border border-border shadow-md w-48\">\n        <CommandList>\n          <CommandGroup>\n            {data.menu1.map((item, i) => {\n              const Icon = { User, Settings, LogOut }[item.icon as \"User\" | \"Settings\" | \"LogOut\"];\n              return (\n                <CommandItem key={i} className={item.destructive ? \"text-destructive\" : \"\"}>\n                  {Icon && <Icon className=\"me-2 h-4 w-4\" />}\n                  {item.label}\n                </CommandItem>\n              );\n            })}\n          </CommandGroup>\n        </CommandList>\n      </Command>\n\n      <Command className=\"rounded-lg border border-border shadow-md w-56\">\n        <CommandList>\n          <CommandGroup heading=\"Sort By\">\n            {data.menu2.map((item, i) => (\n              <CommandItem key={i}>{item}</CommandItem>\n            ))}\n          </CommandGroup>\n        </CommandList>\n      </Command>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

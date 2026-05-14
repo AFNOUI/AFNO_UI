@@ -1,0 +1,12 @@
+{
+  "name": "switch/switch-inline",
+  "category": "switch",
+  "variant": "switch-inline",
+  "files": [
+    {
+      "path": "components/ui/switch/switch-inline.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Label } from \"@/components/ui/label\";\nimport { Switch } from \"@/components/ui/switch\";\n\nconst data = { id: \"airplane-mode\", label: \"Airplane Mode\" };\n\nexport default function SwitchInlineExample() {\n  return (\n    <div className=\"flex items-center space-x-2\">\n      <Switch id={data.id} />\n      <Label htmlFor={data.id}>{data.label}</Label>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

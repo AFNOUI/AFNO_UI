@@ -1,0 +1,12 @@
+{
+  "name": "charts/bar/glass",
+  "category": "charts",
+  "variant": "bar/glass",
+  "files": [
+    {
+      "path": "charts/bar/glassChart.tsx",
+      "type": "registry:variant",
+      "content": "import { BarChart } from \"../../components/charts/bar\";\n\nconst data = \"Jan\\n120\\nFeb\\n200\\nMar\\n150\\nApr\\n280\\nMay\\n220\\nJun\\n310\";\n\nexport default function BarChartGlassExample() {\n  return <BarChart data={data} variant=\"glass\" title=\"Glass\" />;\n}"
+    }
+  ]
+}

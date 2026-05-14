@@ -1,0 +1,12 @@
+{
+  "name": "alert/alert-default",
+  "category": "alert",
+  "variant": "alert-default",
+  "files": [
+    {
+      "path": "components/ui/alert/alert-default.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Info } from \"lucide-react\";\nimport { Alert, AlertDescription, AlertTitle } from \"@/components/ui/alert\";\n\nconst data = {\n  \"title\": \"Heads up!\",\n  \"description\": \"You can add components to your app using the cli.\"\n};\n\nexport default function AlertDefaultExample() {\n  return (\n    <div className=\"flex justify-center p-8 w-full\">\n      <Alert className=\"max-w-lg\">\n        <Info className=\"h-4 w-4\" />\n        <AlertTitle>{data.title}</AlertTitle>\n        <AlertDescription>\n          {data.description}\n        </AlertDescription>\n      </Alert>\n    </div>\n  );\n}"
+    }
+  ]
+}

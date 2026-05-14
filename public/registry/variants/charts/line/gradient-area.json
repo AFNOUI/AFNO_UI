@@ -1,0 +1,12 @@
+{
+  "name": "charts/line/gradient-area",
+  "category": "charts",
+  "variant": "line/gradient-area",
+  "files": [
+    {
+      "path": "charts/line/gradient-areaChart.tsx",
+      "type": "registry:variant",
+      "content": "import { LineChart } from \"../../components/charts/line\";\n\nconst data = \"Mon\\n40\\nTue\\n65\\nWed\\n50\\nThu\\n80\\nFri\\n95\\nSat\\n60\\nSun\\n75\";\n\nexport default function LineChartGradientAreaExample() {\n  return <LineChart data={data} variant=\"gradient-area\" title=\"Gradient Area\" />;\n}"
+    }
+  ]
+}

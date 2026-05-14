@@ -1,0 +1,12 @@
+{
+  "name": "charts/funnel/gradient",
+  "category": "charts",
+  "variant": "funnel/gradient",
+  "files": [
+    {
+      "path": "charts/funnel/gradientChart.tsx",
+      "type": "registry:variant",
+      "content": "import { FunnelChart } from \"../../components/charts/funnel\";\n\nconst data = \"Visitors\\n1200\\nLeads\\n640\\nQualified\\n280\\nCustomers\\n92\";\n\nexport default function FunnelChartGradientExample() {\n  return <FunnelChart data={data} variant=\"gradient\" title=\"Gradient\" />;\n}"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "charts/gauge/speedometer",
+  "category": "charts",
+  "variant": "gauge/speedometer",
+  "files": [
+    {
+      "path": "charts/gauge/speedometerChart.tsx",
+      "type": "registry:variant",
+      "content": "import { GaugeChart } from \"../../components/charts/gauge\";\n\nconst data = [{\"label\":\"Revenue\",\"value\":85},{\"label\":\"Growth\",\"value\":62},{\"label\":\"Retention\",\"value\":91},{\"label\":\"Max\",\"value\":100}];\n\nexport default function GaugeChartSpeedometerExample() {\n  return <GaugeChart data={data} variant=\"speedometer\" title=\"Speedometer\" />;\n}"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "charts/treemap/bordered",
+  "category": "charts",
+  "variant": "treemap/bordered",
+  "files": [
+    {
+      "path": "charts/treemap/borderedChart.tsx",
+      "type": "registry:variant",
+      "content": "import { TreemapChart } from \"../../components/charts/treemap\";\n\nconst data = \"Chrome\\n64\\nSafari\\n18\\nEdge\\n9\\nFirefox\\n7\\nOther\\n2\";\n\nexport default function TreemapChartBorderedExample() {\n  return <TreemapChart data={data} variant=\"bordered\" title=\"Bordered\" />;\n}"
+    }
+  ]
+}

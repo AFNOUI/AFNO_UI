@@ -1,0 +1,12 @@
+{
+  "name": "composite-input/composite-input-url",
+  "category": "composite-input",
+  "variant": "composite-input-url",
+  "files": [
+    {
+      "path": "components/ui/composite-input/composite-input-url.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport {\n  Select,\n  SelectItem,\n  SelectValue,\n  SelectContent,\n  SelectTrigger,\n} from \"@/components/ui/select\";\nimport { Input } from \"@/components/ui/input\";\nimport { Label } from \"@/components/ui/label\";\n\nconst protocols = [\n  {\n    \"value\": \"https\",\n    \"label\": \"https://\"\n  },\n  {\n    \"value\": \"http\",\n    \"label\": \"http://\"\n  }\n];\n\nexport default function CompositeInputURLExample() {\n  return (\n    <div className=\"max-w-md space-y-2\">\n      <Label>Website URL</Label>\n      <div className=\"flex\">\n        <Select defaultValue=\"https\">\n          <SelectTrigger className=\"w-[110px] rounded-r-none border-r-0 focus:ring-0 focus:ring-offset-0\">\n            <SelectValue />\n          </SelectTrigger>\n          <SelectContent>\n            {protocols.map((p) => (\n              <SelectItem key={p.value} value={p.value}>\n                {p.label}\n              </SelectItem>\n            ))}\n          </SelectContent>\n        </Select>\n        <Input\n          placeholder=\"example.com\"\n          className=\"rounded-l-none\"\n        />\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

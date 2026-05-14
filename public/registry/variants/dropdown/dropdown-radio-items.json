@@ -1,0 +1,12 @@
+{
+  "name": "dropdown/dropdown-radio-items",
+  "category": "dropdown",
+  "variant": "dropdown-radio-items",
+  "files": [
+    {
+      "path": "components/ui/dropdown/dropdown-radio-items.tsx",
+      "type": "registry:variant",
+      "content": "import React, { useState } from \"react\";\nimport { Sun, Moon, Laptop } from \"lucide-react\";\nimport {\n  DropdownMenu,\n  DropdownMenuContent,\n  DropdownMenuTrigger,\n  DropdownMenuLabel,\n  DropdownMenuSeparator,\n  DropdownMenuRadioGroup,\n  DropdownMenuRadioItem,\n} from \"@/components/ui/dropdown-menu\";\nimport { Button } from \"@/components/ui/button\";\n\nconst data = {\n  \"label\": \"Select Theme\",\n  \"options\": [\n    {\n      \"value\": \"light\",\n      \"icon\": \"Sun\",\n      \"label\": \"Light\"\n    },\n    {\n      \"value\": \"dark\",\n      \"icon\": \"Moon\",\n      \"label\": \"Dark\"\n    },\n    {\n      \"value\": \"system\",\n      \"icon\": \"Laptop\",\n      \"label\": \"System\"\n    }\n  ]\n};\n\nexport default function DropdownRadioItemsExample() {\n  const [theme, setTheme] = useState(\"system\");\n  const icons = { Sun, Moon, Laptop };\n  return (\n    <DropdownMenu>\n      <DropdownMenuTrigger asChild>\n        <Button variant=\"outline\">\n          {theme === \"light\" && <Sun className=\"me-2 h-4 w-4\" />}\n          {theme === \"dark\" && <Moon className=\"me-2 h-4 w-4\" />}\n          {theme === \"system\" && <Laptop className=\"me-2 h-4 w-4\" />}\n          Theme\n        </Button>\n      </DropdownMenuTrigger>\n      <DropdownMenuContent className=\"w-48\">\n        <DropdownMenuLabel>{data.label}</DropdownMenuLabel>\n        <DropdownMenuSeparator />\n        <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>\n          {data.options.map((opt) => {\n            const Icon = icons[opt.icon as keyof typeof icons];\n            return (\n              <DropdownMenuRadioItem key={opt.value} value={opt.value}>\n                {Icon && <Icon className=\"me-2 h-4 w-4\" />}\n                {opt.label}\n              </DropdownMenuRadioItem>\n            );\n          })}\n        </DropdownMenuRadioGroup>\n      </DropdownMenuContent>\n    </DropdownMenu>\n  );\n}\n"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "command/command-basic",
+  "category": "command",
+  "variant": "command-basic",
+  "files": [
+    {
+      "path": "components/ui/command/command-basic.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Calendar, Smile, Calculator, User, CreditCard, Settings } from \"lucide-react\";\nimport {\n  Command,\n  CommandItem,\n  CommandList,\n  CommandEmpty,\n  CommandGroup,\n  CommandInput,\n  CommandSeparator,\n} from \"@/components/ui/command\";\n\nconst data = {\n  \"suggestions\": [\n    {\n      \"icon\": \"Calendar\",\n      \"label\": \"Calendar\"\n    },\n    {\n      \"icon\": \"Smile\",\n      \"label\": \"Search Emoji\"\n    },\n    {\n      \"icon\": \"Calculator\",\n      \"label\": \"Calculator\"\n    }\n  ],\n  \"settings\": [\n    {\n      \"icon\": \"User\",\n      \"label\": \"Profile\"\n    },\n    {\n      \"icon\": \"CreditCard\",\n      \"label\": \"Billing\"\n    },\n    {\n      \"icon\": \"Settings\",\n      \"label\": \"Settings\"\n    }\n  ]\n};\n\nexport default function CommandBasicExample() {\n  return (\n    <Command className=\"rounded-lg border border-border shadow-md max-w-md\">\n      <CommandInput placeholder=\"Type a command or search...\" />\n      <CommandList>\n        <CommandEmpty>No results found.</CommandEmpty>\n        <CommandGroup heading=\"Suggestions\">\n          {data.suggestions.map((item, i) => {\n            const Icon = { Calendar, Smile, Calculator }[item.icon as \"Calendar\" | \"Smile\" | \"Calculator\"];\n            return (\n              <CommandItem key={i}>\n                {Icon && <Icon className=\"me-2 h-4 w-4\" />}\n                <span>{item.label}</span>\n              </CommandItem>\n            );\n          })}\n        </CommandGroup>\n        <CommandSeparator />\n        <CommandGroup heading=\"Settings\">\n          {data.settings.map((item, i) => {\n            const Icon = { User, CreditCard, Settings }[item.icon as \"User\" | \"CreditCard\" | \"Settings\"];\n            return (\n              <CommandItem key={i}>\n                {Icon && <Icon className=\"me-2 h-4 w-4\" />}\n                <span>{item.label}</span>\n              </CommandItem>\n            );\n          })}\n        </CommandGroup>\n      </CommandList>\n    </Command>\n  );\n}\n"
+    }
+  ]
+}

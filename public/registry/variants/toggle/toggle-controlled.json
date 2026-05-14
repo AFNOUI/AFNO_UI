@@ -1,0 +1,12 @@
+{
+  "name": "toggle/toggle-controlled",
+  "category": "toggle",
+  "variant": "toggle-controlled",
+  "files": [
+    {
+      "path": "components/ui/toggle/toggle-controlled.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { useState } from \"react\";\nimport { Bold } from \"lucide-react\";\nimport { Toggle } from \"@/components/ui/toggle\";\n\nexport default function ToggleControlledExample() {\n  const [boldPressed, setBoldPressed] = useState(false);\n\n  return (\n    <div className=\"flex flex-col gap-4\">\n      <Toggle\n        pressed={boldPressed}\n        onPressedChange={setBoldPressed}\n        aria-label=\"Toggle bold\"\n      >\n        <Bold className=\"h-4 w-4\" />\n      </Toggle>\n      <p className=\"text-sm text-muted-foreground\">\n        Bold is {boldPressed ? \"on\" : \"off\"}\n      </p>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

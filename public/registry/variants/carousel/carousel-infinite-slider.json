@@ -1,0 +1,12 @@
+{
+  "name": "carousel/carousel-infinite-slider",
+  "category": "carousel",
+  "variant": "carousel-infinite-slider",
+  "files": [
+    {
+      "path": "components/ui/carousel/carousel-infinite-slider.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport {\n  Carousel,\n  CarouselContent,\n  CarouselItem,\n  CarouselNext,\n  CarouselPrevious,\n  CarouselDots,\n} from \"@/components/ui/carousel\";\nimport { Card, CardContent } from \"@/components/ui/card\";\n\nconst data = [\n  {\n    \"title\": \"First\",\n    \"subtitle\": \"Standard sliding effect\"\n  },\n  {\n    \"title\": \"Second\",\n    \"subtitle\": \"Standard sliding effect\"\n  },\n  {\n    \"title\": \"Third\",\n    \"subtitle\": \"Standard sliding effect\"\n  }\n];\n\nexport default function InfiniteSliderCarouselExample() {\n  return (\n    <Carousel opts={{ loop: true }} className=\"w-full\">\n      <CarouselContent>\n        {data.map((item, index) => (\n          <CarouselItem key={index}>\n            <Card>\n              <CardContent className=\"flex flex-col aspect-video items-center justify-center p-6\">\n                <span className=\"text-3xl font-bold\">{item.title}</span>\n                <span className=\"text-muted-foreground mt-2\">\n                  {item.subtitle}\n                </span>\n              </CardContent>\n            </Card>\n          </CarouselItem>\n        ))}\n      </CarouselContent>\n      <CarouselPrevious />\n      <CarouselNext />\n      <CarouselDots />\n    </Carousel>\n  );\n}\n"
+    }
+  ]
+}

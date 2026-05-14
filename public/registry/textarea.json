@@ -1,0 +1,15 @@
+{
+  "name": "textarea",
+  "dependencies": [],
+  "devDependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "content": "import * as React from \"react\";\n\nimport { cn } from \"@/lib/utils\";\n\nexport type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>\n\nconst Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, ...props }, ref) => {\n  return (\n    <textarea\n      className={cn(\n        \"flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50\",\n        className,\n      )}\n      ref={ref}\n      {...props}\n    />\n  );\n});\nTextarea.displayName = \"Textarea\";\n\nexport { Textarea };\n\n/*\n * ============================================\n * TAILWIND CSS VARIABLES DOCUMENTATION\n * ============================================\n * This component uses Tailwind CSS variables defined in app/globals.css\n *\n * Variables Used:\n * --------------\n * Colors:\n *   - hsl(var(--input))           Line: 11 - Textarea class \"border-input\"\n *                                  Border color\n *   - hsl(var(--background))      Line: 11 - Textarea class \"bg-background\"\n *                                  Background color\n *   - hsl(var(--muted-foreground)) Line: 11 - Textarea class \"placeholder:text-muted-foreground\"\n *                                  Placeholder text color\n *   - hsl(var(--ring))            Line: 11 - Textarea class \"focus-visible:ring-ring\"\n *                                  Focus ring color\n *\n * Layout:\n *   - border-radius: var(--radius) Line: 11 - Textarea class \"rounded-md\"\n *                                  Corner radius\n */\n",
+      "path": "components/ui/textarea.tsx",
+      "type": "registry:component"
+    }
+  ]
+}

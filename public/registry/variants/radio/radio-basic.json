@@ -1,0 +1,12 @@
+{
+  "name": "radio/radio-basic",
+  "category": "radio",
+  "variant": "radio-basic",
+  "files": [
+    {
+      "path": "components/ui/radio/radio-basic.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Label } from \"@/components/ui/label\";\nimport { RadioGroup, RadioGroupItem } from \"@/components/ui/radio-group\";\n\nconst data = {\n  \"defaultValue\": \"comfortable\",\n  \"options\": [\n    {\n      \"value\": \"default\",\n      \"id\": \"r1\",\n      \"label\": \"Default\"\n    },\n    {\n      \"value\": \"comfortable\",\n      \"id\": \"r2\",\n      \"label\": \"Comfortable\"\n    },\n    {\n      \"value\": \"compact\",\n      \"id\": \"r3\",\n      \"label\": \"Compact\"\n    }\n  ]\n};\n\nexport default function RadioBasicExample() {\n  return (\n    <div className=\"space-y-4 max-w-sm\">\n      <RadioGroup defaultValue={data.defaultValue}>\n        {data.options.map((opt) => (\n          <div key={opt.value} className=\"flex items-center space-x-2\">\n            <RadioGroupItem value={opt.value} id={opt.id} />\n            <Label htmlFor={opt.id}>{opt.label}</Label>\n          </div>\n        ))}\n      </RadioGroup>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

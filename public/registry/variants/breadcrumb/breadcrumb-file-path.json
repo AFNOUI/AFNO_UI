@@ -1,0 +1,12 @@
+{
+  "name": "breadcrumb/breadcrumb-file-path",
+  "category": "breadcrumb",
+  "variant": "breadcrumb-file-path",
+  "files": [
+    {
+      "path": "components/ui/breadcrumb/breadcrumb-file-path.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport {\n  Breadcrumb,\n  BreadcrumbItem,\n  BreadcrumbLink,\n  BreadcrumbList,\n  BreadcrumbPage,\n  BreadcrumbSeparator,\n} from \"@/components/ui/breadcrumb\";\n\nconst data = [\n  {\n    \"type\": \"link\",\n    \"href\": \"#\",\n    \"text\": \"src\"\n  },\n  {\n    \"type\": \"link\",\n    \"href\": \"#\",\n    \"text\": \"components\"\n  },\n  {\n    \"type\": \"link\",\n    \"href\": \"#\",\n    \"text\": \"ui\"\n  },\n  {\n    \"type\": \"page\",\n    \"text\": \"breadcrumb.tsx\"\n  }\n];\n\nexport default function BreadcrumbFilePathExample() {\n  return (\n    <div className=\"rounded-md bg-muted px-3 py-2 font-mono text-sm\">\n      <Breadcrumb>\n        <BreadcrumbList>\n          {data.map((item, index) => (\n            <React.Fragment key={index}>\n              {item.type === \"link\" ? (\n                <BreadcrumbItem>\n                  <BreadcrumbLink href={item.href} className=\"text-muted-foreground hover:text-foreground\">\n                    {item.text}\n                  </BreadcrumbLink>\n                </BreadcrumbItem>\n              ) : (\n                <BreadcrumbItem>\n                  <BreadcrumbPage className=\"text-primary\">{item.text}</BreadcrumbPage>\n                </BreadcrumbItem>\n              )}\n              {index < data.length - 1 && (\n                <BreadcrumbSeparator>\n                  <span className=\"text-muted-foreground\">/</span>\n                </BreadcrumbSeparator>\n              )}\n            </React.Fragment>\n          ))}\n        </BreadcrumbList>\n      </Breadcrumb>\n    </div>\n  );\n}"
+    }
+  ]
+}

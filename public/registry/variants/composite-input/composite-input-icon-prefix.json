@@ -1,0 +1,12 @@
+{
+  "name": "composite-input/composite-input-icon-prefix",
+  "category": "composite-input",
+  "variant": "composite-input-icon-prefix",
+  "files": [
+    {
+      "path": "components/ui/composite-input/composite-input-icon-prefix.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Search, Mail, Globe } from \"lucide-react\";\nimport { Input } from \"@/components/ui/input\";\nimport { Label } from \"@/components/ui/label\";\n\nconst data = [\n  {\n    \"id\": \"search\",\n    \"icon\": \"Search\",\n    \"label\": \"Search\",\n    \"placeholder\": \"Search...\"\n  },\n  {\n    \"id\": \"email\",\n    \"icon\": \"Mail\",\n    \"label\": \"Email\",\n    \"placeholder\": \"you@example.com\",\n    \"type\": \"email\"\n  },\n  {\n    \"id\": \"website\",\n    \"icon\": \"Globe\",\n    \"label\": \"Website\",\n    \"placeholder\": \"www.example.com\"\n  }\n];\n\nexport default function CompositeInputIconPrefixExample() {\n  const icons = {\n    Search,\n    Mail,\n    Globe,\n  };\n\n  return (\n    <div className=\"max-w-sm space-y-4\">\n      {data.map((item) => {\n        const Icon = icons[item.icon as keyof typeof icons];\n        return (\n          <div key={item.id} className=\"space-y-2\">\n            <Label>{item.label}</Label>\n            <div className=\"relative\">\n              <Icon className=\"absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground\" />\n              <Input\n                type={item.type || \"text\"}\n                placeholder={item.placeholder}\n                className=\"pl-10\"\n              />\n            </div>\n          </div>\n        );\n      })}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

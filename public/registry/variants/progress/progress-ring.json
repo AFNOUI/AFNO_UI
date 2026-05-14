@@ -1,0 +1,12 @@
+{
+  "name": "progress/progress-ring",
+  "category": "progress",
+  "variant": "progress-ring",
+  "files": [
+    {
+      "path": "components/ui/progress/progress-ring.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { useState, useEffect } from \"react\";\nimport { RingProgress } from \"@/components/lab/progress/progress-shared\";\n\nconst data = [\n  {\n    \"size\": 100,\n    \"thickness\": 10\n  },\n  {\n    \"size\": 120,\n    \"thickness\": 14\n  },\n  {\n    \"size\": 100,\n    \"thickness\": 10,\n    \"value\": 100\n  }\n];\n\nexport default function ProgressRingExample() {\n  const [value, setValue] = useState(0);\n\n  useEffect(() => {\n    const t = setTimeout(() => setValue(75), 500);\n    return () => clearTimeout(t);\n  }, []);\n\n  return (\n    <div className=\"flex flex-wrap gap-12 items-center justify-center py-4\">\n      {data.map((item, i) => (\n        <RingProgress\n          key={i}\n          value={item.value ?? value}\n          size={item.size}\n          thickness={item.thickness}\n        />\n      ))}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

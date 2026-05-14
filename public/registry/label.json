@@ -1,0 +1,18 @@
+{
+  "name": "label",
+  "dependencies": [
+    "@radix-ui/react-label",
+    "class-variance-authority"
+  ],
+  "devDependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "content": "import * as React from \"react\";\nimport * as LabelPrimitive from \"@radix-ui/react-label\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\n\nimport { cn } from \"@/lib/utils\";\n\nconst labelVariants = cva(\"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70\");\n\nconst Label = React.forwardRef<\n  React.ComponentRef<typeof LabelPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> & VariantProps<typeof labelVariants>\n>(({ className, ...props }, ref) => (\n  <LabelPrimitive.Root dir=\"auto\" ref={ref} className={cn(labelVariants(), className)} {...props} />\n));\nLabel.displayName = LabelPrimitive.Root.displayName;\n\nexport { Label };\n\n// /* Add these to your global CSS file (e.g., globals.css) */\n/*\n * ============================================\n * TAILWIND CSS VARIABLES DOCUMENTATION\n * ============================================\n * This component uses Tailwind CSS variables defined in app/globals.css\n * \n * Notes:\n * ------\n * This component is a thin wrapper around Radix UI's Label primitive.\n * It primarily uses hardcoded Tailwind utility classes for styling:\n *   - text-sm (small text size, 14px)\n *   - font-medium (500 font weight)\n *   - leading-none (tight line height)\n *   - peer-disabled classes for disabled state styling\n * \n * No CSS variables are directly used in this component.\n */\n",
+      "path": "components/ui/label.tsx",
+      "type": "registry:component"
+    }
+  ]
+}

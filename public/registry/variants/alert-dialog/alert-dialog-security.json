@@ -1,0 +1,12 @@
+{
+  "name": "alert-dialog/alert-dialog-security",
+  "category": "alert-dialog",
+  "variant": "alert-dialog-security",
+  "files": [
+    {
+      "path": "components/ui/alert-dialog/alert-dialog-security.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Shield } from \"lucide-react\";\nimport { Button } from \"@/components/ui/button\";\nimport {\n  AlertDialog,\n  AlertDialogTitle,\n  AlertDialogAction,\n  AlertDialogCancel,\n  AlertDialogFooter,\n  AlertDialogHeader,\n  AlertDialogTrigger,\n  AlertDialogContent,\n  AlertDialogDescription,\n} from \"@/components/ui/alert-dialog\";\n\nconst data = {\n  \"trigger\": {\n    \"variant\": \"secondary\",\n    \"icon\": \"Shield\",\n    \"text\": \"Change Security Settings\"\n  },\n  \"title\": {\n    \"icon\": \"Shield\",\n    \"text\": \"Verify Your Identity\",\n    \"className\": \"flex items-center gap-2\"\n  },\n  \"description\": \"For your security, we need to verify your identity before making changes to your security settings. A verification code will be sent to your email.\",\n  \"cancelText\": \"Cancel\",\n  \"actionText\": \"Send Verification\"\n} as const;\n\nexport default function AlertDialogSecurityExample() {\n  return (\n    <div className=\"flex flex-wrap gap-4\">\n      <AlertDialog>\n        <AlertDialogTrigger asChild>\n          <Button variant={data.trigger.variant}>\n            <Shield className=\"me-2 h-4 w-4\" />\n            {data.trigger.text}\n          </Button>\n        </AlertDialogTrigger>\n        <AlertDialogContent>\n          <AlertDialogHeader>\n            <AlertDialogTitle className={data.title.className}>\n              <Shield className=\"h-5 w-5 text-primary\" />\n              {data.title.text}\n            </AlertDialogTitle>\n            <AlertDialogDescription>{data.description}</AlertDialogDescription>\n          </AlertDialogHeader>\n          <AlertDialogFooter>\n            <AlertDialogCancel>{data.cancelText}</AlertDialogCancel>\n            <AlertDialogAction>{data.actionText}</AlertDialogAction>\n          </AlertDialogFooter>\n        </AlertDialogContent>\n      </AlertDialog>\n    </div>\n  );\n}"
+    }
+  ]
+}

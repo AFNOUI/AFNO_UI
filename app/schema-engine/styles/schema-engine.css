@@ -1,0 +1,54 @@
+/* Schema engine — local CSS overrides for React Flow that leverage the design
+   tokens defined in src/index.css. Keeping this isolated avoids leaking styles
+   onto other React Flow uses. */
+
+   @keyframes schema-engine-edge-pulse {
+    to { stroke-dashoffset: -28; }
+  }
+  
+  .schema-engine-edge-pulse {
+    animation: schema-engine-edge-pulse 1.4s linear infinite;
+  }
+  
+  /* React Flow attribution pill is hidden via prop, but defensive. */
+  .react-flow__attribution { display: none !important; }
+  
+  .react-flow__handle {
+    border-radius: 9999px !important;
+    border-width: 2px !important;
+  }
+  
+  /* ───────────── MiniMap — clean glass card ───────────── */
+  
+  .schema-engine-minimap {
+    background: hsl(var(--card) / 0.92) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid hsl(var(--border)) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 8px 24px -8px hsl(0 0% 0% / 0.35) !important;
+    overflow: hidden;
+    margin: 12px !important;
+    transition: box-shadow 200ms;
+  }
+  .schema-engine-minimap:hover {
+    box-shadow: 0 12px 32px -10px hsl(var(--primary) / 0.35) !important;
+  }
+  .schema-engine-minimap .react-flow__minimap-node {
+    cursor: pointer;
+    transition: opacity 150ms, filter 150ms;
+  }
+  .schema-engine-minimap .react-flow__minimap-node:hover {
+    filter: drop-shadow(0 0 4px hsl(var(--primary) / 0.7));
+  }
+  
+  .schema-engine-swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    border: 1px solid hsl(var(--border));
+  }
+  .schema-engine-swatch-cool { background: hsl(180 65% 55%); }
+  .schema-engine-swatch-warm { background: hsl(20 90% 60%); }
+  

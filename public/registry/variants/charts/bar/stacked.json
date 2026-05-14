@@ -1,0 +1,12 @@
+{
+  "name": "charts/bar/stacked",
+  "category": "charts",
+  "variant": "bar/stacked",
+  "files": [
+    {
+      "path": "charts/bar/stackedChart.tsx",
+      "type": "registry:variant",
+      "content": "import { BarChart } from \"../../components/charts/bar\";\n\nconst data = \"Jan\\n120\\nFeb\\n200\\nMar\\n150\\nApr\\n280\\nMay\\n220\\nJun\\n310\";\n\nexport default function BarChartStackedExample() {\n  return <BarChart data={data} variant=\"stacked\" title=\"Stacked\" />;\n}"
+    }
+  ]
+}

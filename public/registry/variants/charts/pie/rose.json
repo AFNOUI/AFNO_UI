@@ -1,0 +1,12 @@
+{
+  "name": "charts/pie/rose",
+  "category": "charts",
+  "variant": "pie/rose",
+  "files": [
+    {
+      "path": "charts/pie/roseChart.tsx",
+      "type": "registry:variant",
+      "content": "import { PieChart } from \"../../components/charts/pie\";\n\nconst data = \"Desktop\\n55\\nMobile\\n30\\nTablet\\n15\";\n\nexport default function PieChartRoseExample() {\n  return <PieChart data={data} variant=\"rose\" title=\"Rose\" />;\n}"
+    }
+  ]
+}

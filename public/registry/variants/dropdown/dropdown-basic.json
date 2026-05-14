@@ -1,0 +1,12 @@
+{
+  "name": "dropdown/dropdown-basic",
+  "category": "dropdown",
+  "variant": "dropdown-basic",
+  "files": [
+    {
+      "path": "components/ui/dropdown/dropdown-basic.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { ChevronDown, User, Settings, CreditCard, LogOut } from \"lucide-react\";\nimport {\n  DropdownMenu,\n  DropdownMenuContent,\n  DropdownMenuItem,\n  DropdownMenuSeparator,\n  DropdownMenuTrigger,\n} from \"@/components/ui/dropdown-menu\";\nimport { Button } from \"@/components/ui/button\";\n\nconst data = {\n  \"triggerText\": \"Open Menu\",\n  \"menuItems\": [\n    {\n      \"icon\": \"User\",\n      \"label\": \"Profile\"\n    },\n    {\n      \"icon\": \"Settings\",\n      \"label\": \"Settings\"\n    },\n    {\n      \"icon\": \"CreditCard\",\n      \"label\": \"Billing\"\n    },\n    {\n      \"icon\": \"LogOut\",\n      \"label\": \"Logout\",\n      \"destructive\": true\n    }\n  ]\n};\n\nexport default function DropdownBasicExample() {\n  const icons = { User, Settings, CreditCard, LogOut };\n  return (\n    <DropdownMenu>\n      <DropdownMenuTrigger asChild>\n        <Button variant=\"outline\">\n          {data.triggerText}\n          <ChevronDown className=\"ms-2 h-4 w-4\" />\n        </Button>\n      </DropdownMenuTrigger>\n      <DropdownMenuContent className=\"w-48\">\n        {data.menuItems.map((item, i) => {\n          const Icon = icons[item.icon as keyof typeof icons];\n          return (\n            <React.Fragment key={i}>\n              {item.destructive && i > 0 ? <DropdownMenuSeparator /> : null}\n              <DropdownMenuItem className={item.destructive ? \"text-destructive\" : \"\"}>\n                {Icon && <Icon className=\"me-2 h-4 w-4\" />}\n                {item.label}\n              </DropdownMenuItem>\n            </React.Fragment>\n          );\n        })}\n      </DropdownMenuContent>\n    </DropdownMenu>\n  );\n}\n"
+    }
+  ]
+}

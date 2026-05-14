@@ -1,0 +1,12 @@
+{
+  "name": "charts/line/smooth",
+  "category": "charts",
+  "variant": "line/smooth",
+  "files": [
+    {
+      "path": "charts/line/smoothChart.tsx",
+      "type": "registry:variant",
+      "content": "import { LineChart } from \"../../components/charts/line\";\n\nconst data = \"Mon\\n40\\nTue\\n65\\nWed\\n50\\nThu\\n80\\nFri\\n95\\nSat\\n60\\nSun\\n75\";\n\nexport default function LineChartSmoothExample() {\n  return <LineChart data={data} variant=\"smooth\" title=\"Smooth\" />;\n}"
+    }
+  ]
+}

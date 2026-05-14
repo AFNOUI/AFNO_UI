@@ -1,0 +1,15 @@
+{
+  "version": "1.0.15",
+  "aliases": {
+    "components": "app/components",
+    "utils": "app/lib/utils",
+    "hooks": "app/hooks",
+    "ui": "app/components/ui",
+    "lib": "app/lib",
+    "forms": "app/components/forms",
+    "formVariants": "app/forms",
+    "chartVariants": "app/charts",
+    "tableVariants": "app/tables"
+  },
+  "isV4": true
+}

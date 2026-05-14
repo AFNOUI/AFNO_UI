@@ -1,0 +1,12 @@
+{
+  "name": "carousel/carousel-horizontal-feed",
+  "category": "carousel",
+  "variant": "carousel-horizontal-feed",
+  "files": [
+    {
+      "path": "components/ui/carousel/carousel-horizontal-feed.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport Autoplay from \"embla-carousel-autoplay\";\nimport {\n  Carousel,\n  CarouselContent,\n  CarouselItem,\n} from \"@/components/ui/carousel\";\nimport { cn } from \"@/lib/utils\";\n\nconst alerts = [\n  {\n    \"text\": \"Success\",\n    \"c\": \"bg-green-500\"\n  },\n  {\n    \"text\": \"Warning\",\n    \"c\": \"bg-yellow-500\"\n  },\n  {\n    \"text\": \"Error\",\n    \"c\": \"bg-red-500\"\n  },\n  {\n    \"text\": \"Info\",\n    \"c\": \"bg-blue-500\"\n  }\n];\n\nexport default function HorizontalFeedCarouselExample() {\n  return (\n    <Carousel\n      opts={{ loop: true }}\n      plugins={[Autoplay({ delay: 2500 })]}\n      className=\"w-full\"\n    >\n      <CarouselContent>\n        {alerts.map((item, i) => (\n          <CarouselItem key={i}>\n            <div className=\"p-4 rounded-xl bg-card border\">\n              <div className=\"flex items-center gap-3\">\n                <div className={cn(\"w-3 h-3 rounded-full\", item.c)} />\n                <span className=\"font-medium\">\n                  System Alert: {item.text} Level\n                </span>\n              </div>\n            </div>\n          </CarouselItem>\n        ))}\n      </CarouselContent>\n    </Carousel>\n  );\n}\n"
+    }
+  ]
+}

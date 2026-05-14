@@ -1,0 +1,12 @@
+{
+  "name": "collapsible/collapsible-animated",
+  "category": "collapsible",
+  "variant": "collapsible-animated",
+  "files": [
+    {
+      "path": "components/ui/collapsible/collapsible-animated.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { ChevronDown } from \"lucide-react\";\nimport {\n  Collapsible,\n  CollapsibleContent,\n  CollapsibleTrigger,\n} from \"@/components/ui/collapsible\";\nimport { Card, CardContent, CardHeader, CardTitle } from \"@/components/ui/card\";\n\nconst data = [\n  {\n    \"action\": \"Logged in\",\n    \"time\": \"2 minutes ago\"\n  },\n  {\n    \"action\": \"Updated profile\",\n    \"time\": \"1 hour ago\"\n  },\n  {\n    \"action\": \"Created new project\",\n    \"time\": \"3 hours ago\"\n  },\n  {\n    \"action\": \"Invited team member\",\n    \"time\": \"1 day ago\"\n  }\n];\n\nexport default function CollapsibleAnimatedExample() {\n  return (\n    <div className=\"max-w-md\">\n      <Card>\n        <Collapsible defaultOpen>\n          <CardHeader className=\"pb-2\">\n            <CollapsibleTrigger className=\"flex items-center justify-between w-full\">\n              <CardTitle className=\"text-base\">Activity Log</CardTitle>\n              <ChevronDown className=\"h-4 w-4 transition-transform duration-200 [[data-state=closed]>&]:-rotate-90\" />\n            </CollapsibleTrigger>\n          </CardHeader>\n          <CollapsibleContent className=\"data-[state=open]:animate-slideDown data-[state=closed]:animate-slideUp\">\n            <CardContent className=\"pt-0\">\n              <div className=\"space-y-3\">\n                {data.map((log, index) => (\n                  <div key={index} className=\"flex justify-between text-sm border-b pb-2 last:border-0\">\n                    <span>{log.action}</span>\n                    <span className=\"text-muted-foreground\">{log.time}</span>\n                  </div>\n                ))}\n              </div>\n            </CardContent>\n          </CollapsibleContent>\n        </Collapsible>\n      </Card>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "toggle/toggle-list-type",
+  "category": "toggle",
+  "variant": "toggle-list-type",
+  "files": [
+    {
+      "path": "components/ui/toggle/toggle-list-type.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { List, ListOrdered } from \"lucide-react\";\nimport { ToggleGroup, ToggleGroupItem } from \"@/components/ui/toggle-group\";\n\nexport default function ToggleListTypeExample() {\n  return (\n    <ToggleGroup type=\"single\" defaultValue=\"bullet\">\n      <ToggleGroupItem\n        value=\"bullet\"\n        aria-label=\"Bullet list\"\n        className=\"gap-2\"\n      >\n        <List className=\"h-4 w-4\" />\n        Bullet\n      </ToggleGroupItem>\n      <ToggleGroupItem\n        value=\"numbered\"\n        aria-label=\"Numbered list\"\n        className=\"gap-2\"\n      >\n        <ListOrdered className=\"h-4 w-4\" />\n        Numbered\n      </ToggleGroupItem>\n    </ToggleGroup>\n  );\n}\n"
+    }
+  ]
+}

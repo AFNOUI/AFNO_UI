@@ -1,0 +1,12 @@
+{
+  "name": "toggle/toggle-view-switcher",
+  "category": "toggle",
+  "variant": "toggle-view-switcher",
+  "files": [
+    {
+      "path": "components/ui/toggle/toggle-view-switcher.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Grid, LayoutList } from \"lucide-react\";\nimport { ToggleGroup, ToggleGroupItem } from \"@/components/ui/toggle-group\";\n\nexport default function ToggleViewSwitcherExample() {\n  return (\n    <ToggleGroup type=\"single\" defaultValue=\"grid\" variant=\"outline\">\n      <ToggleGroupItem value=\"grid\" aria-label=\"Grid view\">\n        <Grid className=\"h-4 w-4\" />\n      </ToggleGroupItem>\n      <ToggleGroupItem value=\"list\" aria-label=\"List view\">\n        <LayoutList className=\"h-4 w-4\" />\n      </ToggleGroupItem>\n    </ToggleGroup>\n  );\n}\n"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "charts/area/range",
+  "category": "charts",
+  "variant": "area/range",
+  "files": [
+    {
+      "path": "charts/area/rangeChart.tsx",
+      "type": "registry:variant",
+      "content": "import { AreaChart } from \"../../components/charts/area\";\n\nconst data = \"Jan\\n30\\nFeb\\n45\\nMar\\n38\\nApr\\n60\\nMay\\n55\\nJun\\n72\";\n\nexport default function AreaChartRangeExample() {\n  return <AreaChart data={data} variant=\"range\" title=\"Range\" />;\n}"
+    }
+  ]
+}

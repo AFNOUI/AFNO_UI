@@ -1,0 +1,12 @@
+{
+  "name": "accordion/accordion-multiple",
+  "category": "accordion",
+  "variant": "accordion-multiple",
+  "files": [
+    {
+      "path": "components/ui/accordion/accordion-multiple.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\n    \nimport {\n  Accordion,\n  AccordionItem,\n  AccordionContent,\n  AccordionTrigger,\n} from \"@/components/ui/accordion\";\n\nconst data = [\n  {\n    \"value\": \"item-1\",\n    \"trigger\": \"Can I open multiple items?\",\n    \"content\": \"Yes! This version uses type='multiple' so you don't have to close one to open another.\"\n  },\n  {\n    \"value\": \"item-2\",\n    \"trigger\": \"Is it still accessible?\",\n    \"content\": \"Absolutely. It maintains all WAI-ARIA standards for screen readers.\"\n  }\n];\n\nexport default function AccordionMultipleExample() {\n  return (\n    <div className=\"flex justify-center p-8 w-full\">\n      <Accordion type=\"multiple\" className=\"w-full max-w-lg\">\n        {data.map((item) => (\n          <AccordionItem key={item.value} value={item.value}>\n            <AccordionTrigger>{item.trigger}</AccordionTrigger>\n            <AccordionContent>{item.content}</AccordionContent>\n          </AccordionItem>\n        ))}\n      </Accordion>\n    </div>\n  );\n}"
+    }
+  ]
+}

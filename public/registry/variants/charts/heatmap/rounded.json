@@ -1,0 +1,12 @@
+{
+  "name": "charts/heatmap/rounded",
+  "category": "charts",
+  "variant": "heatmap/rounded",
+  "files": [
+    {
+      "path": "charts/heatmap/roundedChart.tsx",
+      "type": "registry:variant",
+      "content": "import { HeatmapChart } from \"../../components/charts/heatmap\";\n\nconst data = \"Mon\\n12\\nTue\\n8\\nWed\\n15\\nThu\\n20\\nFri\\n7\\nSat\\n3\\nSun\\n10\";\n\nexport default function HeatmapChartRoundedExample() {\n  return <HeatmapChart data={data} variant=\"rounded\" title=\"Rounded\" />;\n}"
+    }
+  ]
+}

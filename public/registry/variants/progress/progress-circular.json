@@ -1,0 +1,12 @@
+{
+  "name": "progress/progress-circular",
+  "category": "progress",
+  "variant": "progress-circular",
+  "files": [
+    {
+      "path": "components/ui/progress/progress-circular.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { CircularProgress } from \"@/components/lab/progress/progress-shared\";\n\ntype ProgressVariant = \"primary\" | \"success\" | \"warning\" | \"error\";\n\nconst data: { value: number; size: number; label: string; variant?: ProgressVariant }[] = [\n  {\n    \"value\": 25,\n    \"size\": 60,\n    \"label\": \"Small\"\n  },\n  {\n    \"value\": 50,\n    \"size\": 80,\n    \"label\": \"Medium\"\n  },\n  {\n    \"value\": 75,\n    \"size\": 100,\n    \"label\": \"Large\"\n  },\n  {\n    \"value\": 100,\n    \"size\": 100,\n    \"label\": \"Complete\",\n    \"variant\": \"success\"\n  }\n];\n\nexport default function ProgressCircularExample() {\n  return (\n    <div className=\"flex flex-wrap gap-8 items-center justify-center py-4\">\n      {data.map((item) => (\n        <div key={item.label} className=\"text-center space-y-2\">\n          <CircularProgress\n            value={item.value}\n            size={item.size}\n            variant={item.variant || \"primary\"}\n          />\n          <p className=\"text-xs text-muted-foreground\">{item.label}</p>\n        </div>\n      ))}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

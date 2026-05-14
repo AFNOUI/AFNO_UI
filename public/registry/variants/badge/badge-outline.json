@@ -1,0 +1,12 @@
+{
+  "name": "badge/badge-outline",
+  "category": "badge",
+  "variant": "badge-outline",
+  "files": [
+    {
+      "path": "components/ui/badge/badge-outline.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Badge } from \"@/components/ui/badge\";\n\nconst data = [\n  {\n    \"text\": \"Outline\"\n  }\n];\n\nexport default function BadgeOutlineExample() {\n  return (\n    <div className=\"flex flex-wrap gap-3\">\n      {data.map((item, index) => (\n        <Badge key={index} variant=\"outline\">{item.text}</Badge>\n      ))}\n    </div>\n  );\n}"
+    }
+  ]
+}

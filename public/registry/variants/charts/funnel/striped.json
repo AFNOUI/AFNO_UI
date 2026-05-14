@@ -1,0 +1,12 @@
+{
+  "name": "charts/funnel/striped",
+  "category": "charts",
+  "variant": "funnel/striped",
+  "files": [
+    {
+      "path": "charts/funnel/stripedChart.tsx",
+      "type": "registry:variant",
+      "content": "import { FunnelChart } from \"../../components/charts/funnel\";\n\nconst data = \"Visitors\\n1200\\nLeads\\n640\\nQualified\\n280\\nCustomers\\n92\";\n\nexport default function FunnelChartStripedExample() {\n  return <FunnelChart data={data} variant=\"striped\" title=\"Striped\" />;\n}"
+    }
+  ]
+}

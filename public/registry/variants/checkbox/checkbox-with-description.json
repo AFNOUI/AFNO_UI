@@ -1,0 +1,12 @@
+{
+  "name": "checkbox/checkbox-with-description",
+  "category": "checkbox",
+  "variant": "checkbox-with-description",
+  "files": [
+    {
+      "path": "components/ui/checkbox/checkbox-with-description.tsx",
+      "type": "registry:variant",
+      "content": "import React, { useState } from \"react\";\nimport { Label } from \"@/components/ui/label\";\nimport { Checkbox } from \"@/components/ui/checkbox\";\n\nconst data = [\n  {\n    \"label\": \"Email notifications\",\n    \"description\": \"Receive email notifications when someone mentions you.\",\n    \"defaultChecked\": false\n  },\n  {\n    \"label\": \"Push notifications\",\n    \"description\": \"Receive push notifications on your mobile device.\",\n    \"defaultChecked\": true\n  },\n  {\n    \"label\": \"SMS notifications\",\n    \"description\": \"Receive important updates via SMS.\",\n    \"defaultChecked\": false\n  }\n];\n\ninterface SettingItem {\n  label: string;\n  description: string;\n  defaultChecked?: boolean;\n}\n\nexport default function CheckboxWithDescriptionExample() {\n  const [checkedStates, setCheckedStates] = useState<boolean[]>([true, false, false]);\n\n  const handleCheckedChange = (index: number, checked: boolean) => {\n    setCheckedStates(prev => {\n      const newStates = [...prev];\n      newStates[index] = checked;\n      return newStates;\n    });\n  };\n\n  return (\n    <div className=\"space-y-4 max-w-md\">\n      {data.map((item, index) => (\n        <div key={index} className=\"flex items-start space-x-3\">\n          <Checkbox\n            id={`desc-${index}`}\n            checked={checkedStates[index]}\n            onCheckedChange={(c) => handleCheckedChange(index, c as boolean)}\n            className=\"mt-0.5\"\n          />\n          <div className=\"space-y-0.5\">\n            <Label htmlFor={`desc-${index}`} className=\"cursor-pointer font-medium leading-none\">{item.label}</Label>\n            <p className=\"text-sm text-muted-foreground leading-relaxed\">{item.description}</p>\n          </div>\n        </div>\n      ))}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

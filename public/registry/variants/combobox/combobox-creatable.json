@@ -1,0 +1,12 @@
+{
+  "name": "combobox/combobox-creatable",
+  "category": "combobox",
+  "variant": "combobox-creatable",
+  "files": [
+    {
+      "path": "components/ui/combobox/combobox-creatable.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Building2, Plus } from \"lucide-react\";\nimport {\n  Combobox,\n  ComboboxList,\n  ComboboxItem,\n  ComboboxEmpty,\n  ComboboxInput,\n  ComboboxGroup,\n  ComboboxTrigger,\n  ComboboxContent,\n} from \"@/components/ui/combobox\";\nimport { Button } from \"@/components/ui/button\";\n\nconst data = [\n  {\n    \"value\": \"acme\",\n    \"label\": \"Acme Inc.\"\n  },\n  {\n    \"value\": \"globex\",\n    \"label\": \"Globex Corp.\"\n  }\n];\n\nexport default function ComboboxCreatableExample() {\n  return (\n    <Combobox value=\"\" onValueChange={() => { }}>\n      <ComboboxTrigger className=\"w-[240px]\">\n        <p className=\"flex items-center gap-2\">\n          <Building2 className=\"me-2 h-4 w-4 opacity-50\" />\n          Select or create...\n        </p>\n      </ComboboxTrigger>\n      <ComboboxContent className=\"w-[240px]\">\n        <ComboboxInput placeholder=\"Search...\" />\n        <ComboboxList>\n          <ComboboxEmpty>\n            <Button variant=\"ghost\" className=\"w-full justify-start text-xs h-8 px-2\" onClick={() => alert('Create logic')}>\n              <Plus className=\"me-2 h-3 w-3\" /> Create \"New Item\"\n            </Button>\n          </ComboboxEmpty>\n          <ComboboxGroup heading=\"Existing\">\n            {data.map((company) => (\n              <ComboboxItem key={company.value} value={company.value}>\n                {company.label}\n              </ComboboxItem>\n            ))}\n          </ComboboxGroup>\n        </ComboboxList>\n      </ComboboxContent>\n    </Combobox>\n  );\n}\n"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "charts/pie/half",
+  "category": "charts",
+  "variant": "pie/half",
+  "files": [
+    {
+      "path": "charts/pie/halfChart.tsx",
+      "type": "registry:variant",
+      "content": "import { PieChart } from \"../../components/charts/pie\";\n\nconst data = \"Desktop\\n55\\nMobile\\n30\\nTablet\\n15\";\n\nexport default function PieChartHalfExample() {\n  return <PieChart data={data} variant=\"half\" title=\"Half\" />;\n}"
+    }
+  ]
+}

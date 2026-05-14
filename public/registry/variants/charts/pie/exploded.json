@@ -1,0 +1,12 @@
+{
+  "name": "charts/pie/exploded",
+  "category": "charts",
+  "variant": "pie/exploded",
+  "files": [
+    {
+      "path": "charts/pie/explodedChart.tsx",
+      "type": "registry:variant",
+      "content": "import { PieChart } from \"../../components/charts/pie\";\n\nconst data = \"Desktop\\n55\\nMobile\\n30\\nTablet\\n15\";\n\nexport default function PieChartExplodedExample() {\n  return <PieChart data={data} variant=\"exploded\" title=\"Exploded\" />;\n}"
+    }
+  ]
+}

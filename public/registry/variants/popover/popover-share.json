@@ -1,0 +1,12 @@
+{
+  "name": "popover/popover-share",
+  "category": "popover",
+  "variant": "popover-share",
+  "files": [
+    {
+      "path": "components/ui/popover/popover-share.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Share2, X, Mail, Link2, Copy } from \"lucide-react\";\nimport {\n  Popover,\n  PopoverContent,\n  PopoverTrigger,\n} from \"@/components/ui/popover\";\nimport { Input } from \"@/components/ui/input\";\nimport { Button } from \"@/components/ui/button\";\n\nconst data = {\n  \"title\": \"Share this page\",\n  \"copyUrl\": \"https://example.com/page\"\n};\n\nexport default function PopoverShareExample() {\n  return (\n    <Popover>\n      <PopoverTrigger asChild>\n        <Button>\n          <Share2 className=\"me-2 h-4 w-4\" />\n          Share\n        </Button>\n      </PopoverTrigger>\n      <PopoverContent className=\"w-72\">\n        <div className=\"space-y-4\">\n          <h4 className=\"font-medium\">{data.title}</h4>\n          <div className=\"flex gap-2\">\n            <Button variant=\"outline\" size=\"icon\" className=\"flex-1\">\n              <X className=\"h-4 w-4\" />\n            </Button>\n            <Button variant=\"outline\" size=\"icon\" className=\"flex-1\">\n              <Mail className=\"h-4 w-4\" />\n            </Button>\n            <Button variant=\"outline\" size=\"icon\" className=\"flex-1\">\n              <Link2 className=\"h-4 w-4\" />\n            </Button>\n          </div>\n          <div className=\"flex gap-2\">\n            <Input readOnly value={data.copyUrl} className=\"text-xs\" />\n            <Button size=\"icon\" variant=\"secondary\">\n              <Copy className=\"h-4 w-4\" />\n            </Button>\n          </div>\n        </div>\n      </PopoverContent>\n    </Popover>\n  );\n}\n"
+    }
+  ]
+}

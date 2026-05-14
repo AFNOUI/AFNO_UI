@@ -1,0 +1,12 @@
+{
+  "name": "charts/bump/default",
+  "category": "charts",
+  "variant": "bump/default",
+  "files": [
+    {
+      "path": "charts/bump/defaultChart.tsx",
+      "type": "registry:variant",
+      "content": "import { BumpChart } from \"../../components/charts/bump\";\n\nconst data = [{\"label\":\"Alpha\",\"value\":95},{\"label\":\"Beta\",\"value\":72},{\"label\":\"Gamma\",\"value\":88},{\"label\":\"Delta\",\"value\":56},{\"label\":\"Epsilon\",\"value\":81}];\n\nexport default function BumpChartDefaultExample() {\n  return <BumpChart data={data} variant=\"default\" title=\"Default\" />;\n}"
+    }
+  ]
+}

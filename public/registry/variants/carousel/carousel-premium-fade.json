@@ -1,0 +1,12 @@
+{
+  "name": "carousel/carousel-premium-fade",
+  "category": "carousel",
+  "variant": "carousel-premium-fade",
+  "files": [
+    {
+      "path": "components/ui/carousel/carousel-premium-fade.tsx",
+      "type": "registry:variant",
+      "content": "import React, { useRef } from \"react\";\nimport Fade from \"embla-carousel-fade\";\nimport Autoplay from \"embla-carousel-autoplay\";\nimport {\n  Carousel,\n  CarouselItem,\n  CarouselDots,\n  CarouselContent,\n} from \"@/components/ui/carousel\";\n\nconst data = [\n  1,\n  2,\n  3\n];\n\nexport default function PremiumFadeCarouselExample() {\n  const autoplay = useRef(Autoplay({ delay: 3000, stopOnInteraction: false }));\n  const fade = useRef(Fade());\n\n  return (\n    <Carousel\n      opts={{ loop: true }}\n      plugins={[autoplay.current, fade.current]}\n      className=\"w-full\"\n    >\n      <CarouselContent>\n        {data.map((i) => (\n          <CarouselItem key={i}>\n            <div className=\"aspect-video rounded-xl bg-linear-to-br from-primary/30 to-primary/60 flex items-center justify-center\">\n              <span className=\"text-4xl font-bold text-primary-foreground\">\n                Slide {i}\n              </span>\n            </div>\n          </CarouselItem>\n        ))}\n      </CarouselContent>\n      <CarouselDots />\n    </Carousel>\n  );\n}\n"
+    }
+  ]
+}

@@ -1,0 +1,188 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`tableCodeGenerator / generateAllFiles (per template × per dataMode) > invoiceTracker (static-rich) / api — file shape locked 1`] = `
+[
+  {
+    "codeBytes": 570,
+    "isFixed": false,
+    "language": "tsx",
+    "name": "DataTable.tsx",
+    "path": "src/components/tables/DataTable.tsx",
+  },
+  {
+    "codeBytes": 2859,
+    "isFixed": false,
+    "language": "ts",
+    "name": "tableConfig.ts",
+    "path": "src/components/tables/tableConfig.ts",
+  },
+  {
+    "codeBytes": 2494,
+    "isFixed": false,
+    "language": "ts",
+    "name": "useRowInteractions.ts",
+    "path": "src/components/tables/useRowInteractions.ts",
+  },
+]
+`;
+
+exports[`tableCodeGenerator / generateAllFiles (per template × per dataMode) > invoiceTracker (static-rich) / static — file shape locked 1`] = `
+[
+  {
+    "codeBytes": 570,
+    "isFixed": false,
+    "language": "tsx",
+    "name": "DataTable.tsx",
+    "path": "src/components/tables/DataTable.tsx",
+  },
+  {
+    "codeBytes": 2859,
+    "isFixed": false,
+    "language": "ts",
+    "name": "tableConfig.ts",
+    "path": "src/components/tables/tableConfig.ts",
+  },
+  {
+    "codeBytes": 2494,
+    "isFixed": false,
+    "language": "ts",
+    "name": "useRowInteractions.ts",
+    "path": "src/components/tables/useRowInteractions.ts",
+  },
+]
+`;
+
+exports[`tableCodeGenerator / generateAllFiles (per template × per dataMode) > pinnedVirtualized (DnD/virt) / api — file shape locked 1`] = `
+[
+  {
+    "codeBytes": 272,
+    "isFixed": false,
+    "language": "tsx",
+    "name": "DataTable.tsx",
+    "path": "src/components/tables/DataTable.tsx",
+  },
+  {
+    "codeBytes": 4026,
+    "isFixed": false,
+    "language": "ts",
+    "name": "tableConfig.ts",
+    "path": "src/components/tables/tableConfig.ts",
+  },
+]
+`;
+
+exports[`tableCodeGenerator / generateAllFiles (per template × per dataMode) > pinnedVirtualized (DnD/virt) / static — file shape locked 1`] = `
+[
+  {
+    "codeBytes": 272,
+    "isFixed": false,
+    "language": "tsx",
+    "name": "DataTable.tsx",
+    "path": "src/components/tables/DataTable.tsx",
+  },
+  {
+    "codeBytes": 4026,
+    "isFixed": false,
+    "language": "ts",
+    "name": "tableConfig.ts",
+    "path": "src/components/tables/tableConfig.ts",
+  },
+]
+`;
+
+exports[`tableCodeGenerator / generateAllFiles (per template × per dataMode) > serverSideCRM (api-rich) / api — file shape locked 1`] = `
+[
+  {
+    "codeBytes": 1451,
+    "isFixed": false,
+    "language": "tsx",
+    "name": "DataTable.tsx",
+    "path": "src/components/tables/DataTable.tsx",
+  },
+  {
+    "codeBytes": 4992,
+    "isFixed": false,
+    "language": "ts",
+    "name": "tableConfig.ts",
+    "path": "src/components/tables/tableConfig.ts",
+  },
+  {
+    "codeBytes": 2503,
+    "isFixed": false,
+    "language": "ts",
+    "name": "useRowInteractions.ts",
+    "path": "src/components/tables/useRowInteractions.ts",
+  },
+  {
+    "codeBytes": 7935,
+    "isFixed": false,
+    "language": "ts",
+    "name": "useTableData.ts",
+    "path": "src/components/tables/useTableData.ts",
+  },
+]
+`;
+
+exports[`tableCodeGenerator / generateAllFiles (per template × per dataMode) > serverSideCRM (api-rich) / static — file shape locked 1`] = `
+[
+  {
+    "codeBytes": 570,
+    "isFixed": false,
+    "language": "tsx",
+    "name": "DataTable.tsx",
+    "path": "src/components/tables/DataTable.tsx",
+  },
+  {
+    "codeBytes": 4992,
+    "isFixed": false,
+    "language": "ts",
+    "name": "tableConfig.ts",
+    "path": "src/components/tables/tableConfig.ts",
+  },
+  {
+    "codeBytes": 2503,
+    "isFixed": false,
+    "language": "ts",
+    "name": "useRowInteractions.ts",
+    "path": "src/components/tables/useRowInteractions.ts",
+  },
+]
+`;
+
+exports[`tableCodeGenerator / generateAllFiles (per template × per dataMode) > simpleList / api — file shape locked 1`] = `
+[
+  {
+    "codeBytes": 272,
+    "isFixed": false,
+    "language": "tsx",
+    "name": "DataTable.tsx",
+    "path": "src/components/tables/DataTable.tsx",
+  },
+  {
+    "codeBytes": 1840,
+    "isFixed": false,
+    "language": "ts",
+    "name": "tableConfig.ts",
+    "path": "src/components/tables/tableConfig.ts",
+  },
+]
+`;
+
+exports[`tableCodeGenerator / generateAllFiles (per template × per dataMode) > simpleList / static — file shape locked 1`] = `
+[
+  {
+    "codeBytes": 272,
+    "isFixed": false,
+    "language": "tsx",
+    "name": "DataTable.tsx",
+    "path": "src/components/tables/DataTable.tsx",
+  },
+  {
+    "codeBytes": 1840,
+    "isFixed": false,
+    "language": "ts",
+    "name": "tableConfig.ts",
+    "path": "src/components/tables/tableConfig.ts",
+  },
+]
+`;

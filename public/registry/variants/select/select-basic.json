@@ -1,0 +1,12 @@
+{
+  "name": "select/select-basic",
+  "category": "select",
+  "variant": "select-basic",
+  "files": [
+    {
+      "path": "components/ui/select/select-basic.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport {\n  Select,\n  SelectContent,\n  SelectItem,\n  SelectTrigger,\n  SelectValue,\n} from \"@/components/ui/select\";\nimport { Label } from \"@/components/ui/label\";\n\nconst data = {\n  \"placeholder\": \"Select a theme\",\n  \"options\": [\n    {\n      \"value\": \"light\",\n      \"label\": \"Light\"\n    },\n    {\n      \"value\": \"dark\",\n      \"label\": \"Dark\"\n    },\n    {\n      \"value\": \"system\",\n      \"label\": \"System\"\n    }\n  ]\n};\n\nexport default function SelectBasicExample() {\n  return (\n    <div className=\"max-w-xs space-y-4\">\n      <div className=\"space-y-2\">\n        <Label>Theme</Label>\n        <Select>\n          <SelectTrigger>\n            <SelectValue placeholder={data.placeholder} />\n          </SelectTrigger>\n          <SelectContent>\n            {data.options.map((opt) => (\n              <SelectItem key={opt.value} value={opt.value}>\n                {opt.label}\n              </SelectItem>\n            ))}\n          </SelectContent>\n        </Select>\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

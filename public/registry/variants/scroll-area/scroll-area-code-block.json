@@ -1,0 +1,12 @@
+{
+  "name": "scroll-area/scroll-area-code-block",
+  "category": "scroll-area",
+  "variant": "scroll-area-code-block",
+  "files": [
+    {
+      "path": "components/ui/scroll-area/scroll-area-code-block.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { ScrollArea } from \"@/components/ui/scroll-area\";\n\nconst codeBlock = \"import { useState, useEffect } from 'react';\\n\\ninterface User {\\n  id: number;\\n  name: string;\\n  email: string;\\n  role: 'admin' | 'user' | 'guest';\\n}\\n\\nfunction useUsers() {\\n  const [users, setUsers] = useState<User[]>([]);\\n  const [loading, setLoading] = useState(true);\\n  const [error, setError] = useState<Error | null>(null);\\n\\n  useEffect(() => {\\n    async function fetchUsers() {\\n      try {\\n        const response = await fetch('/api/users');\\n        const data = await response.json();\\n        setUsers(data);\\n      } catch (err) {\\n        setError(err as Error);\\n      } finally {\\n        setLoading(false);\\n      }\\n    }\\n\\n    fetchUsers();\\n  }, []);\\n\\n  return { users, loading, error };\\n}\\n\\nexport default useUsers;\";\n\nexport default function ScrollAreaCodeBlockExample() {\n  return (\n    <ScrollArea className=\"h-[200px] w-full max-w-lg rounded-md border bg-muted/50\">\n      <pre className=\"p-4 text-sm font-mono\">\n        <code>{codeBlock}</code>\n      </pre>\n    </ScrollArea>\n  );\n}\n"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "charts/donut-progress/gradient",
+  "category": "charts",
+  "variant": "donut-progress/gradient",
+  "files": [
+    {
+      "path": "charts/donut-progress/gradientChart.tsx",
+      "type": "registry:variant",
+      "content": "import { DonutProgressChart } from \"../../components/charts/donut-progress\";\n\nconst data = [{\"label\":\"Complete\",\"value\":65},{\"label\":\"In Progress\",\"value\":20},{\"label\":\"Pending\",\"value\":15},{\"label\":\"Max\",\"value\":100}];\n\nexport default function DonutProgressChartGradientExample() {\n  return <DonutProgressChart data={data} variant=\"gradient\" title=\"Gradient\" />;\n}"
+    }
+  ]
+}

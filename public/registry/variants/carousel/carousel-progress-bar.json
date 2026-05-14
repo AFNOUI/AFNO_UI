@@ -1,0 +1,12 @@
+{
+  "name": "carousel/carousel-progress-bar",
+  "category": "carousel",
+  "variant": "carousel-progress-bar",
+  "files": [
+    {
+      "path": "components/ui/carousel/carousel-progress-bar.tsx",
+      "type": "registry:variant",
+      "content": "import React, { useState, useEffect, useRef } from \"react\";\nimport Autoplay from \"embla-carousel-autoplay\";\nimport {\n  Carousel,\n  CarouselContent,\n  CarouselItem,\n  type CarouselApi,\n} from \"@/components/ui/carousel\";\nimport { cn } from \"@/lib/utils\";\n\nconst colors = [\n  {\n    \"color\": \"bg-rose-500\"\n  },\n  {\n    \"color\": \"bg-amber-500\"\n  },\n  {\n    \"color\": \"bg-lime-500\"\n  },\n  {\n    \"color\": \"bg-sky-500\"\n  }\n];\n\nexport default function ProgressBarCarouselExample() {\n  const [api, setApi] = useState<CarouselApi>();\n  const [current, setCurrent] = useState(0);\n  const [count, setCount] = useState(0);\n  const autoplay = useRef(Autoplay({ delay: 3000, stopOnInteraction: false }));\n\n  useEffect(() => {\n    if (!api) return;\n    setCount(api.scrollSnapList().length);\n    setCurrent(api.selectedScrollSnap() + 1);\n    api.on(\"select\", () => setCurrent(api.selectedScrollSnap() + 1));\n  }, [api]);\n\n  return (\n    <Carousel \n      opts={{ loop: true }} \n      setApi={setApi}\n      plugins={[autoplay.current]}\n      className=\"w-full\"\n    >\n      <CarouselContent>\n        {colors.map((color, i) => (\n          <CarouselItem key={i}>\n            <div className={cn(\"aspect-video rounded-xl flex items-center justify-center text-white text-3xl font-bold\", color)}>\n              Slide {i + 1}\n            </div>\n          </CarouselItem>\n        ))}\n      </CarouselContent>\n      <div className=\"mt-4 h-1 bg-muted rounded-full overflow-hidden\">\n        <div \n          className=\"h-full bg-primary transition-all duration-300\"\n          style={{ width: `${(current / count) * 100}%` }}\n        />\n      </div>\n    </Carousel>\n  );\n}\n"
+    }
+  ]
+}

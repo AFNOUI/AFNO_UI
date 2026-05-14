@@ -1,0 +1,12 @@
+{
+  "name": "alert-dialog/alert-dialog-destructive",
+  "category": "alert-dialog",
+  "variant": "alert-dialog-destructive",
+  "files": [
+    {
+      "path": "components/ui/alert-dialog/alert-dialog-destructive.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Trash2, AlertTriangle } from \"lucide-react\";\nimport { Button } from \"@/components/ui/button\";\nimport {\n  AlertDialog,\n  AlertDialogTitle,\n  AlertDialogAction,\n  AlertDialogCancel,\n  AlertDialogFooter,\n  AlertDialogHeader,\n  AlertDialogTrigger,\n  AlertDialogContent,\n  AlertDialogDescription,\n} from \"@/components/ui/alert-dialog\";\n\nconst data = {\n  \"trigger\": {\n    \"variant\": \"destructive\",\n    \"icon\": \"Trash2\",\n    \"text\": \"Delete Account\"\n  },\n  \"title\": {\n    \"icon\": \"AlertTriangle\",\n    \"text\": \"Delete Account\",\n    \"className\": \"flex items-center gap-2 text-destructive\"\n  },\n  \"description\": \"This will permanently delete your account, all your projects, and remove all associated data. This action is irreversible.\",\n  \"cancelText\": \"Keep Account\",\n  \"action\": {\n    \"text\": \"Yes, Delete Everything\",\n    \"className\": \"bg-destructive text-destructive-foreground hover:bg-destructive/90\"\n  }\n} as const;\n\nexport default function AlertDialogDestructiveExample() {\n  return (\n    <div className=\"flex flex-wrap gap-4\">\n      <AlertDialog>\n        <AlertDialogTrigger asChild>\n          <Button variant={data.trigger.variant}>\n            <Trash2 className=\"me-2 h-4 w-4\" />\n            {data.trigger.text}\n          </Button>\n        </AlertDialogTrigger>\n        <AlertDialogContent>\n          <AlertDialogHeader>\n            <AlertDialogTitle className={data.title.className}>\n              <AlertTriangle className=\"h-5 w-5\" />\n              {data.title.text}\n            </AlertDialogTitle>\n            <AlertDialogDescription>{data.description}</AlertDialogDescription>\n          </AlertDialogHeader>\n          <AlertDialogFooter>\n            <AlertDialogCancel>{data.cancelText}</AlertDialogCancel>\n            <AlertDialogAction className={data.action.className}>{data.action.text}</AlertDialogAction>\n          </AlertDialogFooter>\n        </AlertDialogContent>\n      </AlertDialog>\n    </div>\n  );\n}"
+    }
+  ]
+}

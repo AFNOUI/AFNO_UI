@@ -1,0 +1,12 @@
+{
+  "name": "tooltip/tooltip-positions",
+  "category": "tooltip",
+  "variant": "tooltip-positions",
+  "files": [
+    {
+      "path": "components/ui/tooltip/tooltip-positions.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Tooltip, TooltipContent, TooltipTrigger } from \"@/components/ui/tooltip\";\nimport { Button } from \"@/components/ui/button\";\n\ntype Side = \"top\" | \"right\" | \"bottom\" | \"left\";\n\nconst data: { positions: { id: string; label: string; side: Side; text: string }[] } = {\n  \"positions\": [\n    {\n      \"id\": \"top\",\n      \"label\": \"Top\",\n      \"side\": \"top\",\n      \"text\": \"Top tooltip\"\n    },\n    {\n      \"id\": \"bottom\",\n      \"label\": \"Bottom\",\n      \"side\": \"bottom\",\n      \"text\": \"Bottom tooltip\"\n    },\n    {\n      \"id\": \"left\",\n      \"label\": \"Left\",\n      \"side\": \"left\",\n      \"text\": \"Left tooltip\"\n    },\n    {\n      \"id\": \"right\",\n      \"label\": \"Right\",\n      \"side\": \"right\",\n      \"text\": \"Right tooltip\"\n    }\n  ]\n};\n\nexport default function TooltipPositionsExample() {\n  return (\n    <div className=\"flex flex-wrap gap-4 justify-center py-8\">\n      {data.positions.map((pos) => (\n        <Tooltip key={pos.id}>\n          <TooltipTrigger asChild>\n            <Button variant=\"outline\">{pos.label}</Button>\n          </TooltipTrigger>\n          <TooltipContent side={pos.side} showArrow>\n            <p>{pos.text}</p>\n          </TooltipContent>\n        </Tooltip>\n      ))}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

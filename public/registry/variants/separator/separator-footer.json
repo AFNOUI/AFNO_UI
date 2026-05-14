@@ -1,0 +1,12 @@
+{
+  "name": "separator/separator-footer",
+  "category": "separator",
+  "variant": "separator-footer",
+  "files": [
+    {
+      "path": "components/ui/separator/separator-footer.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport Link from \"next/link\";\nimport { Separator } from \"@/components/ui/separator\";\n\nconst data = {\n  \"links\": [\n    \"About\",\n    \"Blog\",\n    \"Careers\",\n    \"Privacy\",\n    \"Terms\"\n  ]\n};\n\nexport default function SeparatorFooterExample() {\n  return (\n    <div className=\"flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground\">\n      {data.links.map((link, i) => (\n        <span key={link}>\n          {i > 0 && <Separator orientation=\"vertical\" className=\"h-4\" />}\n          <Link href=\"#\" className=\"hover:text-foreground transition-colors\">\n            {link}\n          </Link>\n        </span>\n      ))}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

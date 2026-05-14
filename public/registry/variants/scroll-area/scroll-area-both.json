@@ -1,0 +1,12 @@
+{
+  "name": "scroll-area/scroll-area-both",
+  "category": "scroll-area",
+  "variant": "scroll-area-both",
+  "files": [
+    {
+      "path": "components/ui/scroll-area/scroll-area-both.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Badge } from \"@/components/ui/badge\";\nimport { ScrollArea, ScrollBar } from \"@/components/ui/scroll-area\";\n\nconst data = {\n  \"rowCount\": 15\n};\n\nexport default function ScrollAreaBothExample() {\n  return (\n    <ScrollArea className=\"h-[200px] w-[350px] rounded-md border\">\n      <div className=\"p-4\">\n        <table className=\"w-[500px]\">\n          <thead>\n            <tr className=\"border-b\">\n              <th className=\"text-start p-2 font-medium\">ID</th>\n              <th className=\"text-start p-2 font-medium\">Name</th>\n              <th className=\"text-start p-2 font-medium\">Email</th>\n              <th className=\"text-start p-2 font-medium\">Status</th>\n              <th className=\"text-start p-2 font-medium\">Role</th>\n            </tr>\n          </thead>\n          <tbody>\n            {Array.from({ length: data.rowCount }).map((_, i) => (\n              <tr key={i} className=\"border-b\">\n                <td className=\"p-2 text-sm\">{i + 1}</td>\n                <td className=\"p-2 text-sm\">User {i + 1}</td>\n                <td className=\"p-2 text-sm\">user{i + 1}@example.com</td>\n                <td className=\"p-2\">\n                  <Badge variant={i % 2 === 0 ? \"default\" : \"secondary\"}>\n                    {i % 2 === 0 ? \"Active\" : \"Inactive\"}\n                  </Badge>\n                </td>\n                <td className=\"p-2 text-sm\">{i % 3 === 0 ? \"Admin\" : \"User\"}</td>\n              </tr>\n            ))}\n          </tbody>\n        </table>\n      </div>\n      <ScrollBar orientation=\"horizontal\" />\n    </ScrollArea>\n  );\n}\n"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "sheet/sheet-sides",
+  "category": "sheet",
+  "variant": "sheet-sides",
+  "files": [
+    {
+      "path": "components/ui/sheet/sheet-sides.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport {\n  Sheet,\n  SheetContent,\n  SheetDescription,\n  SheetHeader,\n  SheetTitle,\n  SheetTrigger,\n} from \"@/components/ui/sheet\";\nimport { Button } from \"@/components/ui/button\";\n\ntype SheetSide = \"left\" | \"right\" | \"top\" | \"bottom\";\n\nconst sides: { side: SheetSide; label: string; title: string; description: string }[] = [\n  {\n    \"side\": \"left\",\n    \"label\": \"Left\",\n    \"title\": \"Left Sheet\",\n    \"description\": \"This sheet opens from the left side.\"\n  },\n  {\n    \"side\": \"right\",\n    \"label\": \"Right\",\n    \"title\": \"Right Sheet\",\n    \"description\": \"This sheet opens from the right side.\"\n  },\n  {\n    \"side\": \"top\",\n    \"label\": \"Top\",\n    \"title\": \"Top Sheet\",\n    \"description\": \"This sheet opens from the top.\"\n  },\n  {\n    \"side\": \"bottom\",\n    \"label\": \"Bottom\",\n    \"title\": \"Bottom Sheet\",\n    \"description\": \"This sheet opens from the bottom.\"\n  }\n];\n\nexport default function SheetSidesExample() {\n  return (\n    <div className=\"flex flex-wrap gap-4\">\n      {sides.map((s) => (\n        <Sheet key={s.side}>\n          <SheetTrigger asChild>\n            <Button variant=\"outline\">{s.label}</Button>\n          </SheetTrigger>\n          <SheetContent side={s.side}>\n            <SheetHeader>\n              <SheetTitle>{s.title}</SheetTitle>\n              <SheetDescription>{s.description}</SheetDescription>\n            </SheetHeader>\n          </SheetContent>\n        </Sheet>\n      ))}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

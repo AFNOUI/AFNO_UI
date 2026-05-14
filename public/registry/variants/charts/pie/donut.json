@@ -1,0 +1,12 @@
+{
+  "name": "charts/pie/donut",
+  "category": "charts",
+  "variant": "pie/donut",
+  "files": [
+    {
+      "path": "charts/pie/donutChart.tsx",
+      "type": "registry:variant",
+      "content": "import { PieChart } from \"../../components/charts/pie\";\n\nconst data = \"Desktop\\n55\\nMobile\\n30\\nTablet\\n15\";\n\nexport default function PieChartDonutExample() {\n  return <PieChart data={data} variant=\"donut\" title=\"Donut\" />;\n}"
+    }
+  ]
+}

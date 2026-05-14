@@ -1,0 +1,12 @@
+{
+  "name": "dropdown/dropdown-keyboard-shortcuts",
+  "category": "dropdown",
+  "variant": "dropdown-keyboard-shortcuts",
+  "files": [
+    {
+      "path": "components/ui/dropdown/dropdown-keyboard-shortcuts.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Scissors, Copy, Clipboard, Edit, Trash2 } from \"lucide-react\";\nimport {\n  DropdownMenu,\n  DropdownMenuContent,\n  DropdownMenuItem,\n  DropdownMenuSeparator,\n  DropdownMenuTrigger,\n  DropdownMenuShortcut,\n} from \"@/components/ui/dropdown-menu\";\nimport { Button } from \"@/components/ui/button\";\n\nconst data = {\n  \"triggerText\": \"Edit Menu\",\n  \"menuItems\": [\n    {\n      \"icon\": \"Scissors\",\n      \"label\": \"Cut\",\n      \"shortcut\": \"⌘X\"\n    },\n    {\n      \"icon\": \"Copy\",\n      \"label\": \"Copy\",\n      \"shortcut\": \"⌘C\"\n    },\n    {\n      \"icon\": \"Clipboard\",\n      \"label\": \"Paste\",\n      \"shortcut\": \"⌘V\"\n    },\n    {\n      \"icon\": \"Edit\",\n      \"label\": \"Rename\",\n      \"shortcut\": \"F2\"\n    },\n    {\n      \"icon\": \"Trash2\",\n      \"label\": \"Delete\",\n      \"shortcut\": \"⌫\",\n      \"destructive\": true\n    }\n  ]\n};\n\nexport default function DropdownKeyboardShortcutsExample() {\n  const icons = { Scissors, Copy, Clipboard, Edit, Trash2 };\n  return (\n    <DropdownMenu>\n      <DropdownMenuTrigger asChild>\n        <Button variant=\"outline\">{data.triggerText}</Button>\n      </DropdownMenuTrigger>\n      <DropdownMenuContent className=\"w-56\">\n        {data.menuItems.map((item, i) => {\n          const Icon = icons[item.icon as keyof typeof icons];\n          return (\n            <React.Fragment key={i}>\n              {item.destructive && i > 0 ? <DropdownMenuSeparator /> : null}\n              <DropdownMenuItem className={item.destructive ? \"text-destructive\" : \"\"}>\n                {Icon && <Icon className=\"me-2 h-4 w-4\" />}\n                {item.label}\n                <DropdownMenuShortcut>{item.shortcut}</DropdownMenuShortcut>\n              </DropdownMenuItem>\n            </React.Fragment>\n          );\n        })}\n      </DropdownMenuContent>\n    </DropdownMenu>\n  );\n}\n"
+    }
+  ]
+}

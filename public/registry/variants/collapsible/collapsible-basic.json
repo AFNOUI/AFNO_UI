@@ -1,0 +1,12 @@
+{
+  "name": "collapsible/collapsible-basic",
+  "category": "collapsible",
+  "variant": "collapsible-basic",
+  "files": [
+    {
+      "path": "components/ui/collapsible/collapsible-basic.tsx",
+      "type": "registry:variant",
+      "content": "import React, { useState } from \"react\";\nimport { ChevronsUpDown } from \"lucide-react\";\nimport {\n  Collapsible,\n  CollapsibleContent,\n  CollapsibleTrigger,\n} from \"@/components/ui/collapsible\";\nimport { Button } from \"@/components/ui/button\";\n\nconst data = [\n  {\n    \"name\": \"@radix-ui/primitives\"\n  },\n  {\n    \"name\": \"@radix-ui/colors\"\n  },\n  {\n    \"name\": \"@stitches/react\"\n  }\n];\n\nexport default function CollapsibleBasicExample() {\n  const [isOpen, setIsOpen] = useState(false);\n\n  return (\n    <div className=\"max-w-sm\">\n      <Collapsible open={isOpen} onOpenChange={setIsOpen}>\n        <CollapsibleTrigger asChild>\n          <Button variant=\"outline\" className=\"w-full justify-between\">\n            <span>@peduarte starred {data.length} repositories</span>\n            <ChevronsUpDown className=\"h-4 w-4\" />\n          </Button>\n        </CollapsibleTrigger>\n        <CollapsibleContent className=\"space-y-2 mt-2\">\n          {data.map((repo, index) => (\n            <div key={index} className=\"rounded-md border px-4 py-2 font-mono text-sm shadow-sm\">\n              {repo.name}\n            </div>\n          ))}\n        </CollapsibleContent>\n      </Collapsible>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

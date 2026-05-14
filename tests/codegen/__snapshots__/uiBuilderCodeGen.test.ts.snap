@@ -1,0 +1,475 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateCleanCode > collapses heading without a level prop to the default h2 1`] = `
+"export default function Page() {
+  return (
+    <div className="min-h-screen">
+      <h2>Default level</h2>
+    </div>
+  );
+}"
+`;
+
+exports[`generateCleanCode > deduplicates and groups shadcn imports by source file (card, button, separator) 1`] = `
+"import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+
+export default function Page() {
+  return (
+    <div className="min-h-screen">
+      <Card className="bg-card border shadow-lg p-6">
+        <CardContent>
+          <h3>Card title</h3>
+          <Button variant="outline" size="sm">Click</Button>
+        </CardContent>
+      </Card>
+
+      <Separator className="my-8" />
+
+      <Button>Again</Button>
+    </div>
+  );
+}"
+`;
+
+exports[`generateCleanCode > escapes angle brackets and curly braces in user text to HTML entities 1`] = `
+"export default function Page() {
+  return (
+    <div className="min-h-screen">
+      <p>Use &lt;Foo&gt; and &#123;bar&#125; carefully</p>
+    </div>
+  );
+}"
+`;
+
+exports[`generateCleanCode > falls back to a placeholder div for unknown node types 1`] = `
+"export default function Page() {
+  return (
+    <div className="min-h-screen">
+      <div className="p-4">/* definitely-not-a-real-type */</div>
+    </div>
+  );
+}"
+`;
+
+exports[`generateCleanCode > renders a grid with child cards 1`] = `
+"import { Card, CardContent } from "@/components/ui/card";
+
+export default function Page() {
+  return (
+    <div className="min-h-screen">
+      <div className="grid grid-cols-3 gap-4">
+        <Card className="bg-card border shadow-sm">
+          <CardContent>
+            <p>One</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-background/60 border border-dashed shadow-none">
+          <CardContent>
+            <p>Two</p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}"
+`;
+
+exports[`generateCleanCode > renders a simple text-only page without any shadcn imports 1`] = `
+"export default function Page() {
+  return (
+    <div className="min-h-screen">
+      <h1 className="text-4xl">Welcome</h1>
+
+      <p className="text-muted-foreground">Hello world.</p>
+    </div>
+  );
+}"
+`;
+
+exports[`generateCleanCode > renders containers, sections, flex and columns as plain <div>s 1`] = `
+"export default function Page() {
+  return (
+    <div className="min-h-screen">
+      <div className="p-4">
+        <div>
+          <div>
+            <div>
+              <p>Col A</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}"
+`;
+
+exports[`generateCleanCode > renders data widgets: stat-card, data-table, metric-widget 1`] = `
+"import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+
+export default function Page() {
+  return (
+    <div className="min-h-screen">
+      <div className="bg-primary/5 border border-primary/20 shadow-sm">
+        <div className="text-sm text-muted-foreground mb-1">MRR</div>
+        <div className="text-2xl font-bold text-foreground">$12k</div>
+        <div className="text-xs mt-1">+5%</div>
+      </div>
+
+      <div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell>Ada</TableCell>
+              <TableCell>Eng</TableCell>
+              <TableCell>Active</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Bob</TableCell>
+              <TableCell>PM</TableCell>
+              <TableCell>Away</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+
+      <div>
+        <div className="text-xs text-muted-foreground">Users</div>
+        <div className="text-lg font-bold text-foreground">1,024</div>
+      </div>
+    </div>
+  );
+}"
+`;
+
+exports[`generateCleanCode > renders every chart type with the shared \`@/components/ui/charts\` import 1`] = `
+"import { AreaChart, BarChart, BumpChart, CandlestickChart, FunnelChart, GaugeChart, HeatmapChart, LineChart, PieChart, PolarAreaChart, RadarChart, RadialBarChart, ScatterChart, TreemapChart, WaterfallChart } from "@/components/ui/charts";
+
+export default function Page() {
+  return (
+    <div className="min-h-screen">
+      <BarChart data={\`a,1
+b,2\`} variant="default" title="bar-chart" />
+
+      <LineChart data={\`a,1
+b,2\`} variant="default" title="line-chart" />
+
+      <PieChart data={\`a,1
+b,2\`} variant="default" title="pie-chart" />
+
+      <AreaChart data={\`a,1
+b,2\`} variant="default" title="area-chart" />
+
+      <RadarChart data={\`a,1
+b,2\`} variant="default" title="radar-chart" />
+
+      <ScatterChart data={\`a,1
+b,2\`} variant="default" title="scatter-chart" />
+
+      <GaugeChart data={\`a,1
+b,2\`} variant="default" title="gauge-chart" />
+
+      <FunnelChart data={\`a,1
+b,2\`} variant="default" title="funnel-chart" />
+
+      <TreemapChart data={\`a,1
+b,2\`} variant="default" title="treemap-chart" />
+
+      <CandlestickChart data={\`a,1
+b,2\`} variant="default" title="candlestick-chart" />
+
+      <WaterfallChart data={\`a,1
+b,2\`} variant="default" title="waterfall-chart" />
+
+      <HeatmapChart data={\`a,1
+b,2\`} variant="default" title="heatmap-chart" />
+
+      <PolarAreaChart data={\`a,1
+b,2\`} variant="default" title="polar-area-chart" />
+
+      <RadialBarChart data={\`a,1
+b,2\`} variant="default" title="radial-bar-chart" />
+
+      <BumpChart data={\`a,1
+b,2\`} variant="default" title="bump-chart" />
+    </div>
+  );
+}"
+`;
+
+exports[`generateCleanCode > renders every form control: input, textarea, select, checkbox, switch, radio-group, date-picker, file-upload 1`] = `
+"import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+export default function Page() {
+  return (
+    <div className="min-h-screen">
+      <div className="space-y-2">
+        <Label>Name</Label>
+        <Input type="text" placeholder="Jane" />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Bio</Label>
+        <Textarea placeholder="About you" rows={5} />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Country</Label>
+        <Select>
+          <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="US">US</SelectItem>
+            <SelectItem value="NP">NP</SelectItem>
+            <SelectItem value="JP">JP</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Checkbox />
+        <Label>Accept terms</Label>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Switch />
+        <Label>Notifications</Label>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Plan</Label>
+        <RadioGroup>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="Free" id="option-0" />
+            <Label htmlFor="option-0">Free</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="Pro" id="option-1" />
+            <Label htmlFor="option-1">Pro</Label>
+          </div>
+        </RadioGroup>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Birthday</Label>
+        <Input type="date" />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Avatar</Label>
+        <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+          <p className="text-sm text-muted-foreground">PNG or JPG up to 2 MB</p>
+        </div>
+      </div>
+    </div>
+  );
+}"
+`;
+
+exports[`generateCleanCode > renders list (ordered/unordered), image, link, badge, alert, avatar, progress, code-block, video 1`] = `
+"import { Badge } from "@/components/ui/badge";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import { Label } from "@/components/ui/label";
+
+export default function Page() {
+  return (
+    <div className="min-h-screen">
+      <ul className="list-disc">
+        <li>Alpha</li>
+        <li>Beta</li>
+      </ul>
+
+      <ol className="list-decimal">
+        <li>One</li>
+        <li>Two</li>
+      </ol>
+
+      <img src="/hero.png" alt="Hero" />
+
+      <a href="/docs">Docs</a>
+
+      <Badge variant="secondary">New</Badge>
+
+      <Alert variant="destructive">
+        <AlertTitle>Heads up</AlertTitle>
+        <AlertDescription>Something happened</AlertDescription>
+      </Alert>
+
+      <Avatar>
+        <AvatarImage src="/a.jpg" />
+        <AvatarFallback>AB</AvatarFallback>
+      </Avatar>
+
+      <div className="space-y-2">
+        <Label>Loading</Label>
+        <Progress value={42} />
+      </div>
+
+      <pre className="bg-muted rounded-lg p-4 overflow-auto text-sm font-mono">
+        <code>const x = 1;</code>
+      </pre>
+
+      <div style={{ aspectRatio: "4/3" }}>
+        <iframe src="/v.mp4" className="w-full h-full" allowFullScreen style={{ border: 0 }} />
+      </div>
+
+      <div style={{ height: "24px" }} />
+    </div>
+  );
+}"
+`;
+
+exports[`generateCleanCode > renders responsive styles with sm: and md: prefixes 1`] = `
+"export default function Page() {
+  return (
+    <div className="min-h-screen">
+      <p className="text-sm sm:text-base md:text-lg">Responsive</p>
+    </div>
+  );
+}"
+`;
+
+exports[`generateCleanCode > renders tabs-container and accordion-container with correct item indexing 1`] = `
+"import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+
+export default function Page() {
+  return (
+    <div className="min-h-screen">
+      <Tabs defaultValue="0">
+        <TabsList>
+          <TabsTrigger value="0">First</TabsTrigger>
+          <TabsTrigger value="1">Second</TabsTrigger>
+          <TabsTrigger value="2">Third</TabsTrigger>
+        </TabsList>
+        <TabsContent value="0">Content for First</TabsContent>
+        <TabsContent value="1">Content for Second</TabsContent>
+        <TabsContent value="2">Content for Third</TabsContent>
+      </Tabs>
+
+      <Accordion type="single" collapsible>
+        <AccordionItem value="item-0">
+          <AccordionTrigger>Q1</AccordionTrigger>
+          <AccordionContent>A1</AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="item-1">
+          <AccordionTrigger>Q2</AccordionTrigger>
+          <AccordionContent>A2</AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </div>
+  );
+}"
+`;
+
+exports[`generateCleanCode > renders the marketing family: testimonial, pricing, feature-grid, stats-counter, faq, newsletter, footer, hero, cta 1`] = `
+"import { Button } from "@/components/ui/button";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+
+export default function Page() {
+  return (
+    <div className="min-h-screen">
+      <div>
+        <blockquote className="text-lg italic text-foreground mb-4">"Love it"</blockquote>
+        <div className="font-medium text-foreground">Ada</div>
+        <div className="text-sm text-muted-foreground">Engineer</div>
+      </div>
+
+      <div>
+        <div className="text-lg font-semibold mb-1">Pro</div>
+        <div className="text-3xl font-bold mb-1">$29<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+        <ul className="space-y-2 my-4 text-sm text-muted-foreground">
+          <li className="flex items-center gap-2">✓ SSO</li>
+          <li className="flex items-center gap-2">✓ Audit logs</li>
+          <li className="flex items-center gap-2">✓ Support</li>
+        </ul>
+        <Button className="w-full">Upgrade</Button>
+      </div>
+
+      <div>
+        <div className="p-4 rounded-lg border bg-card">
+          <div className="font-semibold text-foreground mb-1">Fast</div>
+          <div className="text-sm text-muted-foreground">Blazing quick</div>
+        </div>
+        <div className="p-4 rounded-lg border bg-card">
+          <div className="font-semibold text-foreground mb-1">Safe</div>
+          <div className="text-sm text-muted-foreground">Type-checked</div>
+        </div>
+      </div>
+
+      <div>
+        <div>
+          <div className="text-3xl font-bold text-foreground">10k</div>
+          <div className="text-sm text-muted-foreground">Users</div>
+        </div>
+        <div>
+          <div className="text-3xl font-bold text-foreground">99.9%</div>
+          <div className="text-sm text-muted-foreground">Uptime</div>
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-2xl font-bold text-foreground mb-6 text-center">FAQ</h2>
+        <Accordion type="single" collapsible>
+          <AccordionItem value="faq-0">
+            <AccordionTrigger>Why?</AccordionTrigger>
+            <AccordionContent>Because.</AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="faq-1">
+            <AccordionTrigger>How?</AccordionTrigger>
+            <AccordionContent>Like so.</AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
+
+      <div>
+        <h3 className="text-xl font-bold mb-2">Subscribe</h3>
+        <p className="text-sm text-muted-foreground mb-4">Weekly updates</p>
+        <div className="flex gap-2 max-w-md mx-auto">
+          <Input placeholder="Enter your email" className="flex-1" />
+          <Button>Join</Button>
+        </div>
+      </div>
+
+      <footer>
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <span className="text-lg font-bold">Acme</span>
+          <div className="flex flex-wrap gap-4">
+            <a href="#" className="text-sm text-muted-foreground hover:text-foreground">About</a>
+            <a href="#" className="text-sm text-muted-foreground hover:text-foreground">Blog</a>
+            <a href="#" className="text-sm text-muted-foreground hover:text-foreground">Contact</a>
+          </div>
+        </div>
+        <Separator className="mb-4" />
+        <p className="text-xs text-muted-foreground">© 2026</p>
+      </footer>
+
+      <div>
+        <h1>Big hero</h1>
+      </div>
+
+      <div>
+        <Button>Go</Button>
+      </div>
+    </div>
+  );
+}"
+`;

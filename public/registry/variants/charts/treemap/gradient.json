@@ -1,0 +1,12 @@
+{
+  "name": "charts/treemap/gradient",
+  "category": "charts",
+  "variant": "treemap/gradient",
+  "files": [
+    {
+      "path": "charts/treemap/gradientChart.tsx",
+      "type": "registry:variant",
+      "content": "import { TreemapChart } from \"../../components/charts/treemap\";\n\nconst data = \"Chrome\\n64\\nSafari\\n18\\nEdge\\n9\\nFirefox\\n7\\nOther\\n2\";\n\nexport default function TreemapChartGradientExample() {\n  return <TreemapChart data={data} variant=\"gradient\" title=\"Gradient\" />;\n}"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "charts/polar-area/default",
+  "category": "charts",
+  "variant": "polar-area/default",
+  "files": [
+    {
+      "path": "charts/polar-area/defaultChart.tsx",
+      "type": "registry:variant",
+      "content": "import { PolarAreaChart } from \"../../components/charts/polar-area\";\n\nconst data = \"North\\n55\\nEast\\n70\\nSouth\\n42\\nWest\\n63\";\n\nexport default function PolarAreaChartDefaultExample() {\n  return <PolarAreaChart data={data} variant=\"default\" title=\"Default\" />;\n}"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "charts/candlestick/default",
+  "category": "charts",
+  "variant": "candlestick/default",
+  "files": [
+    {
+      "path": "charts/candlestick/defaultChart.tsx",
+      "type": "registry:variant",
+      "content": "import { CandlestickChart } from \"../../components/charts/candlestick\";\n\nconst data = \"Mon\\n100,110,115,95\\nTue\\n110,105,118,102\\nWed\\n105,120,124,103\\nThu\\n120,116,125,112\";\n\nexport default function CandlestickChartDefaultExample() {\n  return <CandlestickChart data={data} variant=\"default\" title=\"Default\" />;\n}"
+    }
+  ]
+}

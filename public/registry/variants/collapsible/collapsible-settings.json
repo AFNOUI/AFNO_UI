@@ -1,0 +1,12 @@
+{
+  "name": "collapsible/collapsible-settings",
+  "category": "collapsible",
+  "variant": "collapsible-settings",
+  "files": [
+    {
+      "path": "components/ui/collapsible/collapsible-settings.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Settings, ChevronDown } from \"lucide-react\";\nimport {\n  Collapsible,\n  CollapsibleContent,\n  CollapsibleTrigger,\n} from \"@/components/ui/collapsible\";\n\nconst data = [\n  {\n    \"title\": \"General Settings\",\n    \"icon\": \"Settings\",\n    \"items\": [\n      {\n        \"label\": \"Language\",\n        \"value\": \"English\"\n      },\n      {\n        \"label\": \"Timezone\",\n        \"value\": \"UTC-5\"\n      },\n      {\n        \"label\": \"Date Format\",\n        \"value\": \"MM/DD/YYYY\"\n      }\n    ]\n  },\n  {\n    \"title\": \"Privacy Settings\",\n    \"icon\": \"Settings\",\n    \"items\": [\n      {\n        \"label\": \"Profile Visibility\",\n        \"value\": \"Public\"\n      },\n      {\n        \"label\": \"Show Email\",\n        \"value\": \"Hidden\"\n      }\n    ]\n  }\n];\n\nexport default function CollapsibleSettingsExample() {\n  return (\n    <div className=\"max-w-md space-y-2\">\n      {data.map((section, index) => (\n        <Collapsible key={index} defaultOpen={index === 0} className=\"border rounded-lg\">\n          <CollapsibleTrigger className=\"flex items-center justify-between w-full p-4 hover:bg-accent/50\">\n            <div className=\"flex items-center gap-2\">\n              <Settings className=\"h-4 w-4\" />\n              <span className=\"font-medium\">{section.title}</span>\n            </div>\n            <ChevronDown className=\"h-4 w-4 transition-transform [[data-state=closed]>&]:-rotate-90\" />\n          </CollapsibleTrigger>\n          <CollapsibleContent>\n            <div className=\"px-4 pb-4 space-y-3\">\n              {section.items.map((item, i) => (\n                <div key={i} className=\"flex justify-between items-center\">\n                  <span className=\"text-sm\">{item.label}</span>\n                  <span className=\"text-sm text-muted-foreground\">{item.value}</span>\n                </div>\n              ))}\n            </div>\n          </CollapsibleContent>\n        </Collapsible>\n      ))}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

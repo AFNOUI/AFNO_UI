@@ -1,0 +1,12 @@
+{
+  "name": "charts/bar/neon",
+  "category": "charts",
+  "variant": "bar/neon",
+  "files": [
+    {
+      "path": "charts/bar/neonChart.tsx",
+      "type": "registry:variant",
+      "content": "import { BarChart } from \"../../components/charts/bar\";\n\nconst data = \"Jan\\n120\\nFeb\\n200\\nMar\\n150\\nApr\\n280\\nMay\\n220\\nJun\\n310\";\n\nexport default function BarChartNeonExample() {\n  return <BarChart data={data} variant=\"neon\" title=\"Neon\" />;\n}"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "charts/pie/nested",
+  "category": "charts",
+  "variant": "pie/nested",
+  "files": [
+    {
+      "path": "charts/pie/nestedChart.tsx",
+      "type": "registry:variant",
+      "content": "import { PieChart } from \"../../components/charts/pie\";\n\nconst data = \"Desktop\\n55\\nMobile\\n30\\nTablet\\n15\";\n\nexport default function PieChartNestedExample() {\n  return <PieChart data={data} variant=\"nested\" title=\"Nested\" />;\n}"
+    }
+  ]
+}

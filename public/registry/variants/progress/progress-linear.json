@@ -1,0 +1,12 @@
+{
+  "name": "progress/progress-linear",
+  "category": "progress",
+  "variant": "progress-linear",
+  "files": [
+    {
+      "path": "components/ui/progress/progress-linear.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { useState } from \"react\";\nimport { Label } from \"@/components/ui/label\";\nimport { Button } from \"@/components/ui/button\";\nimport { Progress } from \"@/components/ui/progress\";\n\nconst data = {\n  \"initialProgress\": 33,\n  \"heights\": [\n    {\n      \"value\": 25,\n      \"className\": \"h-1\"\n    },\n    {\n      \"value\": 50,\n      \"className\": \"h-2\"\n    },\n    {\n      \"value\": 75,\n      \"className\": \"h-3\"\n    },\n    {\n      \"value\": 100,\n      \"className\": \"h-4\"\n    }\n  ]\n};\n\nexport default function ProgressLinearExample() {\n  const [progress, setProgress] = useState(data.initialProgress);\n\n  return (\n    <div className=\"space-y-6 max-w-md\">\n      <div className=\"space-y-2\">\n        <div className=\"flex justify-between text-sm\">\n          <span>Loading...</span>\n          <span>{progress}%</span>\n        </div>\n        <Progress value={progress} />\n      </div>\n\n      <div className=\"space-y-2\">\n        <Label>Different Heights</Label>\n        {data.heights.map((h) => (\n          <Progress key={h.className} value={h.value} className={h.className} />\n        ))}\n      </div>\n\n      <div className=\"flex gap-2\">\n        <Button size=\"sm\" variant=\"outline\" onClick={() => setProgress(Math.max(0, progress - 10))}>\n          - 10%\n        </Button>\n        <Button size=\"sm\" variant=\"outline\" onClick={() => setProgress(Math.min(100, progress + 10))}>\n          + 10%\n        </Button>\n        <Button size=\"sm\" variant=\"outline\" onClick={() => setProgress(0)}>\n          Reset\n        </Button>\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

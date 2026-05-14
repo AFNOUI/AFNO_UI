@@ -1,0 +1,12 @@
+{
+  "name": "charts/heatmap/labeled",
+  "category": "charts",
+  "variant": "heatmap/labeled",
+  "files": [
+    {
+      "path": "charts/heatmap/labeledChart.tsx",
+      "type": "registry:variant",
+      "content": "import { HeatmapChart } from \"../../components/charts/heatmap\";\n\nconst data = \"Mon\\n12\\nTue\\n8\\nWed\\n15\\nThu\\n20\\nFri\\n7\\nSat\\n3\\nSun\\n10\";\n\nexport default function HeatmapChartLabeledExample() {\n  return <HeatmapChart data={data} variant=\"labeled\" title=\"Labeled\" />;\n}"
+    }
+  ]
+}

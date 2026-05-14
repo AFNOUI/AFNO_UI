@@ -1,0 +1,12 @@
+{
+  "name": "dropdown/dropdown-radio-items-priority",
+  "category": "dropdown",
+  "variant": "dropdown-radio-items-priority",
+  "files": [
+    {
+      "path": "components/ui/dropdown/dropdown-radio-items-priority.tsx",
+      "type": "registry:variant",
+      "content": "import React, { useState } from \"react\";\nimport { Flag } from \"lucide-react\";\nimport {\n  DropdownMenu,\n  DropdownMenuContent,\n  DropdownMenuTrigger,\n  DropdownMenuLabel,\n  DropdownMenuSeparator,\n  DropdownMenuRadioGroup,\n  DropdownMenuRadioItem,\n} from \"@/components/ui/dropdown-menu\";\nimport { Button } from \"@/components/ui/button\";\n\nconst data = {\n  \"label\": \"Set Priority\",\n  \"options\": [\n    {\n      \"value\": \"low\",\n      \"label\": \"Low\",\n      \"dotClass\": \"bg-[hsl(var(--progress-success))]\"\n    },\n    {\n      \"value\": \"medium\",\n      \"label\": \"Medium\",\n      \"dotClass\": \"bg-[hsl(var(--progress-warning))]\"\n    },\n    {\n      \"value\": \"high\",\n      \"label\": \"High\",\n      \"dotClass\": \"bg-destructive\"\n    }\n  ]\n};\n\nexport default function DropdownRadioItemsPriorityExample() {\n  const [priority, setPriority] = useState(\"medium\");\n  return (\n    <DropdownMenu>\n      <DropdownMenuTrigger asChild>\n        <Button variant=\"outline\">\n          <Flag className=\"me-2 h-4 w-4\" />\n          Priority: {priority}\n        </Button>\n      </DropdownMenuTrigger>\n      <DropdownMenuContent className=\"w-48\">\n        <DropdownMenuLabel>{data.label}</DropdownMenuLabel>\n        <DropdownMenuSeparator />\n        <DropdownMenuRadioGroup value={priority} onValueChange={setPriority}>\n          {data.options.map((opt) => (\n            <DropdownMenuRadioItem key={opt.value} value={opt.value}>\n              <span className={\"me-2 h-2 w-2 rounded-full \" + opt.dotClass} />\n              {opt.label}\n            </DropdownMenuRadioItem>\n          ))}\n        </DropdownMenuRadioGroup>\n      </DropdownMenuContent>\n    </DropdownMenu>\n  );\n}\n"
+    }
+  ]
+}

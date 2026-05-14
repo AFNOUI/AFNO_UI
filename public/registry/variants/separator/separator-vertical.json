@@ -1,0 +1,12 @@
+{
+  "name": "separator/separator-vertical",
+  "category": "separator",
+  "variant": "separator-vertical",
+  "files": [
+    {
+      "path": "components/ui/separator/separator-vertical.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport React from \"react\";\nimport { Home, Settings, User } from \"lucide-react\";\nimport { Separator } from \"@/components/ui/separator\";\nimport { Button } from \"@/components/ui/button\";\n\nconst buttons = [\n  {\n    \"icon\": \"Home\",\n    \"label\": \"Home\"\n  },\n  {\n    \"icon\": \"Settings\",\n    \"label\": \"Settings\"\n  },\n  {\n    \"icon\": \"User\",\n    \"label\": \"Profile\"\n  }\n];\nconst icons: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = { Home, Settings, User };\n\nexport default function SeparatorVerticalExample() {\n  return (\n    <div className=\"flex h-10 items-center space-x-4\">\n      {buttons.map((btn, i) => {\n        const Icon = icons[btn.icon];\n        return (\n          <span key={btn.label} className=\"flex items-center space-x-4\">\n            {i > 0 && <Separator orientation=\"vertical\" />}\n            <Button variant=\"outline\" size=\"sm\">\n              <Icon className=\"me-2 h-4 w-4\" />\n              {btn.label}\n            </Button>\n          </span>\n        );\n      })}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

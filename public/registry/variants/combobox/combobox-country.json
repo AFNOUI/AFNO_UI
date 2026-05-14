@@ -1,0 +1,12 @@
+{
+  "name": "combobox/combobox-country",
+  "category": "combobox",
+  "variant": "combobox-country",
+  "files": [
+    {
+      "path": "components/ui/combobox/combobox-country.tsx",
+      "type": "registry:variant",
+      "content": "import React, { useState } from \"react\";\nimport { Globe } from \"lucide-react\";\nimport {\n  Combobox,\n  ComboboxList,\n  ComboboxItem,\n  ComboboxEmpty,\n  ComboboxInput,\n  ComboboxGroup,\n  ComboboxTrigger,\n  ComboboxContent,\n} from \"@/components/ui/combobox\";\n\nconst data = [\n  {\n    \"value\": \"us\",\n    \"label\": \"United States\",\n    \"flag\": \"🇺🇸\"\n  },\n  {\n    \"value\": \"uk\",\n    \"label\": \"United Kingdom\",\n    \"flag\": \"🇬🇧\"\n  },\n  {\n    \"value\": \"ca\",\n    \"label\": \"Canada\",\n    \"flag\": \"🇨🇦\"\n  },\n  {\n    \"value\": \"de\",\n    \"label\": \"Germany\",\n    \"flag\": \"🇩🇪\"\n  },\n  {\n    \"value\": \"fr\",\n    \"label\": \"France\",\n    \"flag\": \"🇫🇷\"\n  },\n  {\n    \"value\": \"jp\",\n    \"label\": \"Japan\",\n    \"flag\": \"🇯🇵\"\n  },\n  {\n    \"value\": \"au\",\n    \"label\": \"Australia\",\n    \"flag\": \"🇦🇺\"\n  }\n];\n\nexport default function ComboboxCountryExample() {\n  const [country, setCountry] = useState(\"\");\n\n  return (\n    <Combobox value={country} onValueChange={setCountry}>\n      <ComboboxTrigger className=\"w-[240px]\">\n        <div className=\"flex items-center\">\n        <Globe className=\"me-2 h-4 w-4 opacity-50\" />\n        {country ? (\n          <span className=\"flex items-center gap-2\">\n            {data.find(c => c.value === country)?.flag}\n            {data.find(c => c.value === country)?.label}\n          </span>\n        ) : \"Select country...\"}\n        </div>\n      </ComboboxTrigger>\n      <ComboboxContent className=\"w-[240px]\">\n        <ComboboxInput placeholder=\"Search country...\" />\n        <ComboboxList>\n          <ComboboxEmpty>No country found.</ComboboxEmpty>\n          <ComboboxGroup>\n            {data.map((c) => (\n              <ComboboxItem key={c.value} value={c.value}>\n                <span className=\"me-2\">{c.flag}</span>\n                {c.label}\n              </ComboboxItem>\n            ))}\n          </ComboboxGroup>\n        </ComboboxList>\n      </ComboboxContent>\n    </Combobox>\n  );\n}\n"
+    }
+  ]
+}

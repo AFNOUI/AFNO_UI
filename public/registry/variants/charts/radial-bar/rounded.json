@@ -1,0 +1,12 @@
+{
+  "name": "charts/radial-bar/rounded",
+  "category": "charts",
+  "variant": "radial-bar/rounded",
+  "files": [
+    {
+      "path": "charts/radial-bar/roundedChart.tsx",
+      "type": "registry:variant",
+      "content": "import { RadialBarChart } from \"../../components/charts/radial-bar\";\n\nconst data = \"A\\n60\\nB\\n45\\nC\\n80\\nD\\n30\";\n\nexport default function RadialBarChartRoundedExample() {\n  return <RadialBarChart data={data} variant=\"rounded\" title=\"Rounded\" />;\n}"
+    }
+  ]
+}

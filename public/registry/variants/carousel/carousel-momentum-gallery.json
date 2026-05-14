@@ -1,0 +1,12 @@
+{
+  "name": "carousel/carousel-momentum-gallery",
+  "category": "carousel",
+  "variant": "carousel-momentum-gallery",
+  "files": [
+    {
+      "path": "components/ui/carousel/carousel-momentum-gallery.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport Autoplay from \"embla-carousel-autoplay\";\nimport {\n  Carousel,\n  CarouselContent,\n  CarouselItem,\n} from \"@/components/ui/carousel\";\n\nconst items = [\n  {\n    \"width\": 40,\n    \"id\": 0\n  },\n  {\n    \"width\": 60,\n    \"id\": 1\n  },\n  {\n    \"width\": 30,\n    \"id\": 2\n  },\n  {\n    \"width\": 70,\n    \"id\": 3\n  }\n];\n\nexport default function MomentumGalleryCarouselExample() {\n  return (\n    <Carousel \n      opts={{ loop: true, dragFree: true }}\n      plugins={[Autoplay({ delay: 2000 })]}\n      className=\"w-full\"\n    >\n      <CarouselContent className=\"-ms-2\">\n        {items.map((item) => (\n          <CarouselItem key={item.id} className=\"pl-2\" style={{ flexBasis: `${item.width}%` }}>\n            <div className=\"aspect-video rounded-xl bg-muted/50 border p-4 flex flex-col justify-between\">\n              <span className=\"text-xs text-muted-foreground font-mono\">\n                ASSET_ID: 00{item.id}\n              </span>\n              <p className=\"font-semibold\">Dynamic Width {item.width}%</p>\n            </div>\n          </CarouselItem>\n        ))}\n      </CarouselContent>\n    </Carousel>\n  );\n}\n"
+    }
+  ]
+}

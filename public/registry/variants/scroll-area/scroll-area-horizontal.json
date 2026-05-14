@@ -1,0 +1,12 @@
+{
+  "name": "scroll-area/scroll-area-horizontal",
+  "category": "scroll-area",
+  "variant": "scroll-area-horizontal",
+  "files": [
+    {
+      "path": "components/ui/scroll-area/scroll-area-horizontal.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Star } from \"lucide-react\";\nimport { ScrollArea, ScrollBar } from \"@/components/ui/scroll-area\";\n\nconst artworks = [\n  {\n    \"title\": \"Abstract Waves\",\n    \"artist\": \"John Doe\",\n    \"price\": \"$299\"\n  },\n  {\n    \"title\": \"Mountain Sunset\",\n    \"artist\": \"Jane Smith\",\n    \"price\": \"$450\"\n  },\n  {\n    \"title\": \"City Nights\",\n    \"artist\": \"Mike Chen\",\n    \"price\": \"$375\"\n  },\n  {\n    \"title\": \"Ocean Dreams\",\n    \"artist\": \"Sarah Lee\",\n    \"price\": \"$520\"\n  },\n  {\n    \"title\": \"Forest Path\",\n    \"artist\": \"Tom Wilson\",\n    \"price\": \"$280\"\n  },\n  {\n    \"title\": \"Desert Storm\",\n    \"artist\": \"Anna Brown\",\n    \"price\": \"$390\"\n  }\n];\n\nexport default function ScrollAreaHorizontalExample() {\n  return (\n    <ScrollArea className=\"w-full whitespace-nowrap rounded-md border\">\n      <div className=\"flex w-max space-x-4 p-4\">\n        {artworks.map((artwork, i) => (\n          <figure key={i} className=\"shrink-0\">\n            <div className=\"overflow-hidden rounded-md\">\n              <div className=\"aspect-3/4 w-[150px] bg-linear-to-br from-primary/20 to-primary/5 flex items-center justify-center\">\n                <Star className=\"h-8 w-8 text-primary/50\" />\n              </div>\n            </div>\n            <figcaption className=\"pt-2 text-xs text-muted-foreground\">\n              <span className=\"font-semibold text-foreground\">{artwork.title}</span>\n              <br />\n              {artwork.artist} · {artwork.price}\n            </figcaption>\n          </figure>\n        ))}\n      </div>\n      <ScrollBar orientation=\"horizontal\" />\n    </ScrollArea>\n  );\n}\n"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "command/command-inline",
+  "category": "command",
+  "variant": "command-inline",
+  "files": [
+    {
+      "path": "components/ui/command/command-inline.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Plus, Search, FileText, Settings } from \"lucide-react\";\n\nconst data = [\n  {\n    \"icon\": \"Plus\",\n    \"label\": \"New\"\n  },\n  {\n    \"icon\": \"Search\",\n    \"label\": \"Search\"\n  },\n  {\n    \"icon\": \"FileText\",\n    \"label\": \"Docs\"\n  },\n  {\n    \"icon\": \"Settings\",\n    \"label\": \"Settings\"\n  }\n];\n\nexport default function CommandInlineExample() {\n  return (\n    <div className=\"p-4 border rounded-lg bg-muted/30 max-w-lg\">\n      <p className=\"text-sm mb-3\">Quick actions:</p>\n      <div className=\"flex flex-wrap gap-2\">\n        {data.map((item, i) => {\n          const Icon = { Plus, Search, FileText, Settings }[item.icon as \"Plus\" | \"Search\" | \"FileText\" | \"Settings\"];\n          return (\n            <button\n              key={i}\n              className=\"flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border bg-background hover:bg-accent transition-colors\"\n            >\n              {Icon && <Icon className=\"w-4 h-4\" />}\n              {item.label}\n            </button>\n          );\n        })}\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

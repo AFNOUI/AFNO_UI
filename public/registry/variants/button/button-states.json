@@ -1,0 +1,12 @@
+{
+  "name": "button/button-states",
+  "category": "button",
+  "variant": "button-states",
+  "files": [
+    {
+      "path": "components/ui/button/button-states.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Button } from \"@/components/ui/button\";\n\nconst data = [\n  {\n    \"state\": \"disabled\",\n    \"text\": \"Disabled\"\n  },\n  {\n    \"state\": \"loading\",\n    \"text\": \"Loading\",\n    \"className\": \"animate-pulse\"\n  }\n];\n\nexport default function ButtonStatesExample() {\n  return (\n    <div className=\"flex flex-wrap gap-3\">\n      {data.map((item, index) => (\n        <Button \n          key={index} \n          disabled={item.state === \"disabled\"}\n          className={item.className}\n        >\n          {item.text}\n        </Button>\n      ))}\n    </div>\n  );\n}"
+    }
+  ]
+}

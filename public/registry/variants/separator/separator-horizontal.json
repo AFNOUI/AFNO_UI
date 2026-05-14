@@ -1,0 +1,12 @@
+{
+  "name": "separator/separator-horizontal",
+  "category": "separator",
+  "variant": "separator-horizontal",
+  "files": [
+    {
+      "path": "components/ui/separator/separator-horizontal.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Separator } from \"@/components/ui/separator\";\n\nconst sections = [\n  {\n    \"title\": \"Account Settings\",\n    \"desc\": \"Manage your account preferences and settings.\"\n  },\n  {\n    \"title\": \"Privacy\",\n    \"desc\": \"Control who can see your profile and activity.\"\n  },\n  {\n    \"title\": \"Notifications\",\n    \"desc\": \"Choose what notifications you want to receive.\"\n  }\n];\n\nexport default function SeparatorHorizontalExample() {\n  return (\n    <div className=\"max-w-md space-y-4\">\n      {sections.map((section, i) => (\n        <div key={i}>\n          <h3 className=\"font-semibold\">{section.title}</h3>\n          <p className=\"text-sm text-muted-foreground\">{section.desc}</p>\n          {i < sections.length - 1 && <Separator />}\n        </div>\n      ))}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

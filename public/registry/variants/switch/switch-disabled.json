@@ -1,0 +1,12 @@
+{
+  "name": "switch/switch-disabled",
+  "category": "switch",
+  "variant": "switch-disabled",
+  "files": [
+    {
+      "path": "components/ui/switch/switch-disabled.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Label } from \"@/components/ui/label\";\nimport { Switch } from \"@/components/ui/switch\";\n\nconst data = [\n  { id: \"disabled-off\", label: \"Disabled (Off)\", checked: false },\n  { id: \"disabled-on\", label: \"Disabled (On)\", checked: true },\n];\n\nexport default function SwitchDisabledExample() {\n  return (\n    <div className=\"space-y-4\">\n      {data.map((item) => (\n        <div key={item.id} className=\"flex items-center space-x-2\">\n          <Switch id={item.id} disabled checked={item.checked} />\n          <Label htmlFor={item.id} className=\"text-muted-foreground\">{item.label}</Label>\n        </div>\n      ))}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

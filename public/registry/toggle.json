@@ -1,0 +1,18 @@
+{
+  "name": "toggle",
+  "dependencies": [
+    "@radix-ui/react-toggle",
+    "class-variance-authority"
+  ],
+  "devDependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "content": "import * as React from \"react\";\nimport * as TogglePrimitive from \"@radix-ui/react-toggle\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\n\nimport { cn } from \"@/lib/utils\";\n\nconst toggleVariants = cva(\n  \"inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors hover:bg-muted hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground\",\n  {\n    variants: {\n      variant: {\n        default: \"bg-transparent\",\n        outline: \"border border-input bg-transparent hover:bg-accent hover:text-accent-foreground\",\n      },\n      size: {\n        lg: \"h-11 px-5\",\n        sm: \"h-9 px-2.5\",\n        default: \"h-10 px-3\",\n      },\n    },\n    defaultVariants: {\n      size: \"default\",\n      variant: \"default\",\n    },\n  },\n);\n\nconst Toggle = React.forwardRef<\n  React.ComponentRef<typeof TogglePrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof TogglePrimitive.Root> & VariantProps<typeof toggleVariants>\n>(({ className, variant, size, ...props }, ref) => (\n  <TogglePrimitive.Root ref={ref} className={cn(toggleVariants({ variant, size, className }))} {...props} />\n));\n\nToggle.displayName = TogglePrimitive.Root.displayName;\n\nexport { Toggle, toggleVariants };\n\n/*\n * ============================================\n * TAILWIND CSS VARIABLES DOCUMENTATION\n * ============================================\n * This component uses Tailwind CSS variables defined in app/globals.css\n *\n * Variables Used:\n * --------------\n * Colors:\n *   - hsl(var(--accent))          Line: 8 - Toggle class \"data-[state=on]:bg-accent hover:bg-accent\"\n *                                 ON and outline hover background\n *   - hsl(var(--accent-foreground)) Line: 8 - Toggle class \"data-[state=on]:text-accent-foreground\n *                                 hover:text-accent-foreground\"\n *   - hsl(var(--muted))           Line: 8 - Toggle class \"hover:bg-muted\"\n *                                 Default hover background\n *   - hsl(var(--muted-foreground)) Line: 8 - Toggle class \"hover:text-muted-foreground\"\n *                                 Default hover text color\n *   - hsl(var(--input))           Line: 13 - Toggle outline variant \"border-input\"\n *                                 Outline border color\n *   - hsl(var(--ring))            Line: 8 - Toggle class \"focus-visible:ring-ring\"\n *                                 Focus ring color\n *\n * Layout:\n *   - border-radius: var(--radius) Line: 8 - Toggle class \"rounded-md\"\n */\n",
+      "path": "components/ui/toggle.tsx",
+      "type": "registry:component"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "checkbox",
+  "dependencies": [
+    "@radix-ui/react-checkbox",
+    "lucide-react"
+  ],
+  "devDependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "content": "import * as React from \"react\";\nimport { Check } from \"lucide-react\";\nimport * as CheckboxPrimitive from \"@radix-ui/react-checkbox\";\n\nimport { cn } from \"@/lib/utils\";\n\nconst Checkbox = React.forwardRef<\n  React.ComponentRef<typeof CheckboxPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>\n>(({ className, ...props }, ref) => (\n  <CheckboxPrimitive.Root\n    ref={ref}\n    className={cn(\n      \"peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50\",\n      className,\n    )}\n    {...props}\n  >\n    <CheckboxPrimitive.Indicator className={cn(\"flex items-center justify-center text-current\")}>\n      <Check className=\"h-4 w-4\" />\n    </CheckboxPrimitive.Indicator>\n  </CheckboxPrimitive.Root>\n));\nCheckbox.displayName = CheckboxPrimitive.Root.displayName;\n\nexport { Checkbox };\n\n/*\n * ============================================\n * TAILWIND CSS VARIABLES DOCUMENTATION\n * ============================================\n * This component uses Tailwind CSS variables defined in app/globals.css\n *\n * Variables Used:\n * --------------\n * Colors:\n *   - hsl(var(--primary))          Line: 14 - Checkbox root class \"border-primary\n *                                  data-[state=checked]:bg-primary\n *                                  data-[state=checked]:text-primary-foreground\"\n *                                  Border, checked background, and icon color\n *   - hsl(var(--primary-foreground)) Line: 14 - Checkbox root class\n *                                  \"data-[state=checked]:text-primary-foreground\"\n *                                  Check icon color when checked\n *   - hsl(var(--background))       Line: 14 - Checkbox root class \"ring-offset-background\"\n *                                  Focus ring offset background\n *   - hsl(var(--ring))             Line: 14 - Checkbox root class \"focus-visible:ring-ring\"\n *                                  Focus ring color\n *\n * Layout:\n *   - border-radius: var(--radius) Line: 14 - Checkbox root class \"rounded-sm\"\n *                                  Corner radius\n */\n",
+      "path": "components/ui/checkbox.tsx",
+      "type": "registry:component"
+    }
+  ]
+}

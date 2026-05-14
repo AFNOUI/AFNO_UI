@@ -1,0 +1,12 @@
+{
+  "name": "charts/waterfall/colored",
+  "category": "charts",
+  "variant": "waterfall/colored",
+  "files": [
+    {
+      "path": "charts/waterfall/coloredChart.tsx",
+      "type": "registry:variant",
+      "content": "import { WaterfallChart } from \"../../components/charts/waterfall\";\n\nconst data = \"Start\\n100\\nSales\\n45\\nReturns\\n-20\\nDiscounts\\n-10\\nNet\\n30\";\n\nexport default function WaterfallChartColoredExample() {\n  return <WaterfallChart data={data} variant=\"colored\" title=\"Colored\" />;\n}"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "breadcrumb/breadcrumb-with-icons",
+  "category": "breadcrumb",
+  "variant": "breadcrumb-with-icons",
+  "files": [
+    {
+      "path": "components/ui/breadcrumb/breadcrumb-with-icons.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Home, Settings, User } from \"lucide-react\";\nimport {\n  Breadcrumb,\n  BreadcrumbItem,\n  BreadcrumbLink,\n  BreadcrumbList,\n  BreadcrumbPage,\n  BreadcrumbSeparator,\n} from \"@/components/ui/breadcrumb\";\n\nconst data = [\n  {\n    \"type\": \"link\",\n    \"href\": \"/\",\n    \"text\": \"Home\",\n    \"icon\": \"Home\"\n  },\n  {\n    \"type\": \"link\",\n    \"href\": \"/settings\",\n    \"text\": \"Settings\",\n    \"icon\": \"Settings\"\n  },\n  {\n    \"type\": \"page\",\n    \"text\": \"Profile\",\n    \"icon\": \"User\"\n  }\n];\n\nexport default function BreadcrumbWithIconsExample() {\n  return (\n    <Breadcrumb>\n      <BreadcrumbList>\n        {data.map((item, index) => (\n          <React.Fragment key={index}>\n            {item.type === \"link\" ? (\n              <BreadcrumbItem>\n                <BreadcrumbLink href={item.href} className=\"flex items-center gap-1\">\n                  {item.icon === \"Home\" && <Home className=\"h-4 w-4\" />}\n                  {item.icon === \"Settings\" && <Settings className=\"h-4 w-4\" />}\n                  {item.text}\n                </BreadcrumbLink>\n              </BreadcrumbItem>\n            ) : (\n              <BreadcrumbItem>\n                <BreadcrumbPage className=\"flex items-center gap-1\">\n                  {item.icon === \"User\" && <User className=\"h-4 w-4\" />}\n                  {item.text}\n                </BreadcrumbPage>\n              </BreadcrumbItem>\n            )}\n            {index < data.length - 1 && <BreadcrumbSeparator />}\n          </React.Fragment>\n        ))}\n      </BreadcrumbList>\n    </Breadcrumb>\n  );\n}"
+    }
+  ]
+}

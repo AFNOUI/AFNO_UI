@@ -1,0 +1,12 @@
+{
+  "name": "switch/switch-with-state",
+  "category": "switch",
+  "variant": "switch-with-state",
+  "files": [
+    {
+      "path": "components/ui/switch/switch-with-state.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { useState } from \"react\";\nimport { Label } from \"@/components/ui/label\";\nimport { Switch } from \"@/components/ui/switch\";\n\nconst data = [\n  {\n    \"id\": \"enabled\",\n    \"label\": \"Enable feature\",\n    \"description\": \"Turn on this feature to unlock additional options.\"\n  },\n  {\n    \"id\": \"notifications\",\n    \"label\": \"Notifications\",\n    \"description\": \"Receive notifications about updates.\"\n  },\n  {\n    \"id\": \"dark-mode\",\n    \"label\": \"Dark Mode\",\n    \"description\": \"Toggle dark mode appearance.\"\n  }\n];\n\nexport default function SwitchWithStateExample() {\n  const [enabled, setEnabled] = useState(false);\n  const [notifications, setNotifications] = useState(true);\n  const [darkMode, setDarkMode] = useState(false);\n  const values = [enabled, notifications, darkMode];\n  const setters = [setEnabled, setNotifications, setDarkMode];\n\n  return (\n    <div className=\"space-y-4\">\n      {data.map((item, i) => (\n        <div key={item.id} className=\"flex items-center justify-between rounded-lg border p-4\">\n          <div className=\"space-y-0.5\">\n            <Label htmlFor={item.id} className=\"text-base\">{item.label}</Label>\n            <p className=\"text-sm text-muted-foreground\">{item.description}</p>\n          </div>\n          <Switch\n            id={item.id}\n            checked={values[i]}\n            onCheckedChange={setters[i]}\n          />\n        </div>\n      ))}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

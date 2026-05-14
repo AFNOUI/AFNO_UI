@@ -1,0 +1,12 @@
+{
+  "name": "popover/popover-positions",
+  "category": "popover",
+  "variant": "popover-positions",
+  "files": [
+    {
+      "path": "components/ui/popover/popover-positions.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport {\n  Popover,\n  PopoverContent,\n  PopoverTrigger,\n} from \"@/components/ui/popover\";\nimport { Button } from \"@/components/ui/button\";\n\ntype Side = \"top\" | \"right\" | \"bottom\" | \"left\";\ntype Align = \"start\" | \"center\" | \"end\";\n\nconst positions: { side: Side; align?: Align; label: string; text: string }[] = [\n  {\n    \"side\": \"top\",\n    \"align\": \"start\",\n    \"label\": \"Top Start\",\n    \"text\": \"Top start aligned\"\n  },\n  {\n    \"side\": \"top\",\n    \"label\": \"Top\",\n    \"text\": \"Top center aligned\"\n  },\n  {\n    \"side\": \"top\",\n    \"align\": \"end\",\n    \"label\": \"Top End\",\n    \"text\": \"Top end aligned\"\n  },\n  {\n    \"side\": \"left\",\n    \"label\": \"Left\",\n    \"text\": \"Left aligned\"\n  },\n  {\n    \"side\": \"right\",\n    \"label\": \"Right\",\n    \"text\": \"Right aligned\"\n  },\n  {\n    \"side\": \"bottom\",\n    \"align\": \"start\",\n    \"label\": \"Bottom Start\",\n    \"text\": \"Bottom start\"\n  },\n  {\n    \"side\": \"bottom\",\n    \"label\": \"Bottom\",\n    \"text\": \"Bottom center\"\n  },\n  {\n    \"side\": \"bottom\",\n    \"align\": \"end\",\n    \"label\": \"Bottom End\",\n    \"text\": \"Bottom end\"\n  }\n];\n\nexport default function PopoverPositionsExample() {\n  return (\n    <div className=\"grid grid-cols-3 gap-4 max-w-md mx-auto py-8\">\n      {positions.map((p) => (\n        <Popover key={p.label}>\n          <PopoverTrigger asChild>\n            <Button variant=\"outline\" size=\"sm\">{p.label}</Button>\n          </PopoverTrigger>\n          <PopoverContent\n            side={p.side}\n            align={p.align}\n            className=\"w-40\"\n          >\n            <p className=\"text-sm\">{p.text}</p>\n          </PopoverContent>\n        </Popover>\n      ))}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

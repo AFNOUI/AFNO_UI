@@ -1,0 +1,12 @@
+{
+  "name": "charts/funnel/pyramid",
+  "category": "charts",
+  "variant": "funnel/pyramid",
+  "files": [
+    {
+      "path": "charts/funnel/pyramidChart.tsx",
+      "type": "registry:variant",
+      "content": "import { FunnelChart } from \"../../components/charts/funnel\";\n\nconst data = \"Visitors\\n1200\\nLeads\\n640\\nQualified\\n280\\nCustomers\\n92\";\n\nexport default function FunnelChartPyramidExample() {\n  return <FunnelChart data={data} variant=\"pyramid\" title=\"Pyramid\" />;\n}"
+    }
+  ]
+}

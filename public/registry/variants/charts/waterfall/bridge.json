@@ -1,0 +1,12 @@
+{
+  "name": "charts/waterfall/bridge",
+  "category": "charts",
+  "variant": "waterfall/bridge",
+  "files": [
+    {
+      "path": "charts/waterfall/bridgeChart.tsx",
+      "type": "registry:variant",
+      "content": "import { WaterfallChart } from \"../../components/charts/waterfall\";\n\nconst data = \"Start\\n100\\nSales\\n45\\nReturns\\n-20\\nDiscounts\\n-10\\nNet\\n30\";\n\nexport default function WaterfallChartBridgeExample() {\n  return <WaterfallChart data={data} variant=\"bridge\" title=\"Bridge\" />;\n}"
+    }
+  ]
+}

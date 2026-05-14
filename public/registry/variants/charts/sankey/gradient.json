@@ -1,0 +1,12 @@
+{
+  "name": "charts/sankey/gradient",
+  "category": "charts",
+  "variant": "sankey/gradient",
+  "files": [
+    {
+      "path": "charts/sankey/gradientChart.tsx",
+      "type": "registry:variant",
+      "content": "import { SankeyChart } from \"../../components/charts/sankey\";\n\nconst data = \"Inbound\\n120\\nStage A\\n85\\nStage B\\n95\\nOutbound\\n72\\nReturns\\n28\";\n\nexport default function SankeyChartGradientExample() {\n  return <SankeyChart data={data} variant=\"gradient\" title=\"Gradient\" />;\n}"
+    }
+  ]
+}

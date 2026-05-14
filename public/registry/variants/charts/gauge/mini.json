@@ -1,0 +1,12 @@
+{
+  "name": "charts/gauge/mini",
+  "category": "charts",
+  "variant": "gauge/mini",
+  "files": [
+    {
+      "path": "charts/gauge/miniChart.tsx",
+      "type": "registry:variant",
+      "content": "import { GaugeChart } from \"../../components/charts/gauge\";\n\nconst data = [{\"label\":\"Revenue\",\"value\":85},{\"label\":\"Growth\",\"value\":62},{\"label\":\"Retention\",\"value\":91},{\"label\":\"Max\",\"value\":100}];\n\nexport default function GaugeChartMiniExample() {\n  return <GaugeChart data={data} variant=\"mini\" title=\"Mini\" />;\n}"
+    }
+  ]
+}

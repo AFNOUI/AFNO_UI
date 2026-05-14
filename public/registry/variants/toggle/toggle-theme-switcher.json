@@ -1,0 +1,12 @@
+{
+  "name": "toggle/toggle-theme-switcher",
+  "category": "toggle",
+  "variant": "toggle-theme-switcher",
+  "files": [
+    {
+      "path": "components/ui/toggle/toggle-theme-switcher.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { useState } from \"react\";\nimport { Sun, Moon, Monitor } from \"lucide-react\";\nimport { ToggleGroup, ToggleGroupItem } from \"@/components/ui/toggle-group\";\n\nexport default function ToggleThemeSwitcherExample() {\n  const [theme, setTheme] = useState(\"system\");\n\n  return (\n    <ToggleGroup\n      type=\"single\"\n      value={theme}\n      onValueChange={(v: string) => v && setTheme(v)}\n      variant=\"outline\"\n    >\n      <ToggleGroupItem value=\"light\" aria-label=\"Light theme\" className=\"gap-2\">\n        <Sun className=\"h-4 w-4\" />\n        Light\n      </ToggleGroupItem>\n      <ToggleGroupItem value=\"dark\" aria-label=\"Dark theme\" className=\"gap-2\">\n        <Moon className=\"h-4 w-4\" />\n        Dark\n      </ToggleGroupItem>\n      <ToggleGroupItem\n        value=\"system\"\n        aria-label=\"System theme\"\n        className=\"gap-2\"\n      >\n        <Monitor className=\"h-4 w-4\" />\n        System\n      </ToggleGroupItem>\n    </ToggleGroup>\n  );\n}\n"
+    }
+  ]
+}

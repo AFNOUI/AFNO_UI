@@ -1,0 +1,12 @@
+{
+  "name": "separator/separator-navigation",
+  "category": "separator",
+  "variant": "separator-navigation",
+  "files": [
+    {
+      "path": "components/ui/separator/separator-navigation.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport React from \"react\";\nimport { Home, User, Mail, Settings, Bell, LogOut } from \"lucide-react\";\nimport { Separator } from \"@/components/ui/separator\";\nimport { Button } from \"@/components/ui/button\";\nimport { Badge } from \"@/components/ui/badge\";\n\nconst data = {\n  \"topLinks\": [\n    {\n      \"icon\": \"Home\",\n      \"label\": \"Dashboard\"\n    },\n    {\n      \"icon\": \"User\",\n      \"label\": \"Profile\"\n    },\n    {\n      \"icon\": \"Mail\",\n      \"label\": \"Messages\",\n      \"badge\": 5\n    }\n  ],\n  \"middleLinks\": [\n    {\n      \"icon\": \"Settings\",\n      \"label\": \"Settings\"\n    },\n    {\n      \"icon\": \"Bell\",\n      \"label\": \"Notifications\"\n    }\n  ],\n  \"logout\": {\n    \"icon\": \"LogOut\",\n    \"label\": \"Logout\",\n    \"destructive\": true\n  }\n};\nconst icons: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = { Home, User, Mail, Settings, Bell, LogOut };\n\nexport default function SeparatorNavigationExample() {\n  return (\n    <div className=\"rounded-lg border p-2 w-64\">\n      <div className=\"space-y-1\">\n        {data.topLinks.map((item) => {\n          const Icon = icons[item.icon];\n          return (\n            <Button key={item.label} variant=\"ghost\" className=\"w-full justify-start\">\n              <Icon className=\"me-2 h-4 w-4\" />\n              {item.label}\n              {item.badge != null && (\n                <Badge className=\"ms-auto\" variant=\"secondary\">{item.badge}</Badge>\n              )}\n            </Button>\n          );\n        })}\n      </div>\n      <Separator className=\"my-2\" />\n      <div className=\"space-y-1\">\n        {data.middleLinks.map((item) => {\n          const Icon = icons[item.icon];\n          return (\n            <Button key={item.label} variant=\"ghost\" className=\"w-full justify-start\">\n              <Icon className=\"me-2 h-4 w-4\" />\n              {item.label}\n            </Button>\n          );\n        })}\n      </div>\n      <Separator className=\"my-2\" />\n      <Button variant=\"ghost\" className=\"w-full justify-start text-destructive hover:text-destructive\">\n        <LogOut className=\"me-2 h-4 w-4\" />\n        {data.logout.label}\n      </Button>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

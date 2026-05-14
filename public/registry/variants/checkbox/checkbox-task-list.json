@@ -1,0 +1,12 @@
+{
+  "name": "checkbox/checkbox-task-list",
+  "category": "checkbox",
+  "variant": "checkbox-task-list",
+  "files": [
+    {
+      "path": "components/ui/checkbox/checkbox-task-list.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Label } from \"@/components/ui/label\";\nimport { Checkbox } from \"@/components/ui/checkbox\";\n\nconst data = [\n  {\n    \"id\": \"task-1\",\n    \"label\": \"Review pull request\",\n    \"done\": true\n  },\n  {\n    \"id\": \"task-2\",\n    \"label\": \"Update documentation\",\n    \"done\": true\n  },\n  {\n    \"id\": \"task-3\",\n    \"label\": \"Write unit tests\",\n    \"done\": false\n  },\n  {\n    \"id\": \"task-4\",\n    \"label\": \"Deploy to production\",\n    \"done\": false\n  }\n];\n\nexport default function CheckboxTaskListExample() {\n  return (\n    <div className=\"space-y-2 max-w-sm\">\n      {data.map((task, index) => (\n        <div\n          key={index}\n          className={`flex items-center gap-3 p-3 rounded-lg transition-colors hover:bg-muted/50 border border-border ${task.done ? 'bg-muted/30' : ''}`}\n        >\n          <Checkbox id={task.id} defaultChecked={task.done} />\n          <Label htmlFor={task.id} className={`cursor-pointer flex-1 ${task.done ? 'line-through text-muted-foreground' : ''}`}>\n            {task.label}\n          </Label>\n        </div>\n      ))}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

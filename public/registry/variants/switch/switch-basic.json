@@ -1,0 +1,12 @@
+{
+  "name": "switch/switch-basic",
+  "category": "switch",
+  "variant": "switch-basic",
+  "files": [
+    {
+      "path": "components/ui/switch/switch-basic.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Label } from \"@/components/ui/label\";\nimport { Switch } from \"@/components/ui/switch\";\n\nconst data = [\n  {\n    \"id\": \"airplane\",\n    \"label\": \"Airplane Mode\",\n    \"defaultChecked\": false\n  },\n  {\n    \"id\": \"notifications\",\n    \"label\": \"Notifications\",\n    \"defaultChecked\": true\n  }\n];\n\nexport default function SwitchBasicExample() {\n  return (\n    <div className=\"space-y-4 max-w-sm\">\n      {data.map((item) => (\n        <div key={item.id} className=\"flex items-center justify-between\">\n          <Label htmlFor={item.id}>{item.label}</Label>\n          <Switch id={item.id} defaultChecked={item.defaultChecked} />\n        </div>\n      ))}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

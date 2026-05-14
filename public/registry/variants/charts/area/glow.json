@@ -1,0 +1,12 @@
+{
+  "name": "charts/area/glow",
+  "category": "charts",
+  "variant": "area/glow",
+  "files": [
+    {
+      "path": "charts/area/glowChart.tsx",
+      "type": "registry:variant",
+      "content": "import { AreaChart } from \"../../components/charts/area\";\n\nconst data = \"Jan\\n30\\nFeb\\n45\\nMar\\n38\\nApr\\n60\\nMay\\n55\\nJun\\n72\";\n\nexport default function AreaChartGlowExample() {\n  return <AreaChart data={data} variant=\"glow\" title=\"Glow\" />;\n}"
+    }
+  ]
+}

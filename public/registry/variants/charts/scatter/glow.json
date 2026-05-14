@@ -1,0 +1,12 @@
+{
+  "name": "charts/scatter/glow",
+  "category": "charts",
+  "variant": "scatter/glow",
+  "files": [
+    {
+      "path": "charts/scatter/glowChart.tsx",
+      "type": "registry:variant",
+      "content": "import { ScatterChart } from \"../../components/charts/scatter\";\n\nconst data = \"A\\n20\\nB\\n40\\nC\\n35\\nD\\n60\\nE\\n85\";\n\nexport default function ScatterChartGlowExample() {\n  return <ScatterChart data={data} variant=\"glow\" title=\"Glow\" />;\n}"
+    }
+  ]
+}

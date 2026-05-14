@@ -1,0 +1,12 @@
+{
+  "name": "composite-input/composite-input-select-suffix",
+  "category": "composite-input",
+  "variant": "composite-input-select-suffix",
+  "files": [
+    {
+      "path": "components/ui/composite-input/composite-input-select-suffix.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport {\n  Select,\n  SelectItem,\n  SelectValue,\n  SelectContent,\n  SelectTrigger,\n} from \"@/components/ui/select\";\nimport { Input } from \"@/components/ui/input\";\nimport { Label } from \"@/components/ui/label\";\n\nconst units = [\n  {\n    \"value\": \"kg\",\n    \"label\": \"kg\"\n  },\n  {\n    \"value\": \"g\",\n    \"label\": \"g\"\n  },\n  {\n    \"value\": \"lb\",\n    \"label\": \"lb\"\n  },\n  {\n    \"value\": \"oz\",\n    \"label\": \"oz\"\n  }\n];\n\nexport default function CompositeInputSelectSuffixExample() {\n  return (\n    <div className=\"max-w-xs space-y-2\">\n      <Label>Quantity</Label>\n      <div className=\"flex\">\n        <Input\n          type=\"number\"\n          placeholder=\"100\"\n          className=\"rounded-r-none\"\n        />\n        <Select defaultValue=\"kg\">\n          <SelectTrigger className=\"w-[80px] rounded-l-none border-l-0 focus:ring-0 focus:ring-offset-0\">\n            <SelectValue />\n          </SelectTrigger>\n          <SelectContent>\n            {units.map((u) => (\n              <SelectItem key={u.value} value={u.value}>\n                {u.label}\n              </SelectItem>\n            ))}\n          </SelectContent>\n        </Select>\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

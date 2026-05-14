@@ -1,0 +1,12 @@
+{
+  "name": "checkbox/checkbox-inline",
+  "category": "checkbox",
+  "variant": "checkbox-inline",
+  "files": [
+    {
+      "path": "components/ui/checkbox/checkbox-inline.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Label } from \"@/components/ui/label\";\nimport { Checkbox } from \"@/components/ui/checkbox\";\n\nconst data = [\n  {\n    \"text\": \"Dark Mode\",\n    \"defaultChecked\": true\n  },\n  {\n    \"text\": \"Animations\",\n    \"defaultChecked\": true\n  },\n  {\n    \"text\": \"Sounds\",\n    \"defaultChecked\": false\n  },\n  {\n    \"text\": \"Haptic Feedback\",\n    \"defaultChecked\": false\n  }\n];\n\nexport default function CheckboxInlineExample() {\n  return (\n    <div className=\"space-y-4\">\n      <Label className=\"text-base font-medium\">Select features</Label>\n      <div className=\"flex flex-wrap gap-4\">\n        {data.map((item, index) => (\n          <div key={index} className=\"flex items-center space-x-2\">\n            <Checkbox\n              id={`feature-${index}`}\n              defaultChecked={item.defaultChecked}\n            />\n            <Label htmlFor={`feature-${index}`} className=\"cursor-pointer text-sm\">{item.text}</Label>\n          </div>\n        ))}\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

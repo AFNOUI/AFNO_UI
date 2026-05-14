@@ -1,0 +1,12 @@
+{
+  "name": "charts/bar/grouped",
+  "category": "charts",
+  "variant": "bar/grouped",
+  "files": [
+    {
+      "path": "charts/bar/groupedChart.tsx",
+      "type": "registry:variant",
+      "content": "import { BarChart } from \"../../components/charts/bar\";\n\nconst data = \"Jan\\n120\\nFeb\\n200\\nMar\\n150\\nApr\\n280\\nMay\\n220\\nJun\\n310\";\n\nexport default function BarChartGroupedExample() {\n  return <BarChart data={data} variant=\"grouped\" title=\"Grouped\" />;\n}"
+    }
+  ]
+}

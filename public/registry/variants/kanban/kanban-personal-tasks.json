@@ -1,0 +1,27 @@
+{
+  "name": "kanban/kanban-personal-tasks",
+  "category": "kanban",
+  "variant": "kanban-personal-tasks",
+  "files": [
+    {
+      "path": "kanban/kanban-personal-tasks/PersonalTasksBoard.tsx",
+      "type": "registry:kanban-variant",
+      "content": "import { useState } from \"react\";\nimport { KanbanBoard } from \"../../components/kanban/KanbanBoard\";\nimport { boardConfig } from \"./config\";\nimport { initialCards } from \"./data\";\nimport { usePersonalTasksBoardCardChange, usePersonalTasksBoardLoadMore } from \"./useCardChange\";\nimport type { KanbanCardData } from \"../../components/kanban/types\";\n\n/**\n * My Tasks\n * Personal productivity board\n *\n * Drag-and-drop is powered by the project's custom Pointer DnD library\n * (no @dnd-kit dependency). Cards persist locally — wire `useCardChange`\n * to your backend to make moves stick across reloads.\n */\nexport default function PersonalTasksBoard() {\n  const [cards, setCards] = useState<KanbanCardData[]>(initialCards);\n  const handleCardChange = usePersonalTasksBoardCardChange();\n  const handleLoadMore = usePersonalTasksBoardLoadMore();\n  return (\n    <div className=\"space-y-4\">\n      <div>\n        <h2 className=\"text-xl font-bold\">{boardConfig.title}</h2>\n        {boardConfig.subtitle && (\n          <p className=\"text-sm text-muted-foreground\">{boardConfig.subtitle}</p>\n        )}\n      </div>\n      <KanbanBoard\n        config={boardConfig}\n        cards={cards}\n        onCardsChange={setCards}\n        onCardChange={handleCardChange}\n        onLoadMore={handleLoadMore}\n      />\n    </div>\n  );\n}\n"
+    },
+    {
+      "path": "kanban/kanban-personal-tasks/config.ts",
+      "type": "registry:kanban-variant",
+      "content": "import type { KanbanBuilderConfig } from \"../../components/kanban/types\";\n\n/** Static configuration. All fields are typed and validated. */\nexport const boardConfig: KanbanBuilderConfig = {\n  \"title\": \"My Tasks\",\n  \"subtitle\": \"Personal productivity board\",\n  \"layout\": \"board\",\n  \"columns\": [\n    {\n      \"id\": \"todo\",\n      \"title\": \"To Do\",\n      \"color\": \"amber\"\n    },\n    {\n      \"id\": \"doing\",\n      \"title\": \"Doing\",\n      \"color\": \"blue\"\n    },\n    {\n      \"id\": \"done\",\n      \"title\": \"Done\",\n      \"color\": \"emerald\"\n    }\n  ],\n  \"visibleFields\": [\n    \"priority\",\n    \"dueDate\"\n  ],\n  \"enableDnd\": true,\n  \"enableAddCard\": true,\n  \"enableWipLimits\": false,\n  \"showColumnTotals\": true,\n  \"compactCards\": false\n};\n"
+    },
+    {
+      "path": "kanban/kanban-personal-tasks/data.ts",
+      "type": "registry:kanban-variant",
+      "content": "import type { KanbanCardData } from \"../../components/kanban/types\";\n\n/** Initial card data. Swap with your own backend fetch when wiring up production. */\nexport const initialCards: KanbanCardData[] = [\n  {\n    \"id\": \"p1\",\n    \"columnId\": \"todo\",\n    \"title\": \"Buy groceries\",\n    \"priority\": \"low\",\n    \"dueDate\": \"Apr 25\"\n  },\n  {\n    \"id\": \"p2\",\n    \"columnId\": \"todo\",\n    \"title\": \"Renew gym membership\",\n    \"priority\": \"medium\"\n  },\n  {\n    \"id\": \"p3\",\n    \"columnId\": \"doing\",\n    \"title\": \"Read TanStack docs\",\n    \"priority\": \"medium\"\n  },\n  {\n    \"id\": \"p4\",\n    \"columnId\": \"done\",\n    \"title\": \"Pay electricity bill\",\n    \"priority\": \"high\"\n  }\n];\n"
+    },
+    {
+      "path": "kanban/kanban-personal-tasks/useCardChange.ts",
+      "type": "registry:kanban-variant",
+      "content": "import { useCallback } from \"react\";\nimport type { KanbanCardChangeEvent, KanbanLoadMoreEvent } from \"../../components/kanban/types\";\n\n/**\n * Called whenever a card is dropped into a new position via DnD.\n * Replace the body with your real backend call (e.g. fetch PATCH).\n *\n * Example:\n *   await fetch(`/api/cards/${event.card.id}`, {\n *     method: \"PATCH\",\n *     body: JSON.stringify({ columnId: event.toColumnId, position: event.toIndex }),\n *   });\n */\nexport function usePersonalTasksBoardCardChange() {\n  return useCallback((event: KanbanCardChangeEvent) => {\n    // TODO: persist the change to your backend.\n    console.log(\"[kanban] card moved:\", event);\n  }, []);\n}\n\nexport function usePersonalTasksBoardLoadMore() {\n  return useCallback(async (event: KanbanLoadMoreEvent) => {\n    // TODO: fetch the next page for event.columnId/event.cursor and append it to cards.\n    console.log(\"[kanban] load more:\", event);\n  }, []);\n}\n"
+    }
+  ]
+}

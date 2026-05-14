@@ -1,0 +1,12 @@
+{
+  "name": "separator/separator-profile-card",
+  "category": "separator",
+  "variant": "separator-profile-card",
+  "files": [
+    {
+      "path": "components/ui/separator/separator-profile-card.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport React from \"react\";\nimport { User } from \"lucide-react\";\nimport { Separator } from \"@/components/ui/separator\";\n\nconst data = {\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"stats\": [\n    {\n      \"value\": \"128\",\n      \"label\": \"Posts\"\n    },\n    {\n      \"value\": \"1.2k\",\n      \"label\": \"Followers\"\n    },\n    {\n      \"value\": \"384\",\n      \"label\": \"Following\"\n    }\n  ]\n};\n\nexport default function SeparatorProfileCardExample() {\n  return (\n    <div className=\"rounded-lg border p-6 max-w-sm\">\n      <div className=\"flex items-center space-x-4\">\n        <div className=\"h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center\">\n          <User className=\"h-6 w-6 text-primary\" />\n        </div>\n        <div>\n          <p className=\"font-semibold\">{data.name}</p>\n          <p className=\"text-sm text-muted-foreground\">{data.email}</p>\n        </div>\n      </div>\n      <Separator className=\"my-4\" />\n      <div className=\"flex justify-between text-sm\">\n        {data.stats.map((stat, i) => (\n          <React.Fragment key={stat.label}>\n            {i > 0 && <Separator orientation=\"vertical\" className=\"h-12\" />}\n            <div className=\"text-center\">\n              <p className=\"font-semibold\">{stat.value}</p>\n              <p className=\"text-muted-foreground\">{stat.label}</p>\n            </div>\n          </React.Fragment>\n        ))}\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

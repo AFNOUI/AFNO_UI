@@ -1,0 +1,12 @@
+{
+  "name": "charts/line/stepped",
+  "category": "charts",
+  "variant": "line/stepped",
+  "files": [
+    {
+      "path": "charts/line/steppedChart.tsx",
+      "type": "registry:variant",
+      "content": "import { LineChart } from \"../../components/charts/line\";\n\nconst data = \"Mon\\n40\\nTue\\n65\\nWed\\n50\\nThu\\n80\\nFri\\n95\\nSat\\n60\\nSun\\n75\";\n\nexport default function LineChartSteppedExample() {\n  return <LineChart data={data} variant=\"stepped\" title=\"Stepped\" />;\n}"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "charts/bar/horizontal",
+  "category": "charts",
+  "variant": "bar/horizontal",
+  "files": [
+    {
+      "path": "charts/bar/horizontalChart.tsx",
+      "type": "registry:variant",
+      "content": "import { BarChart } from \"../../components/charts/bar\";\n\nconst data = \"Jan\\n120\\nFeb\\n200\\nMar\\n150\\nApr\\n280\\nMay\\n220\\nJun\\n310\";\n\nexport default function BarChartHorizontalExample() {\n  return <BarChart data={data} variant=\"horizontal\" title=\"Horizontal\" />;\n}"
+    }
+  ]
+}

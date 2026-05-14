@@ -1,0 +1,12 @@
+{
+  "name": "charts/funnel/flat",
+  "category": "charts",
+  "variant": "funnel/flat",
+  "files": [
+    {
+      "path": "charts/funnel/flatChart.tsx",
+      "type": "registry:variant",
+      "content": "import { FunnelChart } from \"../../components/charts/funnel\";\n\nconst data = \"Visitors\\n1200\\nLeads\\n640\\nQualified\\n280\\nCustomers\\n92\";\n\nexport default function FunnelChartFlatExample() {\n  return <FunnelChart data={data} variant=\"flat\" title=\"Flat\" />;\n}"
+    }
+  ]
+}

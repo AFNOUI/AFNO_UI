@@ -1,0 +1,17 @@
+{
+  "name": "tables/tables-simple-list",
+  "category": "tables",
+  "variant": "tables-simple-list",
+  "files": [
+    {
+      "path": "tables/tables-simple-list/tableConfig.ts",
+      "type": "registry:table-variant",
+      "content": "import type { TableBuilderConfig, TableRow } from \"../../components/tables/types\";\n\nexport interface Row extends TableRow {\n  \"name\": string;\n  \"email\": string;\n  \"phone\": string;\n}\n\n\nexport const tableConfig: TableBuilderConfig = {\n  \"title\": \"Contacts\",\n  \"description\": \"A simple list of contacts.\",\n  \"direction\": \"ltr\",\n  \"density\": \"comfortable\",\n  \"pageSize\": 8,\n  \"sortMode\": \"client\",\n  \"paginationMode\": \"client\",\n  \"expandableLayout\": \"details\",\n  \"expandableIconStyle\": \"chevron\",\n  \"expandableIconPosition\": \"first\",\n  \"paginationLayout\": \"full\",\n  \"pageSizeOptions\": [\n    5,\n    10,\n    20,\n    50,\n    100\n  ],\n  \"virtualRowHeight\": 44,\n  \"virtualMaxHeight\": 520,\n  \"enableSearch\": true,\n  \"enablePagination\": true,\n  \"enableRowSelection\": false,\n  \"enableDnD\": false,\n  \"enableColumnVisibility\": false,\n  \"enableExport\": false,\n  \"enableStriped\": false,\n  \"enableHover\": true,\n  \"enableBordered\": false,\n  \"enableStickyHeader\": false,\n  \"enableExpandableRows\": false,\n  \"enableInlineEdit\": false,\n  \"enableBulkActions\": false,\n  \"enableColumnResize\": false,\n  \"enableMultiSort\": false,\n  \"enableColumnFilters\": false,\n  \"enableRowGrouping\": false,\n  \"enableAggregation\": false,\n  \"enableFooter\": false,\n  \"columns\": [\n    {\n      \"id\": \"c1\",\n      \"key\": \"name\",\n      \"label\": \"Name\",\n      \"type\": \"text\",\n      \"sortable\": true,\n      \"filterable\": true,\n      \"visible\": true,\n      \"align\": \"left\"\n    },\n    {\n      \"id\": \"c2\",\n      \"key\": \"email\",\n      \"label\": \"Email\",\n      \"type\": \"email\",\n      \"sortable\": true,\n      \"filterable\": true,\n      \"visible\": true,\n      \"align\": \"left\"\n    },\n    {\n      \"id\": \"c3\",\n      \"key\": \"phone\",\n      \"label\": \"Phone\",\n      \"type\": \"text\",\n      \"sortable\": false,\n      \"filterable\": false,\n      \"visible\": true,\n      \"align\": \"left\"\n    }\n  ]\n} as const satisfies TableBuilderConfig;\n"
+    },
+    {
+      "path": "tables/tables-simple-list/DataTable.tsx",
+      "type": "registry:table-variant",
+      "content": "import { TablePreview } from \"../../components/tables/TablePreview\";\nimport { tableConfig, type Row } from \"./tableConfig\";\n\ninterface DataTableProps {\n  data: Row[];\n}\n\nexport default function SimpleListTable({ data }: DataTableProps) {\n  return <TablePreview config={tableConfig} data={data} />;\n}\n"
+    }
+  ]
+}

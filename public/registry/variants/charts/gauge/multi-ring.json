@@ -1,0 +1,12 @@
+{
+  "name": "charts/gauge/multi-ring",
+  "category": "charts",
+  "variant": "gauge/multi-ring",
+  "files": [
+    {
+      "path": "charts/gauge/multi-ringChart.tsx",
+      "type": "registry:variant",
+      "content": "import { GaugeChart } from \"../../components/charts/gauge\";\n\nconst data = [{\"label\":\"Revenue\",\"value\":85},{\"label\":\"Growth\",\"value\":62},{\"label\":\"Retention\",\"value\":91},{\"label\":\"Max\",\"value\":100}];\n\nexport default function GaugeChartMultiRingExample() {\n  return <GaugeChart data={data} variant=\"multi-ring\" title=\"Multi Ring\" />;\n}"
+    }
+  ]
+}

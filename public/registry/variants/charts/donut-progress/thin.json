@@ -1,0 +1,12 @@
+{
+  "name": "charts/donut-progress/thin",
+  "category": "charts",
+  "variant": "donut-progress/thin",
+  "files": [
+    {
+      "path": "charts/donut-progress/thinChart.tsx",
+      "type": "registry:variant",
+      "content": "import { DonutProgressChart } from \"../../components/charts/donut-progress\";\n\nconst data = [{\"label\":\"Complete\",\"value\":65},{\"label\":\"In Progress\",\"value\":20},{\"label\":\"Pending\",\"value\":15},{\"label\":\"Max\",\"value\":100}];\n\nexport default function DonutProgressChartThinExample() {\n  return <DonutProgressChart data={data} variant=\"thin\" title=\"Thin\" />;\n}"
+    }
+  ]
+}

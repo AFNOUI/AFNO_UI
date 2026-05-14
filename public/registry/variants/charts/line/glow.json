@@ -1,0 +1,12 @@
+{
+  "name": "charts/line/glow",
+  "category": "charts",
+  "variant": "line/glow",
+  "files": [
+    {
+      "path": "charts/line/glowChart.tsx",
+      "type": "registry:variant",
+      "content": "import { LineChart } from \"../../components/charts/line\";\n\nconst data = \"Mon\\n40\\nTue\\n65\\nWed\\n50\\nThu\\n80\\nFri\\n95\\nSat\\n60\\nSun\\n75\";\n\nexport default function LineChartGlowExample() {\n  return <LineChart data={data} variant=\"glow\" title=\"Glow\" />;\n}"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "separator/separator-basic",
+  "category": "separator",
+  "variant": "separator-basic",
+  "files": [
+    {
+      "path": "components/ui/separator/separator-basic.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Separator } from \"@/components/ui/separator\";\n\nconst data = {\n  \"title\": \"Radix Primitives\",\n  \"description\": \"An open-source UI component library.\",\n  \"links\": [\n    \"Blog\",\n    \"Docs\",\n    \"Source\"\n  ]\n};\n\nexport default function SeparatorBasicExample() {\n  return (\n    <div>\n      <div className=\"space-y-1\">\n        <h4 className=\"text-sm font-medium leading-none\">{data.title}</h4>\n        <p className=\"text-sm text-muted-foreground\">{data.description}</p>\n      </div>\n      <Separator className=\"my-4\" />\n      <div className=\"flex h-5 items-center space-x-4 text-sm\">\n        <div>{data.links[0]}</div>\n        <Separator orientation=\"vertical\" />\n        <div>{data.links[1]}</div>\n        <Separator orientation=\"vertical\" />\n        <div>{data.links[2]}</div>\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

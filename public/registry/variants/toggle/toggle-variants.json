@@ -1,0 +1,12 @@
+{
+  "name": "toggle/toggle-variants",
+  "category": "toggle",
+  "variant": "toggle-variants",
+  "files": [
+    {
+      "path": "components/ui/toggle/toggle-variants.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Bold, Italic, Underline } from \"lucide-react\";\nimport { Toggle } from \"@/components/ui/toggle\";\n\nexport default function ToggleVariantsExample() {\n  return (\n    <div className=\"flex flex-wrap gap-4\">\n      <Toggle variant=\"default\" aria-label=\"Toggle bold\">\n        <Bold className=\"h-4 w-4\" />\n      </Toggle>\n      <Toggle variant=\"outline\" aria-label=\"Toggle italic\">\n        <Italic className=\"h-4 w-4\" />\n      </Toggle>\n      <Toggle disabled aria-label=\"Toggle underline\">\n        <Underline className=\"h-4 w-4\" />\n      </Toggle>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

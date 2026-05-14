@@ -1,0 +1,12 @@
+{
+  "name": "composite-input/composite-input-price",
+  "category": "composite-input",
+  "variant": "composite-input-price",
+  "files": [
+    {
+      "path": "components/ui/composite-input/composite-input-price.tsx",
+      "type": "registry:variant",
+      "content": "import React, { useState } from \"react\";\nimport {\n  Select,\n  SelectItem,\n  SelectValue,\n  SelectContent,\n  SelectTrigger,\n} from \"@/components/ui/select\";\nimport { Input } from \"@/components/ui/input\";\nimport { Label } from \"@/components/ui/label\";\n\nconst currencies = [\n  {\n    \"value\": \"USD\",\n    \"label\": \"USD\"\n  },\n  {\n    \"value\": \"EUR\",\n    \"label\": \"EUR\"\n  },\n  {\n    \"value\": \"GBP\",\n    \"label\": \"GBP\"\n  },\n  {\n    \"value\": \"JPY\",\n    \"label\": \"JPY\"\n  },\n  {\n    \"value\": \"INR\",\n    \"label\": \"INR\"\n  }\n];\n\nexport default function CompositeInputPriceExample() {\n  const [currency, setCurrency] = useState(\"USD\");\n\n  return (\n    <div className=\"max-w-xs space-y-2\">\n      <Label>Price</Label>\n      <div className=\"flex\">\n        <Select value={currency} onValueChange={setCurrency}>\n          <SelectTrigger className=\"w-[80px] rounded-r-none border-r-0 focus:ring-0 focus:ring-offset-0\">\n            <SelectValue />\n          </SelectTrigger>\n          <SelectContent>\n            {currencies.map((c) => (\n              <SelectItem key={c.value} value={c.value}>\n                {c.value} {c.label}\n              </SelectItem>\n            ))}\n          </SelectContent>\n        </Select>\n        <Input\n          type=\"number\"\n          placeholder=\"0.00\"\n          className=\"rounded-l-none\"\n        />\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

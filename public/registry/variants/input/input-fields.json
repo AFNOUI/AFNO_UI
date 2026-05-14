@@ -1,0 +1,12 @@
+{
+  "name": "input/input-fields",
+  "category": "input",
+  "variant": "input-fields",
+  "files": [
+    {
+      "path": "components/ui/input/input-fields.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Input } from \"@/components/ui/input\";\nimport { Label } from \"@/components/ui/label\";\nimport { Textarea } from \"@/components/ui/textarea\";\n\nconst data = {\n  \"fields\": [\n    {\n      \"id\": \"email\",\n      \"label\": \"Email\",\n      \"type\": \"email\",\n      \"placeholder\": \"you@example.com\"\n    },\n    {\n      \"id\": \"password\",\n      \"label\": \"Password\",\n      \"type\": \"password\",\n      \"placeholder\": \"••••••••\"\n    },\n    {\n      \"id\": \"disabled\",\n      \"label\": \"Disabled\",\n      \"disabled\": true,\n      \"placeholder\": \"Disabled input\"\n    }\n  ],\n  \"textarea\": {\n    \"id\": \"textarea\",\n    \"label\": \"Message\",\n    \"placeholder\": \"Type your message here...\"\n  }\n};\n\nexport default function InputFieldsExample() {\n  return (\n    <div className=\"space-y-4 max-w-md\">\n      {data.fields.map((field) => (\n        <div key={field.id} className=\"space-y-2\">\n          <Label htmlFor={field.id}>{field.label}</Label>\n          <Input\n            id={field.id}\n            type={field.type}\n            placeholder={field.placeholder}\n            disabled={field.disabled}\n          />\n        </div>\n      ))}\n      <div className=\"space-y-2\">\n        <Label htmlFor={data.textarea.id}>{data.textarea.label}</Label>\n        <Textarea id={data.textarea.id} placeholder={data.textarea.placeholder} />\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

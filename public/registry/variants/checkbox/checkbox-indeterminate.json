@@ -1,0 +1,12 @@
+{
+  "name": "checkbox/checkbox-indeterminate",
+  "category": "checkbox",
+  "variant": "checkbox-indeterminate",
+  "files": [
+    {
+      "path": "components/ui/checkbox/checkbox-indeterminate.tsx",
+      "type": "registry:variant",
+      "content": "import React, { useState } from \"react\";\nimport { Label } from \"@/components/ui/label\";\nimport { Checkbox } from \"@/components/ui/checkbox\";\n\ninterface Task {\n  id: string;\n  label: string;\n  checked: boolean;\n}\n\nconst initialItems: Task[] = [\n  {\n    \"id\": \"1\",\n    \"label\": \"Design System\",\n    \"checked\": true\n  },\n  {\n    \"id\": \"2\",\n    \"label\": \"Components\",\n    \"checked\": true\n  },\n  {\n    \"id\": \"3\",\n    \"label\": \"Documentation\",\n    \"checked\": false\n  },\n  {\n    \"id\": \"4\",\n    \"label\": \"Testing\",\n    \"checked\": false\n  }\n];\n\nexport default function CheckboxIndeterminateExample() {\n  const [items, setItems] = useState<Task[]>(initialItems);\n\n  const allChecked = items.every(item => item.checked);\n\n  const handleSelectAll = () => {\n    setItems(items.map(item => ({ ...item, checked: !allChecked })));\n  };\n\n  const handleItemChange = (id: string, checked: boolean) => {\n    setItems(items.map(item =>\n      item.id === id ? { ...item, checked } : item\n    ));\n  };\n\n  return (\n    <div className=\"space-y-4 max-w-sm\">\n      <div className=\"flex items-center space-x-2 pb-2 border-b border-border\">\n        <Checkbox\n          checked={allChecked}\n          onCheckedChange={handleSelectAll}\n          className=\"h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2\"\n        />\n        <Label className=\"font-medium cursor-pointer\">Select All Tasks</Label>\n      </div>\n      <div className=\"space-y-3 pl-6\">\n        {items.map((item) => (\n          <div key={item.id} className=\"flex items-center space-x-2\">\n            <Checkbox\n              id={item.id}\n              checked={item.checked}\n              onCheckedChange={(c) => handleItemChange(item.id, c as boolean)}\n            />\n            <Label htmlFor={item.id} className=\"cursor-pointer\">{item.label}</Label>\n          </div>\n        ))}\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

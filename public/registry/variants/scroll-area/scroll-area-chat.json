@@ -1,0 +1,12 @@
+{
+  "name": "scroll-area/scroll-area-chat",
+  "category": "scroll-area",
+  "variant": "scroll-area-chat",
+  "files": [
+    {
+      "path": "components/ui/scroll-area/scroll-area-chat.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { ScrollArea } from \"@/components/ui/scroll-area\";\nimport { Card, CardHeader, CardTitle } from \"@/components/ui/card\";\n\nconst messages = [\n  {\n    \"sender\": \"Alice\",\n    \"message\": \"Hey team! 👋\",\n    \"time\": \"10:30 AM\",\n    \"isMe\": false\n  },\n  {\n    \"sender\": \"You\",\n    \"message\": \"Hi Alice! How's the project going?\",\n    \"time\": \"10:32 AM\",\n    \"isMe\": true\n  },\n  {\n    \"sender\": \"Alice\",\n    \"message\": \"Going well! Just finished the design review.\",\n    \"time\": \"10:33 AM\",\n    \"isMe\": false\n  },\n  {\n    \"sender\": \"Bob\",\n    \"message\": \"Great work everyone!\",\n    \"time\": \"10:35 AM\",\n    \"isMe\": false\n  },\n  {\n    \"sender\": \"You\",\n    \"message\": \"Thanks! Let's sync up later today.\",\n    \"time\": \"10:36 AM\",\n    \"isMe\": true\n  },\n  {\n    \"sender\": \"Alice\",\n    \"message\": \"Sounds good. How about 3 PM?\",\n    \"time\": \"10:38 AM\",\n    \"isMe\": false\n  },\n  {\n    \"sender\": \"You\",\n    \"message\": \"Perfect! 👍\",\n    \"time\": \"10:39 AM\",\n    \"isMe\": true\n  }\n];\n\nexport default function ScrollAreaChatExample() {\n  return (\n    <Card className=\"w-[350px]\">\n      <CardHeader className=\"border-b\">\n        <CardTitle className=\"text-base flex items-center gap-2\">\n          <div className=\"h-2 w-2 rounded-full bg-green-500\" />\n          Team Chat\n        </CardTitle>\n      </CardHeader>\n      <ScrollArea className=\"h-[250px]\">\n        <div className=\"p-4 space-y-4\">\n          {messages.map((msg, i) => (\n            <div\n              key={i}\n              className={`flex flex-col ${msg.isMe ? \"items-end\" : \"items-start\"}`}\n            >\n              <div\n                className={`rounded-lg px-3 py-2 max-w-[80%] ${msg.isMe ? \"bg-primary text-primary-foreground\" : \"bg-muted\"}`}\n              >\n                {!msg.isMe && <p className=\"text-xs font-medium mb-1\">{msg.sender}</p>}\n                <p className=\"text-sm\">{msg.message}</p>\n              </div>\n              <span className=\"text-xs text-muted-foreground mt-1\">{msg.time}</span>\n            </div>\n          ))}\n        </div>\n      </ScrollArea>\n    </Card>\n  );\n}\n"
+    }
+  ]
+}

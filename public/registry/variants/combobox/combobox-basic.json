@@ -1,0 +1,12 @@
+{
+  "name": "combobox/combobox-basic",
+  "category": "combobox",
+  "variant": "combobox-basic",
+  "files": [
+    {
+      "path": "components/ui/combobox/combobox-basic.tsx",
+      "type": "registry:variant",
+      "content": "import React, { useState } from \"react\";\nimport {\n  Combobox,\n  ComboboxList,\n  ComboboxItem,\n  ComboboxEmpty,\n  ComboboxInput,\n  ComboboxGroup,\n  ComboboxTrigger,\n  ComboboxContent,\n} from \"@/components/ui/combobox\";\nimport { Badge } from \"@/components/ui/badge\";\n\nconst data = [\n  {\n    \"value\": \"next\",\n    \"label\": \"Next.js\"\n  },\n  {\n    \"value\": \"sveltekit\",\n    \"label\": \"SvelteKit\"\n  },\n  {\n    \"value\": \"nuxt\",\n    \"label\": \"Nuxt.js\"\n  },\n  {\n    \"value\": \"remix\",\n    \"label\": \"Remix\"\n  },\n  {\n    \"value\": \"astro\",\n    \"label\": \"Astro\"\n  }\n];\n\nexport default function ComboboxBasicExample() {\n  const [value, setValue] = useState(\"\");\n\n  return (\n    <div className=\"flex flex-wrap gap-4 items-center\">\n      <Combobox value={value} onValueChange={setValue}>\n        <ComboboxTrigger className=\"w-[200px]\">\n          {value ? data.find((f) => f.value === value)?.label : \"Select framework...\"}\n        </ComboboxTrigger>\n        <ComboboxContent className=\"w-[200px]\">\n          <ComboboxInput placeholder=\"Search framework...\" />\n          <ComboboxList>\n            <ComboboxEmpty>No framework found.</ComboboxEmpty>\n            <ComboboxGroup>\n              {data.map((f) => (\n                <ComboboxItem key={f.value} value={f.value}>\n                  {f.label}\n                </ComboboxItem>\n              ))}\n            </ComboboxGroup>\n          </ComboboxList>\n        </ComboboxContent>\n      </Combobox>\n\n      {value && <Badge variant=\"outline\">Selected: {value}</Badge>}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

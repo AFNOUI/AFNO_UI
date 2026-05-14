@@ -1,0 +1,12 @@
+{
+  "name": "slider/slider-basic",
+  "category": "slider",
+  "variant": "slider-basic",
+  "files": [
+    {
+      "path": "components/ui/slider/slider-basic.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Label } from \"@/components/ui/label\";\nimport { Slider } from \"@/components/ui/slider\";\n\nconst data = [\n  {\n    \"label\": \"Volume\",\n    \"defaultValue\": [\n      50\n    ],\n    \"max\": 100,\n    \"step\": 1\n  },\n  {\n    \"label\": \"Price Range\",\n    \"defaultValue\": [\n      25,\n      75\n    ],\n    \"max\": 100,\n    \"step\": 1\n  }\n];\n\nexport default function SliderBasicExample() {\n  return (\n    <div className=\"space-y-6 max-w-sm\">\n      {data.map((item, i) => (\n        <div key={i} className=\"space-y-2\">\n          <Label>{item.label}</Label>\n          <Slider\n            defaultValue={item.defaultValue}\n            max={item.max}\n            step={item.step}\n          />\n        </div>\n      ))}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

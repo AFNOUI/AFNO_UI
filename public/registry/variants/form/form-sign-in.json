@@ -1,0 +1,12 @@
+{
+  "name": "form/form-sign-in",
+  "category": "form",
+  "variant": "form-sign-in",
+  "files": [
+    {
+      "path": "components/ui/form/form-sign-in.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from \"@/components/ui/card\";\nimport { Input } from \"@/components/ui/input\";\nimport { Label } from \"@/components/ui/label\";\nimport { Button } from \"@/components/ui/button\";\nimport { Checkbox } from \"@/components/ui/checkbox\";\n\nconst data = {\n  \"title\": \"Sign In\",\n  \"description\": \"Enter your credentials to access your account.\",\n  \"fields\": [\n    {\n      \"id\": \"email\",\n      \"label\": \"Email\",\n      \"type\": \"email\",\n      \"placeholder\": \"you@example.com\"\n    },\n    {\n      \"id\": \"password\",\n      \"label\": \"Password\",\n      \"type\": \"password\",\n      \"placeholder\": \"••••••••\"\n    }\n  ],\n  \"rememberId\": \"remember\",\n  \"rememberLabel\": \"Remember me\",\n  \"submitText\": \"Sign In\"\n};\n\nexport default function FormSignInExample() {\n  return (\n    <Card className=\"max-w-md\">\n      <CardHeader>\n        <CardTitle>{data.title}</CardTitle>\n        <CardDescription>{data.description}</CardDescription>\n      </CardHeader>\n      <CardContent className=\"space-y-4\">\n        {data.fields.map((field) => (\n          <div key={field.id} className=\"space-y-2\">\n            <Label htmlFor={field.id}>{field.label}</Label>\n            <Input id={field.id} type={field.type} placeholder={field.placeholder} />\n          </div>\n        ))}\n        <div className=\"flex items-center space-x-2\">\n          <Checkbox id={data.rememberId} />\n          <Label htmlFor={data.rememberId}>{data.rememberLabel}</Label>\n        </div>\n      </CardContent>\n      <CardFooter>\n        <Button className=\"w-full\">{data.submitText}</Button>\n      </CardFooter>\n    </Card>\n  );\n}\n"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "charts/treemap/rounded",
+  "category": "charts",
+  "variant": "treemap/rounded",
+  "files": [
+    {
+      "path": "charts/treemap/roundedChart.tsx",
+      "type": "registry:variant",
+      "content": "import { TreemapChart } from \"../../components/charts/treemap\";\n\nconst data = \"Chrome\\n64\\nSafari\\n18\\nEdge\\n9\\nFirefox\\n7\\nOther\\n2\";\n\nexport default function TreemapChartRoundedExample() {\n  return <TreemapChart data={data} variant=\"rounded\" title=\"Rounded\" />;\n}"
+    }
+  ]
+}

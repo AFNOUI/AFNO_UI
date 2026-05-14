@@ -1,0 +1,12 @@
+{
+  "name": "alert-dialog/alert-dialog-basic",
+  "category": "alert-dialog",
+  "variant": "alert-dialog-basic",
+  "files": [
+    {
+      "path": "components/ui/alert-dialog/alert-dialog-basic.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Button } from \"@/components/ui/button\";\nimport {\n  AlertDialog,\n  AlertDialogTitle,\n  AlertDialogAction,\n  AlertDialogCancel,\n  AlertDialogFooter,\n  AlertDialogHeader,\n  AlertDialogTrigger,\n  AlertDialogContent,\n  AlertDialogDescription,\n} from \"@/components/ui/alert-dialog\";\n\nconst data = {\n  \"trigger\": {\n    \"variant\": \"outline\",\n    \"text\": \"Show Dialog\"\n  },\n  \"title\": \"Are you absolutely sure?\",\n  \"description\": \"This action cannot be undone. This will permanently delete your account and remove your data from our servers.\",\n  \"cancelText\": \"Cancel\",\n  \"actionText\": \"Continue\"\n} as const;\n\nexport default function AlertDialogBasicExample() {\n  return (\n    <div className=\"flex flex-wrap gap-4\">\n      <AlertDialog>\n        <AlertDialogTrigger asChild>\n          <Button variant={data.trigger.variant}>{data.trigger.text}</Button>\n        </AlertDialogTrigger>\n        <AlertDialogContent>\n          <AlertDialogHeader>\n            <AlertDialogTitle>{data.title}</AlertDialogTitle>\n            <AlertDialogDescription>{data.description}</AlertDialogDescription>\n          </AlertDialogHeader>\n          <AlertDialogFooter>\n            <AlertDialogCancel>{data.cancelText}</AlertDialogCancel>\n            <AlertDialogAction>{data.actionText}</AlertDialogAction>\n          </AlertDialogFooter>\n        </AlertDialogContent>\n      </AlertDialog>\n    </div>\n  );\n}"
+    }
+  ]
+}

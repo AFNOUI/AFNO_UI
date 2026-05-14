@@ -1,0 +1,12 @@
+{
+  "name": "charts/bar/gradient",
+  "category": "charts",
+  "variant": "bar/gradient",
+  "files": [
+    {
+      "path": "charts/bar/gradientChart.tsx",
+      "type": "registry:variant",
+      "content": "import { BarChart } from \"../../components/charts/bar\";\n\nconst data = \"Jan\\n120\\nFeb\\n200\\nMar\\n150\\nApr\\n280\\nMay\\n220\\nJun\\n310\";\n\nexport default function BarChartGradientExample() {\n  return <BarChart data={data} variant=\"gradient\" title=\"Gradient\" />;\n}"
+    }
+  ]
+}

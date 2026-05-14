@@ -1,0 +1,12 @@
+{
+  "name": "toggle/toggle-multiple-selection",
+  "category": "toggle",
+  "variant": "toggle-multiple-selection",
+  "files": [
+    {
+      "path": "components/ui/toggle/toggle-multiple-selection.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Bold, Italic, Underline } from \"lucide-react\";\nimport { ToggleGroup, ToggleGroupItem } from \"@/components/ui/toggle-group\";\n\nexport default function ToggleMultipleSelectionExample() {\n  return (\n    <ToggleGroup type=\"multiple\" defaultValue={[\"bold\", \"italic\"]}>\n      <ToggleGroupItem value=\"bold\" aria-label=\"Toggle bold\">\n        <Bold className=\"h-4 w-4\" />\n      </ToggleGroupItem>\n      <ToggleGroupItem value=\"italic\" aria-label=\"Toggle italic\">\n        <Italic className=\"h-4 w-4\" />\n      </ToggleGroupItem>\n      <ToggleGroupItem value=\"underline\" aria-label=\"Toggle underline\">\n        <Underline className=\"h-4 w-4\" />\n      </ToggleGroupItem>\n    </ToggleGroup>\n  );\n}\n"
+    }
+  ]
+}

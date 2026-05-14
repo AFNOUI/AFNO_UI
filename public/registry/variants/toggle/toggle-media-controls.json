@@ -1,0 +1,12 @@
+{
+  "name": "toggle/toggle-media-controls",
+  "category": "toggle",
+  "variant": "toggle-media-controls",
+  "files": [
+    {
+      "path": "components/ui/toggle/toggle-media-controls.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { useState } from \"react\";\nimport {\n  Play,\n  Pause,\n  SkipBack,\n  SkipForward,\n  Repeat,\n  Shuffle,\n} from \"lucide-react\";\nimport { Toggle } from \"@/components/ui/toggle\";\n\nexport default function ToggleMediaControlsExample() {\n  const [isPlaying, setIsPlaying] = useState(false);\n\n  return (\n    <div className=\"flex items-center gap-2 p-4 rounded-lg bg-muted\">\n      <Toggle size=\"sm\" aria-label=\"Shuffle\">\n        <Shuffle className=\"h-4 w-4\" />\n      </Toggle>\n      <Toggle size=\"sm\" aria-label=\"Previous\">\n        <SkipBack className=\"h-4 w-4\" />\n      </Toggle>\n      <Toggle\n        pressed={isPlaying}\n        onPressedChange={setIsPlaying}\n        size=\"lg\"\n        aria-label={isPlaying ? \"Pause\" : \"Play\"}\n        className=\"rounded-full\"\n      >\n        {isPlaying ? <Pause className=\"h-5 w-5\" /> : <Play className=\"h-5 w-5\" />}\n      </Toggle>\n      <Toggle size=\"sm\" aria-label=\"Next\">\n        <SkipForward className=\"h-4 w-4\" />\n      </Toggle>\n      <Toggle size=\"sm\" aria-label=\"Repeat\">\n        <Repeat className=\"h-4 w-4\" />\n      </Toggle>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

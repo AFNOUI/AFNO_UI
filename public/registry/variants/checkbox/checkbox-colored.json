@@ -1,0 +1,12 @@
+{
+  "name": "checkbox/checkbox-colored",
+  "category": "checkbox",
+  "variant": "checkbox-colored",
+  "files": [
+    {
+      "path": "components/ui/checkbox/checkbox-colored.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Label } from \"@/components/ui/label\";\nimport { Checkbox } from \"@/components/ui/checkbox\";\nimport { cn } from \"@/lib/utils\";\n\nexport default function CheckboxColoredExample() {\n  return (\n    <div className=\"flex flex-wrap gap-4\">\n      <div className=\"flex items-center space-x-2\">\n        <Checkbox\n          id=\"color-0\"\n          className={cn(\n            \"border\",\n            \"data-[state=checked]:bg-primary\",\n            \"data-[state=checked]:text-white\",\n          )}\n        />\n        <Label htmlFor=\"color-0\" className=\"cursor-pointer\">Primary</Label>\n      </div>\n      <div className=\"flex items-center space-x-2\">\n        <Checkbox\n          id=\"color-1\"\n          className={cn(\n            \"border\",\n            \"border-[hsl(var(--progress-success))]\",\n            \"data-[state=checked]:bg-[hsl(var(--progress-success))]\",\n            \"data-[state=checked]:text-white\",\n          )}\n        />\n        <Label htmlFor=\"color-1\" className=\"cursor-pointer\">Success</Label>\n      </div>\n      <div className=\"flex items-center space-x-2\">\n        <Checkbox\n          id=\"color-2\"\n          className={cn(\n            \"border\",\n            \"border-[hsl(var(--progress-warning))]\",\n            \"data-[state=checked]:bg-[hsl(var(--progress-warning))]\",\n            \"data-[state=checked]:text-foreground\",\n          )}\n        />\n        <Label htmlFor=\"color-2\" className=\"cursor-pointer\">Warning</Label>\n      </div>\n      <div className=\"flex items-center space-x-2\">\n        <Checkbox\n          id=\"color-3\"\n          className={cn(\n            \"border\",\n            \"border-destructive\",\n            \"data-[state=checked]:bg-destructive\",\n            \"data-[state=checked]:text-white\",\n          )}\n        />\n        <Label htmlFor=\"color-3\" className=\"cursor-pointer\">Error</Label>\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

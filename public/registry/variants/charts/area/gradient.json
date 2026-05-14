@@ -1,0 +1,12 @@
+{
+  "name": "charts/area/gradient",
+  "category": "charts",
+  "variant": "area/gradient",
+  "files": [
+    {
+      "path": "charts/area/gradientChart.tsx",
+      "type": "registry:variant",
+      "content": "import { AreaChart } from \"../../components/charts/area\";\n\nconst data = \"Jan\\n30\\nFeb\\n45\\nMar\\n38\\nApr\\n60\\nMay\\n55\\nJun\\n72\";\n\nexport default function AreaChartGradientExample() {\n  return <AreaChart data={data} variant=\"gradient\" title=\"Gradient\" />;\n}"
+    }
+  ]
+}

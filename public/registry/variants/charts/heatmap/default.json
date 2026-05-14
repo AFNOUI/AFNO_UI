@@ -1,0 +1,12 @@
+{
+  "name": "charts/heatmap/default",
+  "category": "charts",
+  "variant": "heatmap/default",
+  "files": [
+    {
+      "path": "charts/heatmap/defaultChart.tsx",
+      "type": "registry:variant",
+      "content": "import { HeatmapChart } from \"../../components/charts/heatmap\";\n\nconst data = \"Mon\\n12\\nTue\\n8\\nWed\\n15\\nThu\\n20\\nFri\\n7\\nSat\\n3\\nSun\\n10\";\n\nexport default function HeatmapChartDefaultExample() {\n  return <HeatmapChart data={data} variant=\"default\" title=\"Default\" />;\n}"
+    }
+  ]
+}

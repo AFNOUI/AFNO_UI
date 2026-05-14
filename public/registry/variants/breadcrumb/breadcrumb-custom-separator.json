@@ -1,0 +1,12 @@
+{
+  "name": "breadcrumb/breadcrumb-custom-separator",
+  "category": "breadcrumb",
+  "variant": "breadcrumb-custom-separator",
+  "files": [
+    {
+      "path": "components/ui/breadcrumb/breadcrumb-custom-separator.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Slash } from \"lucide-react\";\nimport {\n  Breadcrumb,\n  BreadcrumbItem,\n  BreadcrumbLink,\n  BreadcrumbList,\n  BreadcrumbPage,\n  BreadcrumbSeparator,\n} from \"@/components/ui/breadcrumb\";\n\nconst data = [\n  {\n    \"type\": \"link\",\n    \"href\": \"#\",\n    \"text\": \"Dashboard\"\n  },\n  {\n    \"type\": \"link\",\n    \"href\": \"#\",\n    \"text\": \"Analytics\"\n  },\n  {\n    \"type\": \"page\",\n    \"text\": \"Overview\"\n  }\n];\n\nexport default function BreadcrumbCustomSeparatorExample() {\n  return (\n    <Breadcrumb>\n      <BreadcrumbList>\n        {data.map((item, index) => (\n          <React.Fragment key={index}>\n            {item.type === \"link\" ? (\n              <BreadcrumbItem>\n                <BreadcrumbLink href={item.href}>{item.text}</BreadcrumbLink>\n              </BreadcrumbItem>\n            ) : (\n              <BreadcrumbItem>\n                <BreadcrumbPage>{item.text}</BreadcrumbPage>\n              </BreadcrumbItem>\n            )}\n            {index < data.length - 1 && (\n              <BreadcrumbSeparator>\n                <Slash className=\"h-4 w-4\" />\n              </BreadcrumbSeparator>\n            )}\n          </React.Fragment>\n        ))}\n      </BreadcrumbList>\n    </Breadcrumb>\n  );\n}"
+    }
+  ]
+}

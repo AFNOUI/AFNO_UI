@@ -1,0 +1,1 @@
+export { SliderBasic } from "./SliderBasic";

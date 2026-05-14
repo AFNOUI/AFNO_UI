@@ -1,0 +1,12 @@
+{
+  "name": "toggle/toggle-group-sizes",
+  "category": "toggle",
+  "variant": "toggle-group-sizes",
+  "files": [
+    {
+      "path": "components/ui/toggle/toggle-group-sizes.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { ToggleGroup, ToggleGroupItem } from \"@/components/ui/toggle-group\";\n\nexport default function ToggleGroupSizesExample() {\n  return (\n    <div className=\"space-y-4\">\n      <ToggleGroup type=\"single\" defaultValue=\"a\" size=\"sm\">\n        <ToggleGroupItem value=\"a\">A</ToggleGroupItem>\n        <ToggleGroupItem value=\"b\">B</ToggleGroupItem>\n        <ToggleGroupItem value=\"c\">C</ToggleGroupItem>\n      </ToggleGroup>\n      <ToggleGroup type=\"single\" defaultValue=\"a\" size=\"default\">\n        <ToggleGroupItem value=\"a\">A</ToggleGroupItem>\n        <ToggleGroupItem value=\"b\">B</ToggleGroupItem>\n        <ToggleGroupItem value=\"c\">C</ToggleGroupItem>\n      </ToggleGroup>\n      <ToggleGroup type=\"single\" defaultValue=\"a\" size=\"lg\">\n        <ToggleGroupItem value=\"a\">A</ToggleGroupItem>\n        <ToggleGroupItem value=\"b\">B</ToggleGroupItem>\n        <ToggleGroupItem value=\"c\">C</ToggleGroupItem>\n      </ToggleGroup>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

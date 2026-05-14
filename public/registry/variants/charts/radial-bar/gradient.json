@@ -1,0 +1,12 @@
+{
+  "name": "charts/radial-bar/gradient",
+  "category": "charts",
+  "variant": "radial-bar/gradient",
+  "files": [
+    {
+      "path": "charts/radial-bar/gradientChart.tsx",
+      "type": "registry:variant",
+      "content": "import { RadialBarChart } from \"../../components/charts/radial-bar\";\n\nconst data = \"A\\n60\\nB\\n45\\nC\\n80\\nD\\n30\";\n\nexport default function RadialBarChartGradientExample() {\n  return <RadialBarChart data={data} variant=\"gradient\" title=\"Gradient\" />;\n}"
+    }
+  ]
+}

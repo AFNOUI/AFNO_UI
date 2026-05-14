@@ -1,0 +1,12 @@
+{
+  "name": "toggle/toggle-text-alignment-group",
+  "category": "toggle",
+  "variant": "toggle-text-alignment-group",
+  "files": [
+    {
+      "path": "components/ui/toggle/toggle-text-alignment-group.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { useState } from \"react\";\nimport {\n  AlignLeft,\n  AlignCenter,\n  AlignRight,\n  AlignJustify,\n} from \"lucide-react\";\nimport { ToggleGroup, ToggleGroupItem } from \"@/components/ui/toggle-group\";\n\nexport default function ToggleTextAlignmentGroupExample() {\n  const [alignment, setAlignment] = useState(\"left\");\n\n  return (\n    <ToggleGroup\n      type=\"single\"\n      value={alignment}\n      onValueChange={(v: string) => v && setAlignment(v)}\n    >\n      <ToggleGroupItem value=\"left\" aria-label=\"Align left\">\n        <AlignLeft className=\"h-4 w-4\" />\n      </ToggleGroupItem>\n      <ToggleGroupItem value=\"center\" aria-label=\"Align center\">\n        <AlignCenter className=\"h-4 w-4\" />\n      </ToggleGroupItem>\n      <ToggleGroupItem value=\"right\" aria-label=\"Align right\">\n        <AlignRight className=\"h-4 w-4\" />\n      </ToggleGroupItem>\n      <ToggleGroupItem value=\"justify\" aria-label=\"Justify\">\n        <AlignJustify className=\"h-4 w-4\" />\n      </ToggleGroupItem>\n    </ToggleGroup>\n  );\n}\n"
+    }
+  ]
+}

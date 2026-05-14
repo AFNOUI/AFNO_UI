@@ -1,0 +1,12 @@
+{
+  "name": "breadcrumb/breadcrumb-basic",
+  "category": "breadcrumb",
+  "variant": "breadcrumb-basic",
+  "files": [
+    {
+      "path": "components/ui/breadcrumb/breadcrumb-basic.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport {\n  Breadcrumb,\n  BreadcrumbItem,\n  BreadcrumbLink,\n  BreadcrumbList,\n  BreadcrumbPage,\n  BreadcrumbSeparator,\n} from \"@/components/ui/breadcrumb\";\n\nconst data = [\n  {\n    \"type\": \"link\",\n    \"href\": \"/\",\n    \"text\": \"Home\"\n  },\n  {\n    \"type\": \"link\",\n    \"href\": \"/components\",\n    \"text\": \"Components\"\n  },\n  {\n    \"type\": \"page\",\n    \"text\": \"Breadcrumb\"\n  }\n];\n\nexport default function BreadcrumbBasicExample() {\n  return (\n    <Breadcrumb>\n      <BreadcrumbList>\n        {data.map((item, index) => (\n          <React.Fragment key={index}>\n            {item.type === \"link\" ? (\n              <BreadcrumbItem>\n                <BreadcrumbLink href={item.href}>{item.text}</BreadcrumbLink>\n              </BreadcrumbItem>\n            ) : (\n              <BreadcrumbItem>\n                <BreadcrumbPage>{item.text}</BreadcrumbPage>\n              </BreadcrumbItem>\n            )}\n            {index < data.length - 1 && <BreadcrumbSeparator />}\n          </React.Fragment>\n        ))}\n      </BreadcrumbList>\n    </Breadcrumb>\n  );\n}"
+    }
+  ]
+}

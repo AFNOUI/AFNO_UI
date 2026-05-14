@@ -1,0 +1,12 @@
+{
+  "name": "charts/scatter/line-connected",
+  "category": "charts",
+  "variant": "scatter/line-connected",
+  "files": [
+    {
+      "path": "charts/scatter/line-connectedChart.tsx",
+      "type": "registry:variant",
+      "content": "import { ScatterChart } from \"../../components/charts/scatter\";\n\nconst data = \"A\\n20\\nB\\n40\\nC\\n35\\nD\\n60\\nE\\n85\";\n\nexport default function ScatterChartLineConnectedExample() {\n  return <ScatterChart data={data} variant=\"line-connected\" title=\"Line Connected\" />;\n}"
+    }
+  ]
+}

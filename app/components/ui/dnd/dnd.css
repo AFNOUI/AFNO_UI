@@ -1,0 +1,22 @@
+/**
+ * Custom Pointer DnD — global styles.
+ *
+ * - Smooth transform transitions on items inside an active drop zone so that
+ *   the visual gap created by <DropIndicator/> appearing/disappearing slides
+ *   smoothly rather than snapping.
+ * - The dragged item itself is excluded (it's already pinned to the cursor by
+ *   the overlay portal).
+ */
+[data-dnd-zone="true"], [data-dnd-zone] {
+  /* No-op selector — keeps Tailwind purger from dropping the data attribute. */
+}
+
+/* Smooth slide for siblings while a drag is in progress. */
+[data-dnd-over="true"] [data-dnd-item="true"]:not([data-dragging="true"]) {
+  transition: transform 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Visual treatment for the dragged source — the overlay shows the real card. */
+[data-dnd-item="true"][data-dragging="true"] {
+  transition: opacity 100ms ease-out;
+}

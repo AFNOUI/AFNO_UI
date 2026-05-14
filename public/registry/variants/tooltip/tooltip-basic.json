@@ -1,0 +1,12 @@
+{
+  "name": "tooltip/tooltip-basic",
+  "category": "tooltip",
+  "variant": "tooltip-basic",
+  "files": [
+    {
+      "path": "components/ui/tooltip/tooltip-basic.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Settings, HelpCircle } from \"lucide-react\";\nimport {\n  Tooltip,\n  TooltipContent,\n  TooltipTrigger,\n} from \"@/components/ui/tooltip\";\nimport { Button } from \"@/components/ui/button\";\n\nconst data = {\n  \"variants\": [\n    {\n      \"id\": \"primary-button\",\n      \"buttonLabel\": \"Hover me\",\n      \"buttonVariant\": \"outline\",\n      \"tooltipText\": \"Add to library\",\n      \"icon\": null\n    },\n    {\n      \"id\": \"settings-icon\",\n      \"buttonLabel\": \"\",\n      \"buttonVariant\": \"secondary\",\n      \"buttonSize\": \"icon\",\n      \"tooltipText\": \"Settings\",\n      \"icon\": \"settings\"\n    },\n    {\n      \"id\": \"help-icon\",\n      \"buttonLabel\": \"\",\n      \"buttonVariant\": \"ghost\",\n      \"buttonSize\": \"icon\",\n      \"tooltipText\": \"Need help?\",\n      \"icon\": \"help\"\n    }\n  ]\n} as const;\n\nexport default function TooltipBasicExample() {\n  return (\n    <div className=\"flex flex-wrap gap-4\">\n      <Tooltip>\n        <TooltipTrigger asChild>\n          <Button variant={data.variants[0].buttonVariant}>\n            {data.variants[0].buttonLabel}\n          </Button>\n        </TooltipTrigger>\n        <TooltipContent>\n          <p>{data.variants[0].tooltipText}</p>\n        </TooltipContent>\n      </Tooltip>\n\n      <Tooltip>\n        <TooltipTrigger asChild>\n          <Button\n            variant={data.variants[1].buttonVariant}\n            size={data.variants[1].buttonSize}\n          >\n            <Settings className=\"h-4 w-4\" />\n          </Button>\n        </TooltipTrigger>\n        <TooltipContent>\n          <p>{data.variants[1].tooltipText}</p>\n        </TooltipContent>\n      </Tooltip>\n\n      <Tooltip>\n        <TooltipTrigger asChild>\n          <Button\n            variant={data.variants[2].buttonVariant}\n            size={data.variants[2].buttonSize}\n          >\n            <HelpCircle className=\"h-4 w-4\" />\n          </Button>\n        </TooltipTrigger>\n        <TooltipContent>\n          <p>{data.variants[2].tooltipText}</p>\n        </TooltipContent>\n      </Tooltip>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

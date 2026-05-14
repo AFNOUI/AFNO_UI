@@ -1,0 +1,12 @@
+{
+  "name": "scroll-area/scroll-area-notifications",
+  "category": "scroll-area",
+  "variant": "scroll-area-notifications",
+  "files": [
+    {
+      "path": "components/ui/scroll-area/scroll-area-notifications.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { ScrollArea } from \"@/components/ui/scroll-area\";\nimport { Card, CardContent, CardHeader, CardTitle } from \"@/components/ui/card\";\n\nconst notifications = [\n  {\n    \"title\": \"Your call has been confirmed.\",\n    \"time\": \"1 hour ago\"\n  },\n  {\n    \"title\": \"You have a new message!\",\n    \"time\": \"2 hours ago\"\n  },\n  {\n    \"title\": \"Your subscription is expiring soon!\",\n    \"time\": \"5 hours ago\"\n  },\n  {\n    \"title\": \"Payment received successfully.\",\n    \"time\": \"1 day ago\"\n  },\n  {\n    \"title\": \"New feature available.\",\n    \"time\": \"2 days ago\"\n  },\n  {\n    \"title\": \"Weekly report is ready.\",\n    \"time\": \"3 days ago\"\n  },\n  {\n    \"title\": \"Security update applied.\",\n    \"time\": \"4 days ago\"\n  },\n  {\n    \"title\": \"Team member joined.\",\n    \"time\": \"5 days ago\"\n  }\n];\n\nexport default function ScrollAreaNotificationsExample() {\n  return (\n    <Card className=\"w-[350px]\">\n      <CardHeader>\n        <CardTitle className=\"text-base\">Notifications</CardTitle>\n      </CardHeader>\n      <CardContent className=\"p-0\">\n        <ScrollArea className=\"h-[300px] px-4\">\n          <div className=\"space-y-4 pb-4\">\n            {notifications.map((n, i) => (\n              <div key={i} className=\"flex items-start gap-4 rounded-lg border p-3\">\n                <div className=\"h-2 w-2 rounded-full bg-primary mt-2\" />\n                <div className=\"flex-1 space-y-1\">\n                  <p className=\"text-sm font-medium leading-none\">{n.title}</p>\n                  <p className=\"text-xs text-muted-foreground\">{n.time}</p>\n                </div>\n              </div>\n            ))}\n          </div>\n        </ScrollArea>\n      </CardContent>\n    </Card>\n  );\n}\n"
+    }
+  ]
+}

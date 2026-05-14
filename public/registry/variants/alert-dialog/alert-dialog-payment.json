@@ -1,0 +1,12 @@
+{
+  "name": "alert-dialog/alert-dialog-payment",
+  "category": "alert-dialog",
+  "variant": "alert-dialog-payment",
+  "files": [
+    {
+      "path": "components/ui/alert-dialog/alert-dialog-payment.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { CreditCard } from \"lucide-react\";\nimport { Button } from \"@/components/ui/button\";\nimport {\n  AlertDialog,\n  AlertDialogTitle,\n  AlertDialogAction,\n  AlertDialogCancel,\n  AlertDialogFooter,\n  AlertDialogHeader,\n  AlertDialogTrigger,\n  AlertDialogContent,\n  AlertDialogDescription,\n} from \"@/components/ui/alert-dialog\";\n\nconst data = {\n  \"trigger\": {\n    \"icon\": \"CreditCard\",\n    \"text\": \"Upgrade to Pro\"\n  },\n  \"title\": \"Confirm Your Upgrade\",\n  \"description\": \"You're about to upgrade to the Pro plan:\",\n  \"pricing\": {\n    \"plan\": \"Pro Plan - $29/month\",\n    \"price\": \"Pro Plan - $29/month\",\n    \"billing\": \"Billed monthly, cancel anytime\"\n  },\n  \"cancelText\": \"Cancel\",\n  \"actionText\": \"Confirm & Pay\"\n} as const;\n\nexport default function AlertDialogPaymentExample() {\n  return (\n    <div className=\"flex flex-wrap gap-4\">\n      <AlertDialog>\n        <AlertDialogTrigger asChild>\n          <Button>\n            <CreditCard className=\"me-2 h-4 w-4\" />\n            {data.trigger.text}\n          </Button>\n        </AlertDialogTrigger>\n        <AlertDialogContent>\n          <AlertDialogHeader>\n            <AlertDialogTitle>{data.title}</AlertDialogTitle>\n            <AlertDialogDescription>{data.description}</AlertDialogDescription>\n            <div className=\"rounded-lg bg-muted p-3 mt-2\">\n              <p className=\"font-medium text-foreground\">{data.pricing.plan}</p>\n              <p className=\"text-sm\">{data.pricing.billing}</p>\n            </div>\n          </AlertDialogHeader>\n          <AlertDialogFooter>\n            <AlertDialogCancel>{data.cancelText}</AlertDialogCancel>\n            <AlertDialogAction>{data.actionText}</AlertDialogAction>\n          </AlertDialogFooter>\n        </AlertDialogContent>\n      </AlertDialog>\n    </div>\n  );\n}"
+    }
+  ]
+}

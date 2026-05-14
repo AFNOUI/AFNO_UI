@@ -1,0 +1,12 @@
+{
+  "name": "toggle/toggle-with-text",
+  "category": "toggle",
+  "variant": "toggle-with-text",
+  "files": [
+    {
+      "path": "components/ui/toggle/toggle-with-text.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Wifi, Volume2 } from \"lucide-react\";\nimport { Toggle } from \"@/components/ui/toggle\";\n\nexport default function ToggleWithTextExample() {\n  return (\n    <div className=\"flex flex-wrap gap-4\">\n      <Toggle variant=\"outline\" aria-label=\"Toggle wifi\" className=\"gap-2\">\n        <Wifi className=\"h-4 w-4\" />\n        WiFi\n      </Toggle>\n      <Toggle variant=\"outline\" aria-label=\"Toggle sound\" className=\"gap-2\">\n        <Volume2 className=\"h-4 w-4\" />\n        Sound\n      </Toggle>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

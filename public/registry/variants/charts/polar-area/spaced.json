@@ -1,0 +1,12 @@
+{
+  "name": "charts/polar-area/spaced",
+  "category": "charts",
+  "variant": "polar-area/spaced",
+  "files": [
+    {
+      "path": "charts/polar-area/spacedChart.tsx",
+      "type": "registry:variant",
+      "content": "import { PolarAreaChart } from \"../../components/charts/polar-area\";\n\nconst data = \"North\\n55\\nEast\\n70\\nSouth\\n42\\nWest\\n63\";\n\nexport default function PolarAreaChartSpacedExample() {\n  return <PolarAreaChart data={data} variant=\"spaced\" title=\"Spaced\" />;\n}"
+    }
+  ]
+}

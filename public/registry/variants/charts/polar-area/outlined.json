@@ -1,0 +1,12 @@
+{
+  "name": "charts/polar-area/outlined",
+  "category": "charts",
+  "variant": "polar-area/outlined",
+  "files": [
+    {
+      "path": "charts/polar-area/outlinedChart.tsx",
+      "type": "registry:variant",
+      "content": "import { PolarAreaChart } from \"../../components/charts/polar-area\";\n\nconst data = \"North\\n55\\nEast\\n70\\nSouth\\n42\\nWest\\n63\";\n\nexport default function PolarAreaChartOutlinedExample() {\n  return <PolarAreaChart data={data} variant=\"outlined\" title=\"Outlined\" />;\n}"
+    }
+  ]
+}

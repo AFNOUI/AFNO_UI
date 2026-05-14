@@ -1,0 +1,12 @@
+{
+  "name": "navigation-menu/navigation-menu-simple",
+  "category": "navigation-menu",
+  "variant": "navigation-menu-simple",
+  "files": [
+    {
+      "path": "components/ui/navigation-menu/navigation-menu-simple.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from \"@/components/ui/navigation-menu\";\n\nconst data = {\n  \"links\": [\n    {\n      \"label\": \"Home\",\n      \"href\": \"#\"\n    },\n    {\n      \"label\": \"About\",\n      \"href\": \"#\"\n    },\n    {\n      \"label\": \"Services\",\n      \"href\": \"#\"\n    },\n    {\n      \"label\": \"Contact\",\n      \"href\": \"#\"\n    }\n  ]\n};\n\nexport default function NavigationMenuSimpleExample() {\n  return (\n    <NavigationMenu>\n      <NavigationMenuList>\n        {data.links.map((link) => (\n          <NavigationMenuItem key={link.label}>\n            <NavigationMenuLink className={navigationMenuTriggerStyle()} href={link.href}>\n              {link.label}\n            </NavigationMenuLink>\n          </NavigationMenuItem>\n        ))}\n      </NavigationMenuList>\n    </NavigationMenu>\n  );\n}\n"
+    }
+  ]
+}

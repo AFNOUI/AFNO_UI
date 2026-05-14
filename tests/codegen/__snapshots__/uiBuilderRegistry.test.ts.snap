@@ -1,0 +1,1581 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`uiBuilderRegistry — shape > locks down the full (icon-less) shape of every entry 1`] = `
+[
+  {
+    "category": "layout",
+    "defaultChildrenTypes": null,
+    "defaultProps": {},
+    "defaultStyles": {
+      "base": {
+        "margin": "mx-auto",
+        "maxWidth": "max-w-7xl",
+        "padding": "p-6",
+      },
+    },
+    "editablePropKeys": [],
+    "isComposite": false,
+    "isContainer": true,
+    "label": "Container",
+    "type": "container",
+  },
+  {
+    "category": "layout",
+    "defaultChildrenTypes": null,
+    "defaultProps": {},
+    "defaultStyles": {
+      "base": {
+        "padding": "py-12 px-6",
+      },
+    },
+    "editablePropKeys": [],
+    "isComposite": false,
+    "isContainer": true,
+    "label": "Section",
+    "type": "section",
+  },
+  {
+    "category": "layout",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "columns": "3",
+    },
+    "defaultStyles": {
+      "base": {
+        "display": "grid",
+        "gap": "gap-6",
+        "gridCols": "grid-cols-3",
+      },
+      "sm": {
+        "gridCols": "grid-cols-1",
+      },
+    },
+    "editablePropKeys": [
+      "columns",
+    ],
+    "isComposite": false,
+    "isContainer": true,
+    "label": "Grid",
+    "type": "grid",
+  },
+  {
+    "category": "layout",
+    "defaultChildrenTypes": null,
+    "defaultProps": {},
+    "defaultStyles": {
+      "base": {
+        "alignItems": "items-center",
+        "display": "flex",
+        "flexWrap": "flex-wrap",
+        "gap": "gap-4",
+      },
+    },
+    "editablePropKeys": [],
+    "isComposite": false,
+    "isContainer": true,
+    "label": "Flex Row",
+    "type": "flex",
+  },
+  {
+    "category": "layout",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-6",
+        "shadow": "shadow-sm",
+      },
+    },
+    "editablePropKeys": [
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": true,
+    "label": "Card",
+    "type": "card",
+  },
+  {
+    "category": "layout",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "activeTab": "0",
+      "tabs": "Tab 1
+Tab 2
+Tab 3",
+    },
+    "defaultStyles": {
+      "base": {},
+    },
+    "editablePropKeys": [
+      "tabs",
+      "activeTab",
+    ],
+    "isComposite": false,
+    "isContainer": true,
+    "label": "Tabs Container",
+    "type": "tabs-container",
+  },
+  {
+    "category": "layout",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "items": "What is this?
+A page builder component
+How does it work?
+Drag and drop components
+Is it free?
+Yes, completely free",
+    },
+    "defaultStyles": {
+      "base": {},
+    },
+    "editablePropKeys": [
+      "items",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Accordion",
+    "type": "accordion-container",
+  },
+  {
+    "category": "layout",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "layout": "1/2-1/2",
+    },
+    "defaultStyles": {
+      "base": {
+        "display": "grid",
+        "gap": "gap-6",
+        "gridCols": "grid-cols-2",
+      },
+      "sm": {
+        "gridCols": "grid-cols-1",
+      },
+    },
+    "editablePropKeys": [
+      "layout",
+    ],
+    "isComposite": false,
+    "isContainer": true,
+    "label": "Columns",
+    "type": "columns",
+  },
+  {
+    "category": "basic",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "level": "h2",
+      "text": "Heading",
+    },
+    "defaultStyles": {
+      "base": {
+        "color": "text-foreground",
+        "fontSize": "text-3xl",
+        "fontWeight": "font-bold",
+      },
+    },
+    "editablePropKeys": [
+      "text",
+      "level",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Heading",
+    "type": "heading",
+  },
+  {
+    "category": "basic",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    },
+    "defaultStyles": {
+      "base": {
+        "color": "text-muted-foreground",
+        "fontSize": "text-base",
+        "lineHeight": "leading-relaxed",
+      },
+    },
+    "editablePropKeys": [
+      "text",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Paragraph",
+    "type": "text",
+  },
+  {
+    "category": "basic",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "alt": "Placeholder",
+      "src": "https://placehold.co/600x400/1a1a2e/e0e0e0?text=Image",
+    },
+    "defaultStyles": {
+      "base": {
+        "borderRadius": "rounded-lg",
+        "width": "w-full",
+      },
+    },
+    "editablePropKeys": [
+      "src",
+      "alt",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Image",
+    "type": "image",
+  },
+  {
+    "category": "basic",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "size": "default",
+      "text": "Click Me",
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {},
+    },
+    "editablePropKeys": [
+      "text",
+      "variant",
+      "size",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Button",
+    "type": "button",
+  },
+  {
+    "category": "basic",
+    "defaultChildrenTypes": null,
+    "defaultProps": {},
+    "defaultStyles": {
+      "base": {
+        "margin": "my-6",
+      },
+    },
+    "editablePropKeys": [],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Divider",
+    "type": "divider",
+  },
+  {
+    "category": "basic",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "height": "40",
+    },
+    "defaultStyles": {
+      "base": {},
+    },
+    "editablePropKeys": [
+      "height",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Spacer",
+    "type": "spacer",
+  },
+  {
+    "category": "basic",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "text": "New",
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {},
+    },
+    "editablePropKeys": [
+      "text",
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Badge",
+    "type": "badge",
+  },
+  {
+    "category": "basic",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "href": "#",
+      "text": "Learn More →",
+    },
+    "defaultStyles": {
+      "base": {
+        "color": "text-primary",
+        "fontWeight": "font-medium",
+      },
+    },
+    "editablePropKeys": [
+      "text",
+      "href",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Link",
+    "type": "link",
+  },
+  {
+    "category": "basic",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "items": "Feature one
+Feature two
+Feature three",
+      "ordered": false,
+    },
+    "defaultStyles": {
+      "base": {
+        "color": "text-muted-foreground",
+        "padding": "pl-5",
+      },
+    },
+    "editablePropKeys": [
+      "items",
+      "ordered",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "List",
+    "type": "list",
+  },
+  {
+    "category": "basic",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "fallback": "JD",
+      "src": "https://placehold.co/100x100/1a1a2e/e0e0e0?text=JD",
+    },
+    "defaultStyles": {
+      "base": {},
+    },
+    "editablePropKeys": [
+      "src",
+      "fallback",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Avatar",
+    "type": "avatar",
+  },
+  {
+    "category": "basic",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "description": "This is an important message for users.",
+      "title": "Heads up!",
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {},
+    },
+    "editablePropKeys": [
+      "title",
+      "description",
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Alert",
+    "type": "alert",
+  },
+  {
+    "category": "basic",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "code": "const hello = 'world';
+console.log(hello);",
+      "language": "javascript",
+    },
+    "defaultStyles": {
+      "base": {},
+    },
+    "editablePropKeys": [
+      "code",
+      "language",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Code Block",
+    "type": "code-block",
+  },
+  {
+    "category": "basic",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "label": "Loading...",
+      "value": 60,
+    },
+    "defaultStyles": {
+      "base": {},
+    },
+    "editablePropKeys": [
+      "value",
+      "label",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Progress Bar",
+    "type": "progress",
+  },
+  {
+    "category": "basic",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "aspectRatio": "16/9",
+      "src": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    },
+    "defaultStyles": {
+      "base": {
+        "borderRadius": "rounded-lg",
+        "overflow": "overflow-hidden",
+        "width": "w-full",
+      },
+    },
+    "editablePropKeys": [
+      "src",
+      "aspectRatio",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Video Embed",
+    "type": "video",
+  },
+  {
+    "category": "marketing",
+    "defaultChildrenTypes": [
+      "badge",
+      "heading",
+      "text",
+      "button",
+    ],
+    "defaultProps": {},
+    "defaultStyles": {
+      "base": {
+        "padding": "py-20 px-6",
+        "textAlign": "text-center",
+      },
+    },
+    "editablePropKeys": [],
+    "isComposite": false,
+    "isContainer": true,
+    "label": "Hero Section",
+    "type": "hero",
+  },
+  {
+    "category": "marketing",
+    "defaultChildrenTypes": [
+      "heading",
+      "text",
+      "button",
+    ],
+    "defaultProps": {},
+    "defaultStyles": {
+      "base": {
+        "background": "bg-primary/5",
+        "border": "border border-primary/20",
+        "borderRadius": "rounded-2xl",
+        "padding": "p-10",
+        "textAlign": "text-center",
+      },
+    },
+    "editablePropKeys": [],
+    "isComposite": false,
+    "isContainer": true,
+    "label": "CTA Banner",
+    "type": "cta",
+  },
+  {
+    "category": "marketing",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "author": "Jane Doe",
+      "quote": "This product changed how our team works. Highly recommend!",
+      "role": "CEO at Acme",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-6",
+      },
+    },
+    "editablePropKeys": [
+      "quote",
+      "author",
+      "role",
+    ],
+    "isComposite": true,
+    "isContainer": true,
+    "label": "Testimonial",
+    "type": "testimonial",
+  },
+  {
+    "category": "marketing",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "cta": "Get Started",
+      "features": "Unlimited projects
+10 team members
+Priority support
+Custom integrations",
+      "highlighted": true,
+      "period": "/month",
+      "price": "$29",
+      "title": "Pro",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-8",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "price",
+      "period",
+      "features",
+      "cta",
+      "highlighted",
+    ],
+    "isComposite": true,
+    "isContainer": true,
+    "label": "Pricing Card",
+    "type": "pricing",
+  },
+  {
+    "category": "marketing",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "features": "Blazing Fast
+Optimized for speed and performance
+Secure
+Enterprise-grade security built-in
+Scalable
+Grows with your business needs
+Reliable
+99.9% uptime guaranteed",
+    },
+    "defaultStyles": {
+      "base": {
+        "display": "grid",
+        "gap": "gap-6",
+        "gridCols": "grid-cols-2",
+      },
+      "sm": {
+        "gridCols": "grid-cols-1",
+      },
+    },
+    "editablePropKeys": [
+      "features",
+    ],
+    "isComposite": true,
+    "isContainer": true,
+    "label": "Feature Grid",
+    "type": "feature-grid",
+  },
+  {
+    "category": "marketing",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "stats": "10K+
+Users
+99.9%
+Uptime
+50+
+Integrations
+24/7
+Support",
+    },
+    "defaultStyles": {
+      "base": {
+        "display": "grid",
+        "gap": "gap-6",
+        "gridCols": "grid-cols-4",
+        "textAlign": "text-center",
+      },
+      "sm": {
+        "gridCols": "grid-cols-2",
+      },
+    },
+    "editablePropKeys": [
+      "stats",
+    ],
+    "isComposite": true,
+    "isContainer": true,
+    "label": "Stats Counter",
+    "type": "stats-counter",
+  },
+  {
+    "category": "marketing",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "items": "What is this?
+A professional page builder for creating beautiful UIs.
+How does it work?
+Drag and drop components onto the canvas.
+Is it free?
+Yes, completely free and open source.",
+      "title": "Frequently Asked Questions",
+    },
+    "defaultStyles": {
+      "base": {
+        "margin": "mx-auto",
+        "maxWidth": "max-w-3xl",
+        "padding": "py-12 px-6",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "items",
+    ],
+    "isComposite": true,
+    "isContainer": true,
+    "label": "FAQ Section",
+    "type": "faq",
+  },
+  {
+    "category": "marketing",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "buttonText": "Subscribe",
+      "description": "Get the latest news delivered to your inbox.",
+      "title": "Stay Updated",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-8",
+        "textAlign": "text-center",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "description",
+      "buttonText",
+    ],
+    "isComposite": true,
+    "isContainer": true,
+    "label": "Newsletter Signup",
+    "type": "newsletter",
+  },
+  {
+    "category": "marketing",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "brand": "Acme Inc",
+      "copyright": "© 2026 Acme Inc. All rights reserved.",
+      "links": "About
+Blog
+Careers
+Contact
+Privacy
+Terms",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-muted",
+        "borderRadius": "rounded-none",
+        "padding": "py-12 px-6",
+      },
+    },
+    "editablePropKeys": [
+      "brand",
+      "links",
+      "copyright",
+    ],
+    "isComposite": true,
+    "isContainer": true,
+    "label": "Footer",
+    "type": "footer",
+  },
+  {
+    "category": "forms",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "inputType": "email",
+      "label": "Email",
+      "placeholder": "you@example.com",
+    },
+    "defaultStyles": {
+      "base": {},
+    },
+    "editablePropKeys": [
+      "label",
+      "placeholder",
+      "inputType",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Input",
+    "type": "input",
+  },
+  {
+    "category": "forms",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "label": "Message",
+      "placeholder": "Type your message...",
+      "rows": 4,
+    },
+    "defaultStyles": {
+      "base": {},
+    },
+    "editablePropKeys": [
+      "label",
+      "placeholder",
+      "rows",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Textarea",
+    "type": "textarea",
+  },
+  {
+    "category": "forms",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "label": "Country",
+      "options": "United States
+Canada
+United Kingdom
+Germany",
+    },
+    "defaultStyles": {
+      "base": {},
+    },
+    "editablePropKeys": [
+      "label",
+      "options",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Select",
+    "type": "select",
+  },
+  {
+    "category": "forms",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "label": "I agree to the terms and conditions",
+    },
+    "defaultStyles": {
+      "base": {},
+    },
+    "editablePropKeys": [
+      "label",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Checkbox",
+    "type": "checkbox",
+  },
+  {
+    "category": "forms",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "defaultChecked": false,
+      "label": "Enable notifications",
+    },
+    "defaultStyles": {
+      "base": {},
+    },
+    "editablePropKeys": [
+      "label",
+      "defaultChecked",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Switch",
+    "type": "switch",
+  },
+  {
+    "category": "forms",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "label": "Select an option",
+      "options": "Option A
+Option B
+Option C",
+    },
+    "defaultStyles": {
+      "base": {},
+    },
+    "editablePropKeys": [
+      "label",
+      "options",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Radio Group",
+    "type": "radio-group",
+  },
+  {
+    "category": "forms",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "label": "Select date",
+    },
+    "defaultStyles": {
+      "base": {},
+    },
+    "editablePropKeys": [
+      "label",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Date Picker",
+    "type": "date-picker",
+  },
+  {
+    "category": "forms",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "accept": "*",
+      "description": "Drag & drop or click to browse",
+      "label": "Upload file",
+    },
+    "defaultStyles": {
+      "base": {},
+    },
+    "editablePropKeys": [
+      "label",
+      "accept",
+      "description",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "File Upload",
+    "type": "file-upload",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "data": "Jan
+120
+Feb
+200
+Mar
+150
+Apr
+280
+May
+220
+Jun
+310",
+      "title": "Monthly Revenue",
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-4",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "data",
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Bar Chart",
+    "type": "bar-chart",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "data": "Mon
+40
+Tue
+65
+Wed
+50
+Thu
+80
+Fri
+95
+Sat
+60
+Sun
+75",
+      "title": "Weekly Trends",
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-4",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "data",
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Line Chart",
+    "type": "line-chart",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "data": "Desktop
+55
+Mobile
+30
+Tablet
+15",
+      "title": "Device Distribution",
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-4",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "data",
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Pie Chart",
+    "type": "pie-chart",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "data": "Jan
+30
+Feb
+45
+Mar
+38
+Apr
+60
+May
+55
+Jun
+72",
+      "title": "Growth Trend",
+      "variant": "gradient",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-4",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "data",
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Area Chart",
+    "type": "area-chart",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "data": "Speed
+80
+Reliability
+95
+Security
+88
+Scalability
+92
+UX
+76",
+      "title": "Capability Radar",
+      "variant": "filled",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-4",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "data",
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Radar Chart",
+    "type": "radar-chart",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "data": "A
+20
+B
+40
+C
+35
+D
+60
+E
+85",
+      "title": "Scatter Distribution",
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-4",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "data",
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Scatter Chart",
+    "type": "scatter-chart",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "data": "Usage
+72
+max
+100",
+      "title": "Usage Gauge",
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-4",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "data",
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Gauge Chart",
+    "type": "gauge-chart",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "data": "Visitors
+1200
+Leads
+640
+Qualified
+280
+Customers
+92",
+      "title": "Sales Funnel",
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-4",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "data",
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Funnel Chart",
+    "type": "funnel-chart",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "data": "Chrome
+64
+Safari
+18
+Edge
+9
+Firefox
+7
+Other
+2",
+      "title": "Browser Share",
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-4",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "data",
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Treemap Chart",
+    "type": "treemap-chart",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "data": "Mon
+100,110,115,95
+Tue
+110,105,118,102
+Wed
+105,120,124,103
+Thu
+120,116,125,112",
+      "title": "OHLC Movement",
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-4",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "data",
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Candlestick Chart",
+    "type": "candlestick-chart",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "data": "Start
+100
+Sales
+45
+Returns
+-20
+Discounts
+-10
+Net
+30",
+      "title": "Waterfall Breakdown",
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-4",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "data",
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Waterfall Chart",
+    "type": "waterfall-chart",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "data": "Mon
+12
+Tue
+8
+Wed
+15
+Thu
+20
+Fri
+7
+Sat
+3
+Sun
+10",
+      "title": "Heatmap Activity",
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-4",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "data",
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Heatmap Chart",
+    "type": "heatmap-chart",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "data": "North
+55
+East
+70
+South
+42
+West
+63",
+      "title": "Polar Area",
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-4",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "data",
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Polar Area Chart",
+    "type": "polar-area-chart",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "data": "A
+60
+B
+45
+C
+80
+D
+30",
+      "title": "Radial Bars",
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-4",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "data",
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Radial Bar Chart",
+    "type": "radial-bar-chart",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "data": "Team A
+92
+Team B
+86
+Team C
+77
+Team D
+70",
+      "title": "Ranking Changes",
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-4",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "data",
+      "variant",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Bump Chart",
+    "type": "bump-chart",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "change": "+20.1%",
+      "changeType": "positive",
+      "title": "Total Revenue",
+      "value": "$45,231",
+      "variant": "default",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-xl",
+        "padding": "p-6",
+      },
+    },
+    "editablePropKeys": [
+      "title",
+      "value",
+      "change",
+      "variant",
+      "changeType",
+    ],
+    "isComposite": true,
+    "isContainer": true,
+    "label": "Stat Card",
+    "type": "stat-card",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "headers": "Name
+Email
+Status
+Role",
+      "rows": "John Doe
+john@example.com
+Active
+Admin
+Jane Smith
+jane@example.com
+Pending
+User
+Bob Wilson
+bob@example.com
+Active
+Editor",
+    },
+    "defaultStyles": {
+      "base": {
+        "border": "border",
+        "borderRadius": "rounded-lg",
+        "overflow": "overflow-hidden",
+      },
+    },
+    "editablePropKeys": [
+      "headers",
+      "rows",
+    ],
+    "isComposite": false,
+    "isContainer": false,
+    "label": "Data Table",
+    "type": "data-table",
+  },
+  {
+    "category": "data",
+    "defaultChildrenTypes": null,
+    "defaultProps": {
+      "icon": "users",
+      "label": "Active Users",
+      "trend": "up",
+      "value": "2,847",
+    },
+    "defaultStyles": {
+      "base": {
+        "background": "bg-card",
+        "border": "border",
+        "borderRadius": "rounded-lg",
+        "padding": "p-4",
+      },
+    },
+    "editablePropKeys": [
+      "label",
+      "value",
+      "trend",
+    ],
+    "isComposite": true,
+    "isContainer": true,
+    "label": "Metric Widget",
+    "type": "metric-widget",
+  },
+]
+`;
+
+exports[`uiBuilderRegistry — shape > produces a stable, ordered list of every entry's type 1`] = `
+[
+  "container",
+  "section",
+  "grid",
+  "flex",
+  "card",
+  "tabs-container",
+  "accordion-container",
+  "columns",
+  "heading",
+  "text",
+  "image",
+  "button",
+  "divider",
+  "spacer",
+  "badge",
+  "link",
+  "list",
+  "avatar",
+  "alert",
+  "code-block",
+  "progress",
+  "video",
+  "hero",
+  "cta",
+  "testimonial",
+  "pricing",
+  "feature-grid",
+  "stats-counter",
+  "faq",
+  "newsletter",
+  "footer",
+  "input",
+  "textarea",
+  "select",
+  "checkbox",
+  "switch",
+  "radio-group",
+  "date-picker",
+  "file-upload",
+  "bar-chart",
+  "line-chart",
+  "pie-chart",
+  "area-chart",
+  "radar-chart",
+  "scatter-chart",
+  "gauge-chart",
+  "funnel-chart",
+  "treemap-chart",
+  "candlestick-chart",
+  "waterfall-chart",
+  "heatmap-chart",
+  "polar-area-chart",
+  "radial-bar-chart",
+  "bump-chart",
+  "stat-card",
+  "data-table",
+  "metric-widget",
+]
+`;
+
+exports[`uiBuilderRegistry — variant class maps > CARD_VARIANT_CLASS_MAP covers the documented variants 1`] = `
+{
+  "default": "bg-card border shadow-sm",
+  "elevated": "bg-card border shadow-lg",
+  "ghost": "bg-background/60 border border-dashed shadow-none",
+  "metric": "bg-gradient-to-b from-card to-muted/40 border border-primary/15 shadow-sm",
+  "outline": "bg-background border-2 shadow-none",
+}
+`;
+
+exports[`uiBuilderRegistry — variant class maps > COLUMN_LAYOUT_CLASS_MAP covers the documented layout presets 1`] = `
+{
+  "1/2-1/2": "grid-cols-2",
+  "1/3-1/3-1/3": "grid-cols-3",
+  "1/3-2/3": "grid-cols-[minmax(240px,1fr)_minmax(0,2fr)]",
+  "1/4-1/4-1/4-1/4": "grid-cols-4",
+  "1/4-3/4": "grid-cols-[minmax(220px,1fr)_minmax(0,3fr)]",
+  "2/3-1/3": "grid-cols-[minmax(0,2fr)_minmax(240px,1fr)]",
+}
+`;
+
+exports[`uiBuilderRegistry — variant class maps > GRID_COLUMN_CLASS_MAP covers 1–6 columns 1`] = `
+{
+  "1": "grid-cols-1",
+  "2": "grid-cols-2",
+  "3": "grid-cols-3",
+  "4": "grid-cols-4",
+  "5": "grid-cols-5",
+  "6": "grid-cols-6",
+}
+`;
+
+exports[`uiBuilderRegistry — variant class maps > STAT_CARD_VARIANT_CLASS_MAP covers the documented variants 1`] = `
+{
+  "default": "bg-card border",
+  "highlight": "bg-primary/5 border border-primary/20 shadow-sm",
+  "outline": "bg-background border-2 shadow-none",
+}
+`;

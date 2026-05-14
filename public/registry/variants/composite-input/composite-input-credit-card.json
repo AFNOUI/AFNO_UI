@@ -1,0 +1,12 @@
+{
+  "name": "composite-input/composite-input-credit-card",
+  "category": "composite-input",
+  "variant": "composite-input-credit-card",
+  "files": [
+    {
+      "path": "components/ui/composite-input/composite-input-credit-card.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Input } from \"@/components/ui/input\";\nimport { Label } from \"@/components/ui/label\";\n\nconst data = {\n  \"cardPlaceholder\": \"4242 4242 4242 4242\",\n  \"cardIcon\": \"💳\",\n  \"expiryPlaceholder\": \"MM/YY\",\n  \"cvcPlaceholder\": \"123\",\n  \"cvcMaxLength\": 4\n};\n\nexport default function CompositeInputCreditCardExample() {\n  return (\n    <div className=\"max-w-sm space-y-2\">\n      <Label>Card Number</Label>\n      <div className=\"relative\">\n        <Input\n          placeholder={data.cardPlaceholder}\n          className=\"pr-16\"\n        />\n        <div className=\"absolute right-3 top-1/2 -translate-y-1/2 flex gap-1\">\n          <span className=\"text-lg\">{data.cardIcon}</span>\n        </div>\n      </div>\n      <div className=\"grid grid-cols-2 gap-4\">\n        <div className=\"space-y-2\">\n          <Label>Expiry</Label>\n          <Input placeholder={data.expiryPlaceholder} />\n        </div>\n        <div className=\"space-y-2\">\n          <Label>CVC</Label>\n          <Input placeholder={data.cvcPlaceholder} maxLength={data.cvcMaxLength} />\n        </div>\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "charts/radar/multi",
+  "category": "charts",
+  "variant": "radar/multi",
+  "files": [
+    {
+      "path": "charts/radar/multiChart.tsx",
+      "type": "registry:variant",
+      "content": "import { RadarChart } from \"../../components/charts/radar\";\n\nconst data = [{\"label\":\"Speed\",\"value\":80},{\"label\":\"Reliability\",\"value\":90},{\"label\":\"Comfort\",\"value\":60},{\"label\":\"Safety\",\"value\":95},{\"label\":\"Efficiency\",\"value\":70},{\"label\":\"Design\",\"value\":85}];\n\nexport default function RadarChartMultiExample() {\n  return <RadarChart data={data} variant=\"multi\" title=\"Multi\" />;\n}"
+    }
+  ]
+}

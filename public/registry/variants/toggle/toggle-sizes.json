@@ -1,0 +1,12 @@
+{
+  "name": "toggle/toggle-sizes",
+  "category": "toggle",
+  "variant": "toggle-sizes",
+  "files": [
+    {
+      "path": "components/ui/toggle/toggle-sizes.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Bold } from \"lucide-react\";\nimport { Toggle } from \"@/components/ui/toggle\";\n\nexport default function ToggleSizesExample() {\n  return (\n    <div className=\"flex flex-wrap items-center gap-4\">\n      <Toggle size=\"sm\" aria-label=\"Toggle small\">\n        <Bold className=\"h-3 w-3\" />\n      </Toggle>\n      <Toggle size=\"default\" aria-label=\"Toggle default\">\n        <Bold className=\"h-4 w-4\" />\n      </Toggle>\n      <Toggle size=\"lg\" aria-label=\"Toggle large\">\n        <Bold className=\"h-5 w-5\" />\n      </Toggle>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

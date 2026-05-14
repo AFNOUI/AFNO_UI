@@ -1,0 +1,12 @@
+{
+  "name": "switch/switch-sizes",
+  "category": "switch",
+  "variant": "switch-sizes",
+  "files": [
+    {
+      "path": "components/ui/switch/switch-sizes.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Label } from \"@/components/ui/label\";\nimport { Switch } from \"@/components/ui/switch\";\n\nconst data = [\n  {\n    \"id\": \"small\",\n    \"label\": \"Small\",\n    \"className\": \"scale-75\"\n  },\n  {\n    \"id\": \"default\",\n    \"label\": \"Default\",\n    \"className\": \"\"\n  },\n  {\n    \"id\": \"large\",\n    \"label\": \"Large\",\n    \"className\": \"scale-125\"\n  }\n];\n\nexport default function SwitchSizesExample() {\n  return (\n    <div className=\"space-y-4\">\n      {data.map((item) => (\n        <div key={item.id} className=\"flex items-center space-x-2\">\n          <Switch id={item.id} className={item.className || undefined} />\n          <Label htmlFor={item.id}>{item.label}</Label>\n        </div>\n      ))}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

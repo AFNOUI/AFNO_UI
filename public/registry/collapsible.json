@@ -1,0 +1,15 @@
+{
+  "name": "collapsible",
+  "dependencies": [
+    "@radix-ui/react-collapsible"
+  ],
+  "devDependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "content": "import * as CollapsiblePrimitive from \"@radix-ui/react-collapsible\";\n\nconst Collapsible = CollapsiblePrimitive.Root;\nconst CollapsibleTrigger = CollapsiblePrimitive.CollapsibleTrigger;\nconst CollapsibleContent = CollapsiblePrimitive.CollapsibleContent;\n\nexport { Collapsible, CollapsibleTrigger, CollapsibleContent };\n\n// /* Add these to your global CSS file (e.g., globals.css) */\n/*\n * ============================================\n * TAILWIND CSS VARIABLES DOCUMENTATION\n * ============================================\n * This component uses Tailwind CSS variables defined in app/globals.css\n * \n * Notes:\n * -----\n * This component is a thin wrapper around Radix UI's Collapsible primitive.\n * It doesn't directly use CSS variables but manages state transitions.\n * \n * It expects accordion animation styles from globals.css for smooth open/close:\n *   - --animation-accordion-down     For expanding content height transition\n *   - --animation-accordion-up       For collapsing content height transition\n * \n * If using animations, ensure these keyframes are defined in your globals.css:\n *   @keyframes accordion-down { from { height: 0 } to { height: var(--radix-collapsible-content-height) } }\n *   @keyframes accordion-up { from { height: var(--radix-collapsible-content-height) } to { height: 0 } }\n * \n * Position Breakdown:\n *   - Collapsible root: Transparent wrapper, no direct styling\n *   - CollapsibleTrigger: Transparent trigger, parent provides styling\n *   - CollapsibleContent: Uses Radix's built-in height transitions\n *                         Expects --radix-collapsible-content-height CSS variable\n *                         Animation classes applied via data-[state] attributes\n *                         data-[state=open]:animate-accordion-down on open\n *                         data-[state=closed]:animate-accordion-up on close\n */\n",
+      "path": "components/ui/collapsible.tsx",
+      "type": "registry:component"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "command/command-theme-switcher",
+  "category": "command",
+  "variant": "command-theme-switcher",
+  "files": [
+    {
+      "path": "components/ui/command/command-theme-switcher.tsx",
+      "type": "registry:variant",
+      "content": "import React, { useState } from \"react\";\nimport { Sun, Moon, Laptop } from \"lucide-react\";\nimport { cn } from \"@/lib/utils\";\nimport {\n  Command,\n  CommandItem,\n  CommandList,\n  CommandEmpty,\n  CommandGroup,\n  CommandInput,\n} from \"@/components/ui/command\";\n\nconst data = [\n  {\n    \"value\": \"light\",\n    \"icon\": \"Sun\",\n    \"label\": \"Light\"\n  },\n  {\n    \"value\": \"dark\",\n    \"icon\": \"Moon\",\n    \"label\": \"Dark\"\n  },\n  {\n    \"value\": \"system\",\n    \"icon\": \"Laptop\",\n    \"label\": \"System\"\n  }\n];\n\nexport default function CommandThemeSwitcherExample() {\n  const [selectedTheme, setSelectedTheme] = useState(\"system\");\n\n  return (\n    <Command className=\"rounded-lg border border-border shadow-md max-w-sm\">\n      <CommandInput placeholder=\"Change theme...\" />\n      <CommandList>\n        <CommandEmpty>No theme found.</CommandEmpty>\n        <CommandGroup heading=\"Appearance\">\n          {data.map((theme) => {\n            const Icon = { Sun, Moon, Laptop }[theme.icon as \"Sun\" | \"Moon\" | \"Laptop\"];\n            return (\n              <CommandItem\n                key={theme.value}\n                onSelect={() => setSelectedTheme(theme.value)}\n                className={cn(selectedTheme === theme.value && \"bg-accent\")}\n              >\n                {Icon && <Icon className=\"me-2 h-4 w-4\" />}\n                <span>{theme.label}</span>\n                {selectedTheme === theme.value && <span className=\"ms-auto text-primary\">✓</span>}\n              </CommandItem>\n            );\n          })}\n        </CommandGroup>\n      </CommandList>\n    </Command>\n  );\n}\n"
+    }
+  ]
+}

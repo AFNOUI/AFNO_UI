@@ -1,0 +1,12 @@
+{
+  "name": "alert-dialog/alert-dialog-logout",
+  "category": "alert-dialog",
+  "variant": "alert-dialog-logout",
+  "files": [
+    {
+      "path": "components/ui/alert-dialog/alert-dialog-logout.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { LogOut } from \"lucide-react\";\nimport { Button } from \"@/components/ui/button\";\nimport {\n  AlertDialog,\n  AlertDialogTitle,\n  AlertDialogAction,\n  AlertDialogCancel,\n  AlertDialogFooter,\n  AlertDialogHeader,\n  AlertDialogTrigger,\n  AlertDialogContent,\n  AlertDialogDescription,\n} from \"@/components/ui/alert-dialog\";\n\nconst data = {\n  \"trigger\": {\n    \"variant\": \"outline\",\n    \"icon\": \"LogOut\",\n    \"text\": \"Sign Out\"\n  },\n  \"title\": \"Sign out of your account?\",\n  \"description\": \"You'll need to sign in again to access your dashboard and projects.\",\n  \"cancelText\": \"Stay signed in\",\n  \"actionText\": \"Sign out\"\n} as const;\n\nexport default function AlertDialogLogoutExample() {\n  return (\n    <div className=\"flex flex-wrap gap-4\">\n      <AlertDialog>\n        <AlertDialogTrigger asChild>\n          <Button variant={data.trigger.variant}>\n            <LogOut className=\"me-2 h-4 w-4\" />\n            {data.trigger.text}\n          </Button>\n        </AlertDialogTrigger>\n        <AlertDialogContent>\n          <AlertDialogHeader>\n            <AlertDialogTitle>{data.title}</AlertDialogTitle>\n            <AlertDialogDescription>{data.description}</AlertDialogDescription>\n          </AlertDialogHeader>\n          <AlertDialogFooter>\n            <AlertDialogCancel>{data.cancelText}</AlertDialogCancel>\n            <AlertDialogAction>{data.actionText}</AlertDialogAction>\n          </AlertDialogFooter>\n        </AlertDialogContent>\n      </AlertDialog>\n    </div>\n  );\n}"
+    }
+  ]
+}

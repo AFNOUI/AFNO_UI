@@ -1,0 +1,12 @@
+{
+  "name": "button/button-variants",
+  "category": "button",
+  "variant": "button-variants",
+  "files": [
+    {
+      "path": "components/ui/button/button-variants.tsx",
+      "type": "registry:variant",
+      "content": "import { Button } from \"@/components/ui/button\";\n\nconst data = [\n  {\n    \"variant\": \"default\",\n    \"text\": \"Default\"\n  },\n  {\n    \"variant\": \"secondary\",\n    \"text\": \"Secondary\"\n  },\n  {\n    \"variant\": \"destructive\",\n    \"text\": \"Destructive\"\n  },\n  {\n    \"variant\": \"outline\",\n    \"text\": \"Outline\"\n  },\n  {\n    \"variant\": \"ghost\",\n    \"text\": \"Ghost\"\n  },\n  {\n    \"variant\": \"link\",\n    \"text\": \"Link\"\n  }\n] as const;\n\nexport default function ButtonVariantsExample() {\n  return (\n    <div className=\"flex flex-wrap gap-3\">\n      {data.map((item, index) => (\n        <Button key={index} variant={item.variant}>{item.text}</Button>\n      ))}\n    </div>\n  );\n}"
+    }
+  ]
+}

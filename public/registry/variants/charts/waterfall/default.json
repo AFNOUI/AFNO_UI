@@ -1,0 +1,12 @@
+{
+  "name": "charts/waterfall/default",
+  "category": "charts",
+  "variant": "waterfall/default",
+  "files": [
+    {
+      "path": "charts/waterfall/defaultChart.tsx",
+      "type": "registry:variant",
+      "content": "import { WaterfallChart } from \"../../components/charts/waterfall\";\n\nconst data = \"Start\\n100\\nSales\\n45\\nReturns\\n-20\\nDiscounts\\n-10\\nNet\\n30\";\n\nexport default function WaterfallChartDefaultExample() {\n  return <WaterfallChart data={data} variant=\"default\" title=\"Default\" />;\n}"
+    }
+  ]
+}

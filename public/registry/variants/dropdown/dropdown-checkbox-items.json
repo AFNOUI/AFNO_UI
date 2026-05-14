@@ -1,0 +1,12 @@
+{
+  "name": "dropdown/dropdown-checkbox-items",
+  "category": "dropdown",
+  "variant": "dropdown-checkbox-items",
+  "files": [
+    {
+      "path": "components/ui/dropdown/dropdown-checkbox-items.tsx",
+      "type": "registry:variant",
+      "content": "import React, { useState } from \"react\";\nimport {\n  DropdownMenu,\n  DropdownMenuContent,\n  DropdownMenuTrigger,\n  DropdownMenuLabel,\n  DropdownMenuSeparator,\n  DropdownMenuCheckboxItem,\n} from \"@/components/ui/dropdown-menu\";\nimport { Button } from \"@/components/ui/button\";\n\nconst data = {\n  \"triggerText\": \"View Options\",\n  \"label\": \"Appearance\",\n  \"items\": [\n    {\n      \"id\": \"statusBar\",\n      \"label\": \"Status Bar\",\n      \"defaultChecked\": true\n    },\n    {\n      \"id\": \"activityBar\",\n      \"label\": \"Activity Bar\",\n      \"defaultChecked\": false\n    },\n    {\n      \"id\": \"panel\",\n      \"label\": \"Panel\",\n      \"defaultChecked\": false\n    }\n  ]\n};\n\nexport default function DropdownCheckboxItemsExample() {\n  const [checked, setChecked] = useState<Record<string, boolean>>(\n    Object.fromEntries(data.items.map((item) => [item.id, item.defaultChecked]))\n  );\n  return (\n    <DropdownMenu>\n      <DropdownMenuTrigger asChild>\n        <Button variant=\"outline\">{data.triggerText}</Button>\n      </DropdownMenuTrigger>\n      <DropdownMenuContent className=\"w-56\">\n        <DropdownMenuLabel>{data.label}</DropdownMenuLabel>\n        <DropdownMenuSeparator />\n        {data.items.map((item) => (\n          <DropdownMenuCheckboxItem\n            key={item.id}\n            checked={checked[item.id]}\n            onCheckedChange={(v) => setChecked((p) => ({ ...p, [item.id]: !!v }))}\n          >\n            {item.label}\n          </DropdownMenuCheckboxItem>\n        ))}\n      </DropdownMenuContent>\n    </DropdownMenu>\n  );\n}\n"
+    }
+  ]
+}

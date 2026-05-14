@@ -1,0 +1,12 @@
+{
+  "name": "charts/bump/dots",
+  "category": "charts",
+  "variant": "bump/dots",
+  "files": [
+    {
+      "path": "charts/bump/dotsChart.tsx",
+      "type": "registry:variant",
+      "content": "import { BumpChart } from \"../../components/charts/bump\";\n\nconst data = [{\"label\":\"Alpha\",\"value\":95},{\"label\":\"Beta\",\"value\":72},{\"label\":\"Gamma\",\"value\":88},{\"label\":\"Delta\",\"value\":56},{\"label\":\"Epsilon\",\"value\":81}];\n\nexport default function BumpChartDotsExample() {\n  return <BumpChart data={data} variant=\"dots\" title=\"Dots\" />;\n}"
+    }
+  ]
+}

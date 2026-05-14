@@ -1,0 +1,12 @@
+{
+  "name": "composite-input/composite-input-phone",
+  "category": "composite-input",
+  "variant": "composite-input-phone",
+  "files": [
+    {
+      "path": "components/ui/composite-input/composite-input-phone.tsx",
+      "type": "registry:variant",
+      "content": "import React, { useState } from \"react\";\nimport {\n  Select,\n  SelectItem,\n  SelectValue,\n  SelectContent,\n  SelectTrigger,\n} from \"@/components/ui/select\";\nimport { Input } from \"@/components/ui/input\";\nimport { Label } from \"@/components/ui/label\";\n\nconst countries = [\n  {\n    \"value\": \"+1\",\n    \"label\": \"+1\",\n    \"flag\": \"🇺🇸\"\n  },\n  {\n    \"value\": \"+44\",\n    \"label\": \"+44\",\n    \"flag\": \"🇬🇧\"\n  },\n  {\n    \"value\": \"+91\",\n    \"label\": \"+91\",\n    \"flag\": \"🇮🇳\"\n  },\n  {\n    \"value\": \"+81\",\n    \"label\": \"+81\",\n    \"flag\": \"🇯🇵\"\n  },\n  {\n    \"value\": \"+49\",\n    \"label\": \"+49\",\n    \"flag\": \"🇩🇪\"\n  },\n  {\n    \"value\": \"+33\",\n    \"label\": \"+33\",\n    \"flag\": \"🇫🇷\"\n  }\n];\n\nexport default function CompositeInputPhoneExample() {\n  const [countryCode, setCountryCode] = useState(\"+1\");\n\n  return (\n    <div className=\"max-w-sm space-y-2\">\n      <Label>Phone Number</Label>\n      <div className=\"flex\">\n        <Select value={countryCode} onValueChange={setCountryCode}>\n          <SelectTrigger className=\"w-[100px] rounded-r-none border-r-0 focus:ring-0 focus:ring-offset-0\">\n            <SelectValue />\n          </SelectTrigger>\n          <SelectContent>\n            {countries.map((c) => (\n              <SelectItem key={c.value} value={c.value}>\n                {c.flag} {c.value}\n              </SelectItem>\n            ))}\n          </SelectContent>\n        </Select>\n        <Input\n          type=\"tel\"\n          placeholder=\"(555) 123-4567\"\n          className=\"rounded-l-none\"\n        />\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "separator/separator-with-label",
+  "category": "separator",
+  "variant": "separator-with-label",
+  "files": [
+    {
+      "path": "components/ui/separator/separator-with-label.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport { Separator } from \"@/components/ui/separator\";\n\nconst data = { label: \"Or continue with\" };\n\nexport default function SeparatorWithLabelExample() {\n  return (\n    <div className=\"max-w-md\">\n      <div className=\"relative\">\n        <div className=\"absolute inset-0 flex items-center\">\n          <Separator className=\"w-full\" />\n        </div>\n        <div className=\"relative flex justify-center text-xs uppercase\">\n          <span className=\"bg-background px-2 text-muted-foreground\">\n            {data.label}\n          </span>\n        </div>\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

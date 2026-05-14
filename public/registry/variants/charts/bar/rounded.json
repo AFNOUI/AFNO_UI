@@ -1,0 +1,12 @@
+{
+  "name": "charts/bar/rounded",
+  "category": "charts",
+  "variant": "bar/rounded",
+  "files": [
+    {
+      "path": "charts/bar/roundedChart.tsx",
+      "type": "registry:variant",
+      "content": "import { BarChart } from \"../../components/charts/bar\";\n\nconst data = \"Jan\\n120\\nFeb\\n200\\nMar\\n150\\nApr\\n280\\nMay\\n220\\nJun\\n310\";\n\nexport default function BarChartRoundedExample() {\n  return <BarChart data={data} variant=\"rounded\" title=\"Rounded\" />;\n}"
+    }
+  ]
+}

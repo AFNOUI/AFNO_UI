@@ -1,0 +1,12 @@
+{
+  "name": "alert/alert-destructive",
+  "category": "alert",
+  "variant": "alert-destructive",
+  "files": [
+    {
+      "path": "components/ui/alert/alert-destructive.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { AlertCircle } from \"lucide-react\";\nimport { Alert, AlertDescription, AlertTitle } from \"@/components/ui/alert\";\n\nconst data = {\n  \"title\": \"Error\",\n  \"description\": \"Your session has expired. Please log in again.\"\n};\n\nexport default function AlertDestructiveExample() {\n  return (\n    <div className=\"flex justify-center p-8 w-full\">\n      <Alert variant=\"destructive\" className=\"max-w-lg\">\n        <AlertCircle className=\"h-4 w-4\" />\n        <AlertTitle>{data.title}</AlertTitle>\n        <AlertDescription>\n          {data.description}\n        </AlertDescription>\n      </Alert>\n    </div>\n  );\n}"
+    }
+  ]
+}

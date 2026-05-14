@@ -1,0 +1,12 @@
+{
+  "name": "collapsible/collapsible-faq",
+  "category": "collapsible",
+  "variant": "collapsible-faq",
+  "files": [
+    {
+      "path": "components/ui/collapsible/collapsible-faq.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Plus, Minus } from \"lucide-react\";\nimport {\n  Collapsible,\n  CollapsibleContent,\n  CollapsibleTrigger,\n} from \"@/components/ui/collapsible\";\n\nconst data = [\n  {\n    \"question\": \"What payment methods do you accept?\",\n    \"answer\": \"We accept all major credit cards (Visa, MasterCard, American Express), PayPal, and bank transfers for enterprise customers.\"\n  },\n  {\n    \"question\": \"Can I cancel my subscription?\",\n    \"answer\": \"Yes, you can cancel your subscription at any time. Your access will continue until the end of your billing period.\"\n  },\n  {\n    \"question\": \"Do you offer refunds?\",\n    \"answer\": \"We offer a 30-day money-back guarantee on all plans. Contact support if you'd like to request a refund.\"\n  }\n];\n\nexport default function CollapsibleFAQExample() {\n  return (\n    <div className=\"max-w-lg space-y-2\">\n      {data.map((faq, index) => (\n        <Collapsible key={index} className=\"border rounded-lg\">\n          <CollapsibleTrigger className=\"flex items-center justify-between w-full p-4 text-start hover:bg-accent/50\">\n            <span className=\"font-medium\">{faq.question}</span>\n            <Plus className=\"h-4 w-4 shrink-0 ms-2 [[data-state=open]>&]:hidden\" />\n            <Minus className=\"h-4 w-4 shrink-0 ms-2 [[data-state=closed]>&]:hidden\" />\n          </CollapsibleTrigger>\n          <CollapsibleContent>\n            <div className=\"px-4 pb-4 text-muted-foreground\">\n              {faq.answer}\n            </div>\n          </CollapsibleContent>\n        </Collapsible>\n      ))}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

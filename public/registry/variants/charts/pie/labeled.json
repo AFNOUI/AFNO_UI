@@ -1,0 +1,12 @@
+{
+  "name": "charts/pie/labeled",
+  "category": "charts",
+  "variant": "pie/labeled",
+  "files": [
+    {
+      "path": "charts/pie/labeledChart.tsx",
+      "type": "registry:variant",
+      "content": "import { PieChart } from \"../../components/charts/pie\";\n\nconst data = \"Desktop\\n55\\nMobile\\n30\\nTablet\\n15\";\n\nexport default function PieChartLabeledExample() {\n  return <PieChart data={data} variant=\"labeled\" title=\"Labeled\" />;\n}"
+    }
+  ]
+}

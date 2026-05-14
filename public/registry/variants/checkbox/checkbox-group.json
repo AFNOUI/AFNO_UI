@@ -1,0 +1,12 @@
+{
+  "name": "checkbox/checkbox-group",
+  "category": "checkbox",
+  "variant": "checkbox-group",
+  "files": [
+    {
+      "path": "components/ui/checkbox/checkbox-group.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Label } from \"@/components/ui/label\";\nimport { Checkbox } from \"@/components/ui/checkbox\";\n\nexport default function CheckboxGroupExample() {\n  return (\n    <div className=\"space-y-4\">\n      <Label className=\"text-base font-medium\">Select your interests</Label>\n      <div className=\"grid grid-cols-2 gap-3\">\n        {[...Array(8)].map((_, index) => (\n          <div key={index} className=\"flex items-center space-x-2\">\n            <Checkbox id={`interest-${index}`} />\n            <Label htmlFor={`interest-${index}`} className=\"cursor-pointer text-sm\">Interest</Label>\n          </div>\n        ))}\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "scroll-area",
+  "dependencies": [
+    "@radix-ui/react-scroll-area"
+  ],
+  "devDependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "content": "import * as React from \"react\";\r\nimport * as ScrollAreaPrimitive from \"@radix-ui/react-scroll-area\";\r\n\r\nimport { cn } from \"@/lib/utils\";\r\n\r\nconst ScrollArea = React.forwardRef<\r\n  React.ComponentRef<typeof ScrollAreaPrimitive.Root>,\r\n  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root>\r\n>(({ className, children, ...props }, ref) => (\r\n  <ScrollAreaPrimitive.Root ref={ref} className={cn(\"relative overflow-hidden\", className)} {...props}>\r\n    <ScrollAreaPrimitive.Viewport className=\"h-full w-full rounded-[inherit]\">{children}</ScrollAreaPrimitive.Viewport>\r\n    <ScrollBar />\r\n    <ScrollAreaPrimitive.Corner />\r\n  </ScrollAreaPrimitive.Root>\r\n));\r\nScrollArea.displayName = ScrollAreaPrimitive.Root.displayName;\r\n\r\nconst ScrollBar = React.forwardRef<\r\n  React.ComponentRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>,\r\n  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>\r\n>(({ className, orientation = \"vertical\", ...props }, ref) => (\r\n  <ScrollAreaPrimitive.ScrollAreaScrollbar\r\n    ref={ref}\r\n    orientation={orientation}\r\n    className={cn(\r\n      \"flex touch-none select-none transition-colors\",\r\n      orientation === \"vertical\" && \"h-full w-2.5 border-s border-s-transparent p-px\",\r\n      orientation === \"horizontal\" && \"h-2.5 flex-col border-t border-t-transparent p-px\",\r\n      className,\r\n    )}\r\n    {...props}\r\n  >\r\n    <ScrollAreaPrimitive.ScrollAreaThumb className=\"relative flex-1 rounded-full bg-border\" />\r\n  </ScrollAreaPrimitive.ScrollAreaScrollbar>\r\n));\r\nScrollBar.displayName = ScrollAreaPrimitive.ScrollAreaScrollbar.displayName;\r\n\r\nexport { ScrollArea, ScrollBar };\r\n\r\n/*\r\n * ============================================\r\n * TAILWIND CSS VARIABLES DOCUMENTATION\r\n * ============================================\r\n * This component uses Tailwind CSS variables defined in app/globals.css\r\n *\r\n * Variables Used:\r\n * --------------\r\n * Colors:\r\n *   - hsl(var(--border)) Line: 33 - ScrollBar thumb class \"bg-border\"\r\n *                         Scroll bar thumb color\r\n */\r\n",
+      "path": "components/ui/scroll-area.tsx",
+      "type": "registry:component"
+    }
+  ]
+}

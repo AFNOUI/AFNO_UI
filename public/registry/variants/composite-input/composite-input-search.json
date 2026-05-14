@@ -1,0 +1,12 @@
+{
+  "name": "composite-input/composite-input-search",
+  "category": "composite-input",
+  "variant": "composite-input-search",
+  "files": [
+    {
+      "path": "components/ui/composite-input/composite-input-search.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Search } from \"lucide-react\";\nimport {\n  Select,\n  SelectItem,\n  SelectValue,\n  SelectContent,\n  SelectTrigger,\n} from \"@/components/ui/select\";\nimport { Input } from \"@/components/ui/input\";\nimport { Label } from \"@/components/ui/label\";\nimport { Button } from \"@/components/ui/button\";\n\nconst categories = [\n  {\n    \"value\": \"all\",\n    \"label\": \"All Categories\"\n  },\n  {\n    \"value\": \"electronics\",\n    \"label\": \"Electronics\"\n  },\n  {\n    \"value\": \"clothing\",\n    \"label\": \"Clothing\"\n  },\n  {\n    \"value\": \"books\",\n    \"label\": \"Books\"\n  },\n  {\n    \"value\": \"home\",\n    \"label\": \"Home & Garden\"\n  }\n];\n\nexport default function CompositeInputSearchExample() {\n  return (\n    <div className=\"max-w-lg space-y-2\">\n      <Label>Search Products</Label>\n      <div className=\"flex\">\n        <Select defaultValue=\"all\">\n          <SelectTrigger className=\"w-[140px] rounded-r-none border-r-0 focus:ring-0 focus:ring-offset-0\">\n            <SelectValue />\n          </SelectTrigger>\n          <SelectContent>\n            {categories.map((c) => (\n              <SelectItem key={c.value} value={c.value}>\n                {c.label}\n              </SelectItem>\n            ))}\n          </SelectContent>\n        </Select>\n        <div className=\"relative flex-1\">\n          <Input placeholder=\"Search products...\" className=\"rounded-none\" />\n        </div>\n        <Button className=\"rounded-l-none\">\n          <Search className=\"h-4 w-4\" />\n        </Button>\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ]
+}

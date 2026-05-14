@@ -1,0 +1,2691 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > action / config — file shape locked 1`] = `
+{
+  "fixed": [
+    {
+      "codeBytes": 1003,
+      "language": "typescript",
+      "name": "applyBackendErrors.ts",
+      "path": "/app/forms/action-forms/applyBackendErrors.ts",
+    },
+    {
+      "codeBytes": 2927,
+      "language": "tsx",
+      "name": "FormFieldErrorBoundary.tsx",
+      "path": "/app/forms/FormFieldErrorBoundary.tsx",
+    },
+    {
+      "codeBytes": 3806,
+      "language": "typescript",
+      "name": "dateFieldHelpers.ts",
+      "path": "/app/forms/utils/dateFieldHelpers.ts",
+    },
+    {
+      "codeBytes": 351,
+      "language": "tsx",
+      "name": "dateSerialize.tsx",
+      "path": "/app/forms/utils/dateSerialize.tsx",
+    },
+    {
+      "codeBytes": 6137,
+      "language": "typescript",
+      "name": "dependentApiRequest.ts",
+      "path": "/app/forms/utils/dependentApiRequest.ts",
+    },
+    {
+      "codeBytes": 1908,
+      "language": "typescript",
+      "name": "fieldExtraKeys.ts",
+      "path": "/app/forms/utils/fieldExtraKeys.ts",
+    },
+    {
+      "codeBytes": 1494,
+      "language": "typescript",
+      "name": "fileFieldHelpers.ts",
+      "path": "/app/forms/utils/fileFieldHelpers.ts",
+    },
+    {
+      "codeBytes": 1042,
+      "language": "typescript",
+      "name": "formFieldGuards.ts",
+      "path": "/app/forms/utils/formFieldGuards.ts",
+    },
+    {
+      "codeBytes": 5404,
+      "language": "typescript",
+      "name": "watchPopulate.ts",
+      "path": "/app/forms/utils/watchPopulate.ts",
+    },
+    {
+      "codeBytes": 12007,
+      "language": "tsx",
+      "name": "ActionForm.tsx",
+      "path": "components/forms/action-forms/ActionForm.tsx",
+    },
+    {
+      "codeBytes": 804,
+      "language": "tsx",
+      "name": "ActionFormContext.tsx",
+      "path": "components/forms/action-forms/ActionFormContext.tsx",
+    },
+    {
+      "codeBytes": 4732,
+      "language": "tsx",
+      "name": "ActionFormField.tsx",
+      "path": "components/forms/action-forms/ActionFormField.tsx",
+    },
+    {
+      "codeBytes": 2911,
+      "language": "tsx",
+      "name": "AsyncSelectField.tsx",
+      "path": "components/forms/action-forms/fields/AsyncSelectField.tsx",
+    },
+    {
+      "codeBytes": 1339,
+      "language": "tsx",
+      "name": "CheckboxField.tsx",
+      "path": "components/forms/action-forms/fields/CheckboxField.tsx",
+    },
+    {
+      "codeBytes": 10952,
+      "language": "tsx",
+      "name": "DateField.tsx",
+      "path": "components/forms/action-forms/fields/DateField.tsx",
+    },
+    {
+      "codeBytes": 335,
+      "language": "typescript",
+      "name": "fields/index.ts",
+      "path": "components/forms/action-forms/fields/index.ts",
+    },
+    {
+      "codeBytes": 3791,
+      "language": "tsx",
+      "name": "MultiselectField.tsx",
+      "path": "components/forms/action-forms/fields/MultiselectField.tsx",
+    },
+    {
+      "codeBytes": 1483,
+      "language": "tsx",
+      "name": "SelectField.tsx",
+      "path": "components/forms/action-forms/fields/SelectField.tsx",
+    },
+    {
+      "codeBytes": 1140,
+      "language": "tsx",
+      "name": "TextareaField.tsx",
+      "path": "components/forms/action-forms/fields/TextareaField.tsx",
+    },
+    {
+      "codeBytes": 1974,
+      "language": "tsx",
+      "name": "TextField.tsx",
+      "path": "components/forms/action-forms/fields/TextField.tsx",
+    },
+    {
+      "codeBytes": 631,
+      "language": "typescript",
+      "name": "index.ts",
+      "path": "components/forms/action-forms/index.ts",
+    },
+    {
+      "codeBytes": 7964,
+      "language": "typescript",
+      "name": "useActionForm.ts",
+      "path": "components/forms/action-forms/useActionForm.ts",
+    },
+    {
+      "codeBytes": 14508,
+      "language": "typescript",
+      "name": "types.ts",
+      "path": "components/forms/types.ts",
+    },
+    {
+      "codeBytes": 3010,
+      "language": "tsx",
+      "name": "form-primitives.tsx",
+      "path": "components/ui/form-primitives.tsx",
+    },
+    {
+      "codeBytes": 1210,
+      "language": "typescript",
+      "name": "useBackendErrors.ts",
+      "path": "hooks/useBackendErrors.ts",
+    },
+    {
+      "codeBytes": 8116,
+      "language": "typescript",
+      "name": "useInfiniteOptions.ts",
+      "path": "hooks/useInfiniteOptions.ts",
+    },
+    {
+      "codeBytes": 14684,
+      "language": "typescript",
+      "name": "zodSchemaBuilder.ts",
+      "path": "utils/zodSchemaBuilder.ts",
+    },
+  ],
+  "variant": [
+    {
+      "code": "import { FormConfig } from "../components/forms/types/types";
+
+export const formConfig: FormConfig = {
+  "id": "profile",
+  "title": "Profile",
+  "description": "All field families",
+  "layout": {
+    "columns": 2,
+    "gap": "md"
+  },
+  "submitButton": {
+    "label": "Save",
+    "className": ""
+  },
+  "sections": [
+    {
+      "id": "main",
+      "title": "Identity",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "label": "Name",
+          "required": true,
+          "minLength": 2
+        },
+        {
+          "name": "age",
+          "type": "number",
+          "label": "Age",
+          "min": 0,
+          "max": 120
+        },
+        {
+          "name": "country",
+          "type": "select",
+          "label": "Country",
+          "options": [
+            {
+              "value": "us",
+              "label": "US"
+            },
+            {
+              "value": "np",
+              "label": "NP"
+            }
+          ],
+          "required": true
+        },
+        {
+          "name": "city",
+          "type": "asyncselect",
+          "label": "City",
+          "api": {
+            "url": "https://api.example.com/cities",
+            "method": "GET",
+            "responseMapping": {
+              "dataPath": "data",
+              "labelKey": "name",
+              "valueKey": "id"
+            }
+          }
+        },
+        {
+          "name": "tags",
+          "type": "multiselect",
+          "label": "Tags",
+          "options": [
+            {
+              "value": "a",
+              "label": "A"
+            }
+          ]
+        },
+        {
+          "name": "agree",
+          "type": "checkbox",
+          "label": "Agree",
+          "required": true
+        },
+        {
+          "name": "dob",
+          "type": "date",
+          "label": "Date of birth"
+        },
+        {
+          "name": "bio",
+          "type": "textarea",
+          "label": "Bio",
+          "maxLength": 500
+        }
+      ]
+    }
+  ]
+};
+",
+      "language": "typescript",
+      "name": "formConfig.ts",
+      "path": "forms/formConfig.ts",
+    },
+    {
+      "code": "import axios from "axios";
+import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+
+const API_BASE = "/api";
+
+/**
+ * Normalize any backend payload to AfnoUI's expected shape:
+ * { success: false, message: string, errors?: [{ field, message }] }
+ *
+ * If your API uses a different format, edit only this function.
+ */
+function normalizeBackendError(data: unknown): BackendErrorResponse {
+  if (typeof data !== "object" || data === null) {
+    return { success: false, message: "Server error", errors: [] };
+  }
+
+  const payload = data as Record<string, unknown>;
+  const message =
+    (typeof payload.message === "string" && payload.message) ||
+    (typeof payload.error === "string" && payload.error) ||
+    "Server error";
+
+  let errors: BackendFieldError[] = [];
+
+  // Shape A: { errors: [{ field, message }] }
+  if (Array.isArray(payload.errors)) {
+    errors = payload.errors
+      .map((item) => {
+        if (typeof item !== "object" || item === null) return null;
+        const e = item as Record<string, unknown>;
+        const field = typeof e.field === "string" ? e.field : (typeof e.path === "string" ? e.path : null);
+        const text = typeof e.message === "string" ? e.message : null;
+        return field && text ? { field, message: text } : null;
+      })
+      .filter((e): e is BackendFieldError => e !== null);
+  }
+
+  // Shape B: { fieldErrors: { email: "Invalid", password: ["Too short"] } }
+  if (errors.length === 0 && typeof payload.fieldErrors === "object" && payload.fieldErrors !== null) {
+    const map = payload.fieldErrors as Record<string, unknown>;
+    errors = Object.entries(map).flatMap(([field, raw]) => {
+      if (typeof raw === "string") return [{ field, message: raw }];
+      if (Array.isArray(raw)) {
+        return raw
+          .filter((x): x is string => typeof x === "string" && x.length > 0)
+          .map((message) => ({ field, message }));
+      }
+      return [];
+    });
+  }
+
+  return { success: false, message, errors };
+}
+
+export const formService = {
+  async submitForm(data: Record<string, unknown>): Promise<void> {
+    try {
+      await axios.post(\`\${API_BASE}/forms/submit\`, data);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.data !== undefined) {
+        throw normalizeBackendError(error.response.data);
+      }
+      throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
+    }
+  },
+};
+",
+      "language": "typescript",
+      "name": "formService.ts",
+      "path": "forms/formService.ts",
+    },
+    {
+      "code": "import { useMemo } from "react";
+import { ActionForm } from "../components/forms/action-forms";
+import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
+import { formService } from "./formService";
+import { formConfig } from "./formConfig";
+import { buildZodSchema } from "../components/forms/utils/zodSchemaBuilder";
+import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
+
+export default function MyFormPage() {
+  const schema = useMemo(() => buildZodSchema(extractFields(formConfig)), []);
+
+  const handleSubmit = async (data: Record<string, unknown>) => {
+    await formService.submitForm(data);
+  };
+
+  return (
+    <div className="container mx-auto py-8 max-w-3xl">
+      <ActionForm config={formConfig} schema={schema} onSubmit={handleSubmit} />
+    </div>
+  );
+}
+",
+      "language": "tsx",
+      "name": "MyFormPage.tsx",
+      "path": "pages/MyFormPage.tsx",
+    },
+  ],
+}
+`;
+
+exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > action / static — file shape locked 1`] = `
+{
+  "fixed": [
+    {
+      "codeBytes": 1003,
+      "language": "typescript",
+      "name": "applyBackendErrors.ts",
+      "path": "/app/forms/action-forms/applyBackendErrors.ts",
+    },
+    {
+      "codeBytes": 2927,
+      "language": "tsx",
+      "name": "FormFieldErrorBoundary.tsx",
+      "path": "/app/forms/FormFieldErrorBoundary.tsx",
+    },
+    {
+      "codeBytes": 3806,
+      "language": "typescript",
+      "name": "dateFieldHelpers.ts",
+      "path": "/app/forms/utils/dateFieldHelpers.ts",
+    },
+    {
+      "codeBytes": 351,
+      "language": "tsx",
+      "name": "dateSerialize.tsx",
+      "path": "/app/forms/utils/dateSerialize.tsx",
+    },
+    {
+      "codeBytes": 6137,
+      "language": "typescript",
+      "name": "dependentApiRequest.ts",
+      "path": "/app/forms/utils/dependentApiRequest.ts",
+    },
+    {
+      "codeBytes": 1908,
+      "language": "typescript",
+      "name": "fieldExtraKeys.ts",
+      "path": "/app/forms/utils/fieldExtraKeys.ts",
+    },
+    {
+      "codeBytes": 1494,
+      "language": "typescript",
+      "name": "fileFieldHelpers.ts",
+      "path": "/app/forms/utils/fileFieldHelpers.ts",
+    },
+    {
+      "codeBytes": 1042,
+      "language": "typescript",
+      "name": "formFieldGuards.ts",
+      "path": "/app/forms/utils/formFieldGuards.ts",
+    },
+    {
+      "codeBytes": 5404,
+      "language": "typescript",
+      "name": "watchPopulate.ts",
+      "path": "/app/forms/utils/watchPopulate.ts",
+    },
+    {
+      "codeBytes": 804,
+      "language": "tsx",
+      "name": "ActionFormContext.tsx",
+      "path": "components/forms/action-forms/ActionFormContext.tsx",
+    },
+    {
+      "codeBytes": 2911,
+      "language": "tsx",
+      "name": "AsyncSelectField.tsx",
+      "path": "components/forms/action-forms/fields/AsyncSelectField.tsx",
+    },
+    {
+      "codeBytes": 1339,
+      "language": "tsx",
+      "name": "CheckboxField.tsx",
+      "path": "components/forms/action-forms/fields/CheckboxField.tsx",
+    },
+    {
+      "codeBytes": 10952,
+      "language": "tsx",
+      "name": "DateField.tsx",
+      "path": "components/forms/action-forms/fields/DateField.tsx",
+    },
+    {
+      "codeBytes": 3791,
+      "language": "tsx",
+      "name": "MultiselectField.tsx",
+      "path": "components/forms/action-forms/fields/MultiselectField.tsx",
+    },
+    {
+      "codeBytes": 1483,
+      "language": "tsx",
+      "name": "SelectField.tsx",
+      "path": "components/forms/action-forms/fields/SelectField.tsx",
+    },
+    {
+      "codeBytes": 1140,
+      "language": "tsx",
+      "name": "TextareaField.tsx",
+      "path": "components/forms/action-forms/fields/TextareaField.tsx",
+    },
+    {
+      "codeBytes": 1974,
+      "language": "tsx",
+      "name": "TextField.tsx",
+      "path": "components/forms/action-forms/fields/TextField.tsx",
+    },
+    {
+      "codeBytes": 14508,
+      "language": "typescript",
+      "name": "types.ts",
+      "path": "components/forms/types.ts",
+    },
+    {
+      "codeBytes": 3010,
+      "language": "tsx",
+      "name": "form-primitives.tsx",
+      "path": "components/ui/form-primitives.tsx",
+    },
+    {
+      "codeBytes": 1210,
+      "language": "typescript",
+      "name": "useBackendErrors.ts",
+      "path": "hooks/useBackendErrors.ts",
+    },
+    {
+      "codeBytes": 8116,
+      "language": "typescript",
+      "name": "useInfiniteOptions.ts",
+      "path": "hooks/useInfiniteOptions.ts",
+    },
+  ],
+  "variant": [
+    {
+      "code": "import { z } from "zod";
+
+const baseSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  age: z.coerce.number().min(0).max(120).optional(),
+  country: z.string().min(1, "Country is required"),
+  city: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  agree: z.boolean(),
+  dob: z.string().optional(),
+  bio: z.string().optional(),
+});
+
+export const formSchema = baseSchema;
+
+export type FormValues = z.infer<typeof formSchema>;",
+      "language": "typescript",
+      "name": "formSchema.ts",
+      "path": "forms/formSchema.ts",
+    },
+    {
+      "code": "import axios from "axios";
+import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+
+const API_BASE = "/api";
+
+/**
+ * Normalize any backend payload to AfnoUI's expected shape:
+ * { success: false, message: string, errors?: [{ field, message }] }
+ *
+ * If your API uses a different format, edit only this function.
+ */
+function normalizeBackendError(data: unknown): BackendErrorResponse {
+  if (typeof data !== "object" || data === null) {
+    return { success: false, message: "Server error", errors: [] };
+  }
+
+  const payload = data as Record<string, unknown>;
+  const message =
+    (typeof payload.message === "string" && payload.message) ||
+    (typeof payload.error === "string" && payload.error) ||
+    "Server error";
+
+  let errors: BackendFieldError[] = [];
+
+  // Shape A: { errors: [{ field, message }] }
+  if (Array.isArray(payload.errors)) {
+    errors = payload.errors
+      .map((item) => {
+        if (typeof item !== "object" || item === null) return null;
+        const e = item as Record<string, unknown>;
+        const field = typeof e.field === "string" ? e.field : (typeof e.path === "string" ? e.path : null);
+        const text = typeof e.message === "string" ? e.message : null;
+        return field && text ? { field, message: text } : null;
+      })
+      .filter((e): e is BackendFieldError => e !== null);
+  }
+
+  // Shape B: { fieldErrors: { email: "Invalid", password: ["Too short"] } }
+  if (errors.length === 0 && typeof payload.fieldErrors === "object" && payload.fieldErrors !== null) {
+    const map = payload.fieldErrors as Record<string, unknown>;
+    errors = Object.entries(map).flatMap(([field, raw]) => {
+      if (typeof raw === "string") return [{ field, message: raw }];
+      if (Array.isArray(raw)) {
+        return raw
+          .filter((x): x is string => typeof x === "string" && x.length > 0)
+          .map((message) => ({ field, message }));
+      }
+      return [];
+    });
+  }
+
+  return { success: false, message, errors };
+}
+
+export const formService = {
+  async submitForm(data: Record<string, unknown>): Promise<void> {
+    try {
+      await axios.post(\`\${API_BASE}/forms/submit\`, data);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.data !== undefined) {
+        throw normalizeBackendError(error.response.data);
+      }
+      throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
+    }
+  },
+};
+",
+      "language": "typescript",
+      "name": "formService.ts",
+      "path": "forms/formService.ts",
+    },
+    {
+      "code": "import { useState, useCallback } from "react";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { AlertCircle, X } from "lucide-react";
+import { ActionFormProvider } from "../components/forms/action-forms/ActionFormContext";
+import { TextField } from "../components/forms/action-forms/fields/TextField";
+import { SelectField } from "../components/forms/action-forms/fields/SelectField";
+import { AsyncSelectField } from "../components/forms/action-forms/fields/AsyncSelectField";
+import { MultiselectField } from "../components/forms/action-forms/fields/MultiselectField";
+import { CheckboxField } from "../components/forms/action-forms/fields/CheckboxField";
+import { DateField } from "../components/forms/action-forms/fields/DateField";
+import { TextareaField } from "../components/forms/action-forms/fields/TextareaField";
+import { formService } from "./formService";
+import { formSchema } from "./formSchema";
+
+export default function MyFormPage() {
+  const SUBMIT_EXCLUDED = new Set<string>();
+  const [values, setValues] = useState<Record<string, unknown>>({
+      "name": "",
+      "age": "",
+      "country": "",
+      "city": "",
+      "tags": [],
+      "agree": false,
+      "dob": "",
+      "bio": ""
+  });
+  const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const [globalError, setGlobalError] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
+
+  const setValue = useCallback((name: string, value: unknown) => {
+    setValues((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => { const next = { ...prev }; delete next[name]; return next; });
+    if (globalError) setGlobalError(null);
+  }, [globalError]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsPending(true);
+    setGlobalError(null);
+
+    const result = formSchema.safeParse(values);
+    if (!result.success) {
+      const flat = result.error.flatten().fieldErrors as Record<string, string[]>;
+      setErrors(flat);
+      setIsPending(false);
+      return;
+    }
+
+    try {
+      const payload = { ...(result.data as Record<string, unknown>) };
+      for (const name of SUBMIT_EXCLUDED) {
+        delete payload[name];
+        const p = \`\${name}__\`;
+        for (const k of Object.keys(payload)) {
+          if (k.startsWith(p)) delete payload[k];
+        }
+      }
+      await formService.submitForm(payload);
+    } catch (error: any) {
+      setGlobalError(error?.message || "An unexpected error occurred");
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return (
+    <div className="container mx-auto py-8 max-w-3xl">
+      <ActionFormProvider value={{ values, setValue, errors, isPending }}>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {globalError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="flex items-center justify-between">
+                {globalError}
+                <button type="button" onClick={() => setGlobalError(null)}><X className="h-4 w-4" /></button>
+              </AlertDescription>
+            </Alert>
+          )}
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Identity</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+              <TextField config={{
+                  "name": "name",
+                  "type": "text",
+                  "label": "Name",
+                  "required": true,
+                  "minLength": 2
+                }} />
+              <TextField config={{
+                  "name": "age",
+                  "type": "number",
+                  "label": "Age",
+                  "min": 0,
+                  "max": 120
+                }} />
+              <SelectField config={{
+                  "name": "country",
+                  "type": "select",
+                  "label": "Country",
+                  "options": [
+                    {
+                      "value": "us",
+                      "label": "US"
+                    },
+                    {
+                      "value": "np",
+                      "label": "NP"
+                    }
+                  ],
+                  "required": true
+                }} />
+              <AsyncSelectField config={{
+                  "name": "city",
+                  "type": "asyncselect",
+                  "label": "City",
+                  "api": {
+                    "url": "https://api.example.com/cities",
+                    "method": "GET",
+                    "responseMapping": {
+                      "dataPath": "data",
+                      "labelKey": "name",
+                      "valueKey": "id"
+                    }
+                  }
+                }} />
+              <MultiselectField config={{
+                  "name": "tags",
+                  "type": "multiselect",
+                  "label": "Tags",
+                  "options": [
+                    {
+                      "value": "a",
+                      "label": "A"
+                    }
+                  ]
+                }} />
+              <CheckboxField config={{
+                  "name": "agree",
+                  "type": "checkbox",
+                  "label": "Agree",
+                  "required": true
+                }} />
+              <DateField config={{
+                  "name": "dob",
+                  "type": "date",
+                  "label": "Date of birth"
+                }} />
+              <TextareaField config={{
+                  "name": "bio",
+                  "type": "textarea",
+                  "label": "Bio",
+                  "maxLength": 500
+                }} />
+              </CardContent>
+            </Card>
+
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Submitting..." : "Submit"}
+            </Button>
+        </form>
+      </ActionFormProvider>
+    </div>
+  );
+}
+",
+      "language": "tsx",
+      "name": "MyFormPage.tsx",
+      "path": "pages/MyFormPage.tsx",
+    },
+  ],
+}
+`;
+
+exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > rhf / config — file shape locked 1`] = `
+{
+  "fixed": [
+    {
+      "codeBytes": 2927,
+      "language": "tsx",
+      "name": "FormFieldErrorBoundary.tsx",
+      "path": "/app/forms/FormFieldErrorBoundary.tsx",
+    },
+    {
+      "codeBytes": 899,
+      "language": "typescript",
+      "name": "applyBackendErrors.ts",
+      "path": "/app/forms/react-hook-form/applyBackendErrors.ts",
+    },
+    {
+      "codeBytes": 3806,
+      "language": "typescript",
+      "name": "dateFieldHelpers.ts",
+      "path": "/app/forms/utils/dateFieldHelpers.ts",
+    },
+    {
+      "codeBytes": 351,
+      "language": "tsx",
+      "name": "dateSerialize.tsx",
+      "path": "/app/forms/utils/dateSerialize.tsx",
+    },
+    {
+      "codeBytes": 6137,
+      "language": "typescript",
+      "name": "dependentApiRequest.ts",
+      "path": "/app/forms/utils/dependentApiRequest.ts",
+    },
+    {
+      "codeBytes": 1908,
+      "language": "typescript",
+      "name": "fieldExtraKeys.ts",
+      "path": "/app/forms/utils/fieldExtraKeys.ts",
+    },
+    {
+      "codeBytes": 1494,
+      "language": "typescript",
+      "name": "fileFieldHelpers.ts",
+      "path": "/app/forms/utils/fileFieldHelpers.ts",
+    },
+    {
+      "codeBytes": 1042,
+      "language": "typescript",
+      "name": "formFieldGuards.ts",
+      "path": "/app/forms/utils/formFieldGuards.ts",
+    },
+    {
+      "codeBytes": 5404,
+      "language": "typescript",
+      "name": "watchPopulate.ts",
+      "path": "/app/forms/utils/watchPopulate.ts",
+    },
+    {
+      "codeBytes": 3684,
+      "language": "tsx",
+      "name": "AsyncSelectField.tsx",
+      "path": "components/forms/react-hook-form/fields/AsyncSelectField.tsx",
+    },
+    {
+      "codeBytes": 1466,
+      "language": "tsx",
+      "name": "CheckboxField.tsx",
+      "path": "components/forms/react-hook-form/fields/CheckboxField.tsx",
+    },
+    {
+      "codeBytes": 12315,
+      "language": "tsx",
+      "name": "DateField.tsx",
+      "path": "components/forms/react-hook-form/fields/DateField.tsx",
+    },
+    {
+      "codeBytes": 335,
+      "language": "typescript",
+      "name": "fields/index.ts",
+      "path": "components/forms/react-hook-form/fields/index.ts",
+    },
+    {
+      "codeBytes": 4987,
+      "language": "tsx",
+      "name": "MultiselectField.tsx",
+      "path": "components/forms/react-hook-form/fields/MultiselectField.tsx",
+    },
+    {
+      "codeBytes": 1696,
+      "language": "tsx",
+      "name": "SelectField.tsx",
+      "path": "components/forms/react-hook-form/fields/SelectField.tsx",
+    },
+    {
+      "codeBytes": 1242,
+      "language": "tsx",
+      "name": "TextareaField.tsx",
+      "path": "components/forms/react-hook-form/fields/TextareaField.tsx",
+    },
+    {
+      "codeBytes": 1969,
+      "language": "tsx",
+      "name": "TextField.tsx",
+      "path": "components/forms/react-hook-form/fields/TextField.tsx",
+    },
+    {
+      "codeBytes": 565,
+      "language": "typescript",
+      "name": "index.ts",
+      "path": "components/forms/react-hook-form/index.ts",
+    },
+    {
+      "codeBytes": 13978,
+      "language": "tsx",
+      "name": "ReactHookForm.tsx",
+      "path": "components/forms/react-hook-form/ReactHookForm.tsx",
+    },
+    {
+      "codeBytes": 4694,
+      "language": "tsx",
+      "name": "ReactHookFormField.tsx",
+      "path": "components/forms/react-hook-form/ReactHookFormField.tsx",
+    },
+    {
+      "codeBytes": 6116,
+      "language": "typescript",
+      "name": "useReactHookForm.ts",
+      "path": "components/forms/react-hook-form/useReactHookForm.ts",
+    },
+    {
+      "codeBytes": 14508,
+      "language": "typescript",
+      "name": "types.ts",
+      "path": "components/forms/types.ts",
+    },
+    {
+      "codeBytes": 4764,
+      "language": "tsx",
+      "name": "form.tsx",
+      "path": "components/ui/form.tsx",
+    },
+    {
+      "codeBytes": 1210,
+      "language": "typescript",
+      "name": "useBackendErrors.ts",
+      "path": "hooks/useBackendErrors.ts",
+    },
+    {
+      "codeBytes": 8116,
+      "language": "typescript",
+      "name": "useInfiniteOptions.ts",
+      "path": "hooks/useInfiniteOptions.ts",
+    },
+    {
+      "codeBytes": 14684,
+      "language": "typescript",
+      "name": "zodSchemaBuilder.ts",
+      "path": "utils/zodSchemaBuilder.ts",
+    },
+  ],
+  "variant": [
+    {
+      "code": "import { FormConfig } from "../components/forms/types/types";
+
+export const formConfig: FormConfig = {
+  "id": "profile",
+  "title": "Profile",
+  "description": "All field families",
+  "layout": {
+    "columns": 2,
+    "gap": "md"
+  },
+  "submitButton": {
+    "label": "Save",
+    "className": ""
+  },
+  "sections": [
+    {
+      "id": "main",
+      "title": "Identity",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "label": "Name",
+          "required": true,
+          "minLength": 2
+        },
+        {
+          "name": "age",
+          "type": "number",
+          "label": "Age",
+          "min": 0,
+          "max": 120
+        },
+        {
+          "name": "country",
+          "type": "select",
+          "label": "Country",
+          "options": [
+            {
+              "value": "us",
+              "label": "US"
+            },
+            {
+              "value": "np",
+              "label": "NP"
+            }
+          ],
+          "required": true
+        },
+        {
+          "name": "city",
+          "type": "asyncselect",
+          "label": "City",
+          "api": {
+            "url": "https://api.example.com/cities",
+            "method": "GET",
+            "responseMapping": {
+              "dataPath": "data",
+              "labelKey": "name",
+              "valueKey": "id"
+            }
+          }
+        },
+        {
+          "name": "tags",
+          "type": "multiselect",
+          "label": "Tags",
+          "options": [
+            {
+              "value": "a",
+              "label": "A"
+            }
+          ]
+        },
+        {
+          "name": "agree",
+          "type": "checkbox",
+          "label": "Agree",
+          "required": true
+        },
+        {
+          "name": "dob",
+          "type": "date",
+          "label": "Date of birth"
+        },
+        {
+          "name": "bio",
+          "type": "textarea",
+          "label": "Bio",
+          "maxLength": 500
+        }
+      ]
+    }
+  ]
+};
+",
+      "language": "typescript",
+      "name": "formConfig.ts",
+      "path": "forms/formConfig.ts",
+    },
+    {
+      "code": "import axios from "axios";
+import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+
+const API_BASE = "/api";
+
+/**
+ * Normalize any backend payload to AfnoUI's expected shape:
+ * { success: false, message: string, errors?: [{ field, message }] }
+ *
+ * If your API uses a different format, edit only this function.
+ */
+function normalizeBackendError(data: unknown): BackendErrorResponse {
+  if (typeof data !== "object" || data === null) {
+    return { success: false, message: "Server error", errors: [] };
+  }
+
+  const payload = data as Record<string, unknown>;
+  const message =
+    (typeof payload.message === "string" && payload.message) ||
+    (typeof payload.error === "string" && payload.error) ||
+    "Server error";
+
+  let errors: BackendFieldError[] = [];
+
+  // Shape A: { errors: [{ field, message }] }
+  if (Array.isArray(payload.errors)) {
+    errors = payload.errors
+      .map((item) => {
+        if (typeof item !== "object" || item === null) return null;
+        const e = item as Record<string, unknown>;
+        const field = typeof e.field === "string" ? e.field : (typeof e.path === "string" ? e.path : null);
+        const text = typeof e.message === "string" ? e.message : null;
+        return field && text ? { field, message: text } : null;
+      })
+      .filter((e): e is BackendFieldError => e !== null);
+  }
+
+  // Shape B: { fieldErrors: { email: "Invalid", password: ["Too short"] } }
+  if (errors.length === 0 && typeof payload.fieldErrors === "object" && payload.fieldErrors !== null) {
+    const map = payload.fieldErrors as Record<string, unknown>;
+    errors = Object.entries(map).flatMap(([field, raw]) => {
+      if (typeof raw === "string") return [{ field, message: raw }];
+      if (Array.isArray(raw)) {
+        return raw
+          .filter((x): x is string => typeof x === "string" && x.length > 0)
+          .map((message) => ({ field, message }));
+      }
+      return [];
+    });
+  }
+
+  return { success: false, message, errors };
+}
+
+export const formService = {
+  async submitForm(data: Record<string, unknown>): Promise<void> {
+    try {
+      await axios.post(\`\${API_BASE}/forms/submit\`, data);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.data !== undefined) {
+        throw normalizeBackendError(error.response.data);
+      }
+      throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
+    }
+  },
+};
+",
+      "language": "typescript",
+      "name": "formService.ts",
+      "path": "forms/formService.ts",
+    },
+    {
+      "code": "import { useMemo } from "react";
+import { ReactHookForm } from "../components/forms/react-hook-form";
+import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
+import { formService } from "./formService";
+import { formConfig } from "./formConfig";
+import { buildZodSchema } from "../components/forms/utils/zodSchemaBuilder";
+import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
+
+export default function MyFormPage() {
+  const schema = useMemo(() => buildZodSchema(extractFields(formConfig)), []);
+
+  const handleSubmit = async (data: Record<string, unknown>) => {
+    await formService.submitForm(data);
+  };
+
+  return (
+    <div className="container mx-auto py-8 max-w-3xl">
+      <ReactHookForm config={formConfig} schema={schema} onSubmit={handleSubmit} />
+    </div>
+  );
+}
+",
+      "language": "tsx",
+      "name": "MyFormPage.tsx",
+      "path": "pages/MyFormPage.tsx",
+    },
+  ],
+}
+`;
+
+exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > rhf / static — file shape locked 1`] = `
+{
+  "fixed": [
+    {
+      "codeBytes": 2927,
+      "language": "tsx",
+      "name": "FormFieldErrorBoundary.tsx",
+      "path": "/app/forms/FormFieldErrorBoundary.tsx",
+    },
+    {
+      "codeBytes": 899,
+      "language": "typescript",
+      "name": "applyBackendErrors.ts",
+      "path": "/app/forms/react-hook-form/applyBackendErrors.ts",
+    },
+    {
+      "codeBytes": 3806,
+      "language": "typescript",
+      "name": "dateFieldHelpers.ts",
+      "path": "/app/forms/utils/dateFieldHelpers.ts",
+    },
+    {
+      "codeBytes": 351,
+      "language": "tsx",
+      "name": "dateSerialize.tsx",
+      "path": "/app/forms/utils/dateSerialize.tsx",
+    },
+    {
+      "codeBytes": 6137,
+      "language": "typescript",
+      "name": "dependentApiRequest.ts",
+      "path": "/app/forms/utils/dependentApiRequest.ts",
+    },
+    {
+      "codeBytes": 1908,
+      "language": "typescript",
+      "name": "fieldExtraKeys.ts",
+      "path": "/app/forms/utils/fieldExtraKeys.ts",
+    },
+    {
+      "codeBytes": 1494,
+      "language": "typescript",
+      "name": "fileFieldHelpers.ts",
+      "path": "/app/forms/utils/fileFieldHelpers.ts",
+    },
+    {
+      "codeBytes": 1042,
+      "language": "typescript",
+      "name": "formFieldGuards.ts",
+      "path": "/app/forms/utils/formFieldGuards.ts",
+    },
+    {
+      "codeBytes": 5404,
+      "language": "typescript",
+      "name": "watchPopulate.ts",
+      "path": "/app/forms/utils/watchPopulate.ts",
+    },
+    {
+      "codeBytes": 3684,
+      "language": "tsx",
+      "name": "AsyncSelectField.tsx",
+      "path": "components/forms/react-hook-form/fields/AsyncSelectField.tsx",
+    },
+    {
+      "codeBytes": 1466,
+      "language": "tsx",
+      "name": "CheckboxField.tsx",
+      "path": "components/forms/react-hook-form/fields/CheckboxField.tsx",
+    },
+    {
+      "codeBytes": 12315,
+      "language": "tsx",
+      "name": "DateField.tsx",
+      "path": "components/forms/react-hook-form/fields/DateField.tsx",
+    },
+    {
+      "codeBytes": 4987,
+      "language": "tsx",
+      "name": "MultiselectField.tsx",
+      "path": "components/forms/react-hook-form/fields/MultiselectField.tsx",
+    },
+    {
+      "codeBytes": 1696,
+      "language": "tsx",
+      "name": "SelectField.tsx",
+      "path": "components/forms/react-hook-form/fields/SelectField.tsx",
+    },
+    {
+      "codeBytes": 1242,
+      "language": "tsx",
+      "name": "TextareaField.tsx",
+      "path": "components/forms/react-hook-form/fields/TextareaField.tsx",
+    },
+    {
+      "codeBytes": 1969,
+      "language": "tsx",
+      "name": "TextField.tsx",
+      "path": "components/forms/react-hook-form/fields/TextField.tsx",
+    },
+    {
+      "codeBytes": 14508,
+      "language": "typescript",
+      "name": "types.ts",
+      "path": "components/forms/types.ts",
+    },
+    {
+      "codeBytes": 4764,
+      "language": "tsx",
+      "name": "form.tsx",
+      "path": "components/ui/form.tsx",
+    },
+    {
+      "codeBytes": 1210,
+      "language": "typescript",
+      "name": "useBackendErrors.ts",
+      "path": "hooks/useBackendErrors.ts",
+    },
+    {
+      "codeBytes": 8116,
+      "language": "typescript",
+      "name": "useInfiniteOptions.ts",
+      "path": "hooks/useInfiniteOptions.ts",
+    },
+  ],
+  "variant": [
+    {
+      "code": "import { z } from "zod";
+
+const baseSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  age: z.coerce.number().min(0).max(120).optional(),
+  country: z.string().min(1, "Country is required"),
+  city: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  agree: z.boolean(),
+  dob: z.string().optional(),
+  bio: z.string().optional(),
+});
+
+export const formSchema = baseSchema;
+
+export type FormValues = z.infer<typeof formSchema>;",
+      "language": "typescript",
+      "name": "formSchema.ts",
+      "path": "forms/formSchema.ts",
+    },
+    {
+      "code": "import axios from "axios";
+import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+
+const API_BASE = "/api";
+
+/**
+ * Normalize any backend payload to AfnoUI's expected shape:
+ * { success: false, message: string, errors?: [{ field, message }] }
+ *
+ * If your API uses a different format, edit only this function.
+ */
+function normalizeBackendError(data: unknown): BackendErrorResponse {
+  if (typeof data !== "object" || data === null) {
+    return { success: false, message: "Server error", errors: [] };
+  }
+
+  const payload = data as Record<string, unknown>;
+  const message =
+    (typeof payload.message === "string" && payload.message) ||
+    (typeof payload.error === "string" && payload.error) ||
+    "Server error";
+
+  let errors: BackendFieldError[] = [];
+
+  // Shape A: { errors: [{ field, message }] }
+  if (Array.isArray(payload.errors)) {
+    errors = payload.errors
+      .map((item) => {
+        if (typeof item !== "object" || item === null) return null;
+        const e = item as Record<string, unknown>;
+        const field = typeof e.field === "string" ? e.field : (typeof e.path === "string" ? e.path : null);
+        const text = typeof e.message === "string" ? e.message : null;
+        return field && text ? { field, message: text } : null;
+      })
+      .filter((e): e is BackendFieldError => e !== null);
+  }
+
+  // Shape B: { fieldErrors: { email: "Invalid", password: ["Too short"] } }
+  if (errors.length === 0 && typeof payload.fieldErrors === "object" && payload.fieldErrors !== null) {
+    const map = payload.fieldErrors as Record<string, unknown>;
+    errors = Object.entries(map).flatMap(([field, raw]) => {
+      if (typeof raw === "string") return [{ field, message: raw }];
+      if (Array.isArray(raw)) {
+        return raw
+          .filter((x): x is string => typeof x === "string" && x.length > 0)
+          .map((message) => ({ field, message }));
+      }
+      return [];
+    });
+  }
+
+  return { success: false, message, errors };
+}
+
+export const formService = {
+  async submitForm(data: Record<string, unknown>): Promise<void> {
+    try {
+      await axios.post(\`\${API_BASE}/forms/submit\`, data);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.data !== undefined) {
+        throw normalizeBackendError(error.response.data);
+      }
+      throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
+    }
+  },
+};
+",
+      "language": "typescript",
+      "name": "formService.ts",
+      "path": "forms/formService.ts",
+    },
+    {
+      "code": "import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form } from "../components/ui/form";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
+import { TextField } from "../components/forms/react-hook-form/fields/TextField";
+import { SelectField } from "../components/forms/react-hook-form/fields/SelectField";
+import { AsyncSelectField } from "../components/forms/react-hook-form/fields/AsyncSelectField";
+import { MultiselectField } from "../components/forms/react-hook-form/fields/MultiselectField";
+import { CheckboxField } from "../components/forms/react-hook-form/fields/CheckboxField";
+import { DateField } from "../components/forms/react-hook-form/fields/DateField";
+import { TextareaField } from "../components/forms/react-hook-form/fields/TextareaField";
+import { formService } from "./formService";
+import { formSchema } from "./formSchema";
+
+export default function MyFormPage() {
+  const SUBMIT_EXCLUDED = new Set<string>();
+
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+        "name": "",
+        "age": "",
+        "country": "",
+        "city": "",
+        "tags": [],
+        "agree": false,
+        "dob": "",
+        "bio": ""
+    },
+    mode: "onSubmit",
+  });
+
+  const onSubmit = form.handleSubmit(async (data) => {
+    const payload = { ...data } as Record<string, unknown>;
+    for (const name of SUBMIT_EXCLUDED) {
+      delete payload[name];
+      const p = \`\${name}__\`;
+      for (const k of Object.keys(payload)) {
+        if (k.startsWith(p)) delete payload[k];
+      }
+    }
+    await formService.submitForm(payload);
+  });
+
+  return (
+    <div className="container mx-auto py-8 max-w-3xl">
+      <Form {...form}>
+        <form onSubmit={onSubmit} className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Identity</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+              <TextField config={{
+                  "name": "name",
+                  "type": "text",
+                  "label": "Name",
+                  "required": true,
+                  "minLength": 2
+                }} />
+              <TextField config={{
+                  "name": "age",
+                  "type": "number",
+                  "label": "Age",
+                  "min": 0,
+                  "max": 120
+                }} />
+              <SelectField config={{
+                  "name": "country",
+                  "type": "select",
+                  "label": "Country",
+                  "options": [
+                    {
+                      "value": "us",
+                      "label": "US"
+                    },
+                    {
+                      "value": "np",
+                      "label": "NP"
+                    }
+                  ],
+                  "required": true
+                }} />
+              <AsyncSelectField config={{
+                  "name": "city",
+                  "type": "asyncselect",
+                  "label": "City",
+                  "api": {
+                    "url": "https://api.example.com/cities",
+                    "method": "GET",
+                    "responseMapping": {
+                      "dataPath": "data",
+                      "labelKey": "name",
+                      "valueKey": "id"
+                    }
+                  }
+                }} />
+              <MultiselectField config={{
+                  "name": "tags",
+                  "type": "multiselect",
+                  "label": "Tags",
+                  "options": [
+                    {
+                      "value": "a",
+                      "label": "A"
+                    }
+                  ]
+                }} />
+              <CheckboxField config={{
+                  "name": "agree",
+                  "type": "checkbox",
+                  "label": "Agree",
+                  "required": true
+                }} />
+              <DateField config={{
+                  "name": "dob",
+                  "type": "date",
+                  "label": "Date of birth"
+                }} />
+              <TextareaField config={{
+                  "name": "bio",
+                  "type": "textarea",
+                  "label": "Bio",
+                  "maxLength": 500
+                }} />
+              </CardContent>
+            </Card>
+
+            <Button type="submit" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? "Submitting..." : "Submit"}
+            </Button>
+        </form>
+      </Form>
+    </div>
+  );
+}
+",
+      "language": "tsx",
+      "name": "MyFormPage.tsx",
+      "path": "pages/MyFormPage.tsx",
+    },
+  ],
+}
+`;
+
+exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > tanstack / config — file shape locked 1`] = `
+{
+  "fixed": [
+    {
+      "codeBytes": 2927,
+      "language": "tsx",
+      "name": "FormFieldErrorBoundary.tsx",
+      "path": "/app/forms/FormFieldErrorBoundary.tsx",
+    },
+    {
+      "codeBytes": 1179,
+      "language": "typescript",
+      "name": "applyBackendErrors.ts",
+      "path": "/app/forms/tanstack-forms/applyBackendErrors.ts",
+    },
+    {
+      "codeBytes": 3806,
+      "language": "typescript",
+      "name": "dateFieldHelpers.ts",
+      "path": "/app/forms/utils/dateFieldHelpers.ts",
+    },
+    {
+      "codeBytes": 351,
+      "language": "tsx",
+      "name": "dateSerialize.tsx",
+      "path": "/app/forms/utils/dateSerialize.tsx",
+    },
+    {
+      "codeBytes": 6137,
+      "language": "typescript",
+      "name": "dependentApiRequest.ts",
+      "path": "/app/forms/utils/dependentApiRequest.ts",
+    },
+    {
+      "codeBytes": 1908,
+      "language": "typescript",
+      "name": "fieldExtraKeys.ts",
+      "path": "/app/forms/utils/fieldExtraKeys.ts",
+    },
+    {
+      "codeBytes": 1494,
+      "language": "typescript",
+      "name": "fileFieldHelpers.ts",
+      "path": "/app/forms/utils/fileFieldHelpers.ts",
+    },
+    {
+      "codeBytes": 1042,
+      "language": "typescript",
+      "name": "formFieldGuards.ts",
+      "path": "/app/forms/utils/formFieldGuards.ts",
+    },
+    {
+      "codeBytes": 5404,
+      "language": "typescript",
+      "name": "watchPopulate.ts",
+      "path": "/app/forms/utils/watchPopulate.ts",
+    },
+    {
+      "codeBytes": 3507,
+      "language": "tsx",
+      "name": "AsyncSelectField.tsx",
+      "path": "components/forms/tanstack-forms/fields/AsyncSelectField.tsx",
+    },
+    {
+      "codeBytes": 1321,
+      "language": "tsx",
+      "name": "CheckboxField.tsx",
+      "path": "components/forms/tanstack-forms/fields/CheckboxField.tsx",
+    },
+    {
+      "codeBytes": 12910,
+      "language": "tsx",
+      "name": "DateField.tsx",
+      "path": "components/forms/tanstack-forms/fields/DateField.tsx",
+    },
+    {
+      "codeBytes": 335,
+      "language": "typescript",
+      "name": "fields/index.ts",
+      "path": "components/forms/tanstack-forms/fields/index.ts",
+    },
+    {
+      "codeBytes": 4527,
+      "language": "tsx",
+      "name": "MultiselectField.tsx",
+      "path": "components/forms/tanstack-forms/fields/MultiselectField.tsx",
+    },
+    {
+      "codeBytes": 1787,
+      "language": "tsx",
+      "name": "SelectField.tsx",
+      "path": "components/forms/tanstack-forms/fields/SelectField.tsx",
+    },
+    {
+      "codeBytes": 1418,
+      "language": "tsx",
+      "name": "TextareaField.tsx",
+      "path": "components/forms/tanstack-forms/fields/TextareaField.tsx",
+    },
+    {
+      "codeBytes": 2324,
+      "language": "tsx",
+      "name": "TextField.tsx",
+      "path": "components/forms/tanstack-forms/fields/TextField.tsx",
+    },
+    {
+      "codeBytes": 653,
+      "language": "typescript",
+      "name": "index.ts",
+      "path": "components/forms/tanstack-forms/index.ts",
+    },
+    {
+      "codeBytes": 13499,
+      "language": "tsx",
+      "name": "TanstackForm.tsx",
+      "path": "components/forms/tanstack-forms/TanstackForm.tsx",
+    },
+    {
+      "codeBytes": 752,
+      "language": "tsx",
+      "name": "TanstackFormContext.tsx",
+      "path": "components/forms/tanstack-forms/TanstackFormContext.tsx",
+    },
+    {
+      "codeBytes": 4777,
+      "language": "tsx",
+      "name": "TanstackFormField.tsx",
+      "path": "components/forms/tanstack-forms/TanstackFormField.tsx",
+    },
+    {
+      "codeBytes": 6981,
+      "language": "typescript",
+      "name": "useTanstackForm.ts",
+      "path": "components/forms/tanstack-forms/useTanstackForm.ts",
+    },
+    {
+      "codeBytes": 14508,
+      "language": "typescript",
+      "name": "types.ts",
+      "path": "components/forms/types.ts",
+    },
+    {
+      "codeBytes": 3010,
+      "language": "tsx",
+      "name": "form-primitives.tsx",
+      "path": "components/ui/form-primitives.tsx",
+    },
+    {
+      "codeBytes": 1210,
+      "language": "typescript",
+      "name": "useBackendErrors.ts",
+      "path": "hooks/useBackendErrors.ts",
+    },
+    {
+      "codeBytes": 8116,
+      "language": "typescript",
+      "name": "useInfiniteOptions.ts",
+      "path": "hooks/useInfiniteOptions.ts",
+    },
+    {
+      "codeBytes": 14684,
+      "language": "typescript",
+      "name": "zodSchemaBuilder.ts",
+      "path": "utils/zodSchemaBuilder.ts",
+    },
+  ],
+  "variant": [
+    {
+      "code": "import { FormConfig } from "../components/forms/types/types";
+
+export const formConfig: FormConfig = {
+  "id": "profile",
+  "title": "Profile",
+  "description": "All field families",
+  "layout": {
+    "columns": 2,
+    "gap": "md"
+  },
+  "submitButton": {
+    "label": "Save",
+    "className": ""
+  },
+  "sections": [
+    {
+      "id": "main",
+      "title": "Identity",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "label": "Name",
+          "required": true,
+          "minLength": 2
+        },
+        {
+          "name": "age",
+          "type": "number",
+          "label": "Age",
+          "min": 0,
+          "max": 120
+        },
+        {
+          "name": "country",
+          "type": "select",
+          "label": "Country",
+          "options": [
+            {
+              "value": "us",
+              "label": "US"
+            },
+            {
+              "value": "np",
+              "label": "NP"
+            }
+          ],
+          "required": true
+        },
+        {
+          "name": "city",
+          "type": "asyncselect",
+          "label": "City",
+          "api": {
+            "url": "https://api.example.com/cities",
+            "method": "GET",
+            "responseMapping": {
+              "dataPath": "data",
+              "labelKey": "name",
+              "valueKey": "id"
+            }
+          }
+        },
+        {
+          "name": "tags",
+          "type": "multiselect",
+          "label": "Tags",
+          "options": [
+            {
+              "value": "a",
+              "label": "A"
+            }
+          ]
+        },
+        {
+          "name": "agree",
+          "type": "checkbox",
+          "label": "Agree",
+          "required": true
+        },
+        {
+          "name": "dob",
+          "type": "date",
+          "label": "Date of birth"
+        },
+        {
+          "name": "bio",
+          "type": "textarea",
+          "label": "Bio",
+          "maxLength": 500
+        }
+      ]
+    }
+  ]
+};
+",
+      "language": "typescript",
+      "name": "formConfig.ts",
+      "path": "forms/formConfig.ts",
+    },
+    {
+      "code": "import axios from "axios";
+import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+
+const API_BASE = "/api";
+
+/**
+ * Normalize any backend payload to AfnoUI's expected shape:
+ * { success: false, message: string, errors?: [{ field, message }] }
+ *
+ * If your API uses a different format, edit only this function.
+ */
+function normalizeBackendError(data: unknown): BackendErrorResponse {
+  if (typeof data !== "object" || data === null) {
+    return { success: false, message: "Server error", errors: [] };
+  }
+
+  const payload = data as Record<string, unknown>;
+  const message =
+    (typeof payload.message === "string" && payload.message) ||
+    (typeof payload.error === "string" && payload.error) ||
+    "Server error";
+
+  let errors: BackendFieldError[] = [];
+
+  // Shape A: { errors: [{ field, message }] }
+  if (Array.isArray(payload.errors)) {
+    errors = payload.errors
+      .map((item) => {
+        if (typeof item !== "object" || item === null) return null;
+        const e = item as Record<string, unknown>;
+        const field = typeof e.field === "string" ? e.field : (typeof e.path === "string" ? e.path : null);
+        const text = typeof e.message === "string" ? e.message : null;
+        return field && text ? { field, message: text } : null;
+      })
+      .filter((e): e is BackendFieldError => e !== null);
+  }
+
+  // Shape B: { fieldErrors: { email: "Invalid", password: ["Too short"] } }
+  if (errors.length === 0 && typeof payload.fieldErrors === "object" && payload.fieldErrors !== null) {
+    const map = payload.fieldErrors as Record<string, unknown>;
+    errors = Object.entries(map).flatMap(([field, raw]) => {
+      if (typeof raw === "string") return [{ field, message: raw }];
+      if (Array.isArray(raw)) {
+        return raw
+          .filter((x): x is string => typeof x === "string" && x.length > 0)
+          .map((message) => ({ field, message }));
+      }
+      return [];
+    });
+  }
+
+  return { success: false, message, errors };
+}
+
+export const formService = {
+  async submitForm(data: Record<string, unknown>): Promise<void> {
+    try {
+      await axios.post(\`\${API_BASE}/forms/submit\`, data);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.data !== undefined) {
+        throw normalizeBackendError(error.response.data);
+      }
+      throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
+    }
+  },
+};
+",
+      "language": "typescript",
+      "name": "formService.ts",
+      "path": "forms/formService.ts",
+    },
+    {
+      "code": "import { useMemo } from "react";
+import { TanstackForm } from "../components/forms/tanstack-forms";
+import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
+import { formService } from "./formService";
+import { formConfig } from "./formConfig";
+import { buildZodSchema } from "../components/forms/utils/zodSchemaBuilder";
+import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
+
+export default function MyFormPage() {
+  const schema = useMemo(() => buildZodSchema(extractFields(formConfig)), []);
+
+  const handleSubmit = async (data: Record<string, unknown>) => {
+    await formService.submitForm(data);
+  };
+
+  return (
+    <div className="container mx-auto py-8 max-w-3xl">
+      <TanstackForm config={formConfig} schema={schema} onSubmit={handleSubmit} />
+    </div>
+  );
+}
+",
+      "language": "tsx",
+      "name": "MyFormPage.tsx",
+      "path": "pages/MyFormPage.tsx",
+    },
+  ],
+}
+`;
+
+exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > tanstack / static — file shape locked 1`] = `
+{
+  "fixed": [
+    {
+      "codeBytes": 2927,
+      "language": "tsx",
+      "name": "FormFieldErrorBoundary.tsx",
+      "path": "/app/forms/FormFieldErrorBoundary.tsx",
+    },
+    {
+      "codeBytes": 1179,
+      "language": "typescript",
+      "name": "applyBackendErrors.ts",
+      "path": "/app/forms/tanstack-forms/applyBackendErrors.ts",
+    },
+    {
+      "codeBytes": 3806,
+      "language": "typescript",
+      "name": "dateFieldHelpers.ts",
+      "path": "/app/forms/utils/dateFieldHelpers.ts",
+    },
+    {
+      "codeBytes": 351,
+      "language": "tsx",
+      "name": "dateSerialize.tsx",
+      "path": "/app/forms/utils/dateSerialize.tsx",
+    },
+    {
+      "codeBytes": 6137,
+      "language": "typescript",
+      "name": "dependentApiRequest.ts",
+      "path": "/app/forms/utils/dependentApiRequest.ts",
+    },
+    {
+      "codeBytes": 1908,
+      "language": "typescript",
+      "name": "fieldExtraKeys.ts",
+      "path": "/app/forms/utils/fieldExtraKeys.ts",
+    },
+    {
+      "codeBytes": 1494,
+      "language": "typescript",
+      "name": "fileFieldHelpers.ts",
+      "path": "/app/forms/utils/fileFieldHelpers.ts",
+    },
+    {
+      "codeBytes": 1042,
+      "language": "typescript",
+      "name": "formFieldGuards.ts",
+      "path": "/app/forms/utils/formFieldGuards.ts",
+    },
+    {
+      "codeBytes": 5404,
+      "language": "typescript",
+      "name": "watchPopulate.ts",
+      "path": "/app/forms/utils/watchPopulate.ts",
+    },
+    {
+      "codeBytes": 3507,
+      "language": "tsx",
+      "name": "AsyncSelectField.tsx",
+      "path": "components/forms/tanstack-forms/fields/AsyncSelectField.tsx",
+    },
+    {
+      "codeBytes": 1321,
+      "language": "tsx",
+      "name": "CheckboxField.tsx",
+      "path": "components/forms/tanstack-forms/fields/CheckboxField.tsx",
+    },
+    {
+      "codeBytes": 12910,
+      "language": "tsx",
+      "name": "DateField.tsx",
+      "path": "components/forms/tanstack-forms/fields/DateField.tsx",
+    },
+    {
+      "codeBytes": 4527,
+      "language": "tsx",
+      "name": "MultiselectField.tsx",
+      "path": "components/forms/tanstack-forms/fields/MultiselectField.tsx",
+    },
+    {
+      "codeBytes": 1787,
+      "language": "tsx",
+      "name": "SelectField.tsx",
+      "path": "components/forms/tanstack-forms/fields/SelectField.tsx",
+    },
+    {
+      "codeBytes": 1418,
+      "language": "tsx",
+      "name": "TextareaField.tsx",
+      "path": "components/forms/tanstack-forms/fields/TextareaField.tsx",
+    },
+    {
+      "codeBytes": 2324,
+      "language": "tsx",
+      "name": "TextField.tsx",
+      "path": "components/forms/tanstack-forms/fields/TextField.tsx",
+    },
+    {
+      "codeBytes": 752,
+      "language": "tsx",
+      "name": "TanstackFormContext.tsx",
+      "path": "components/forms/tanstack-forms/TanstackFormContext.tsx",
+    },
+    {
+      "codeBytes": 14508,
+      "language": "typescript",
+      "name": "types.ts",
+      "path": "components/forms/types.ts",
+    },
+    {
+      "codeBytes": 3010,
+      "language": "tsx",
+      "name": "form-primitives.tsx",
+      "path": "components/ui/form-primitives.tsx",
+    },
+    {
+      "codeBytes": 1210,
+      "language": "typescript",
+      "name": "useBackendErrors.ts",
+      "path": "hooks/useBackendErrors.ts",
+    },
+    {
+      "codeBytes": 8116,
+      "language": "typescript",
+      "name": "useInfiniteOptions.ts",
+      "path": "hooks/useInfiniteOptions.ts",
+    },
+  ],
+  "variant": [
+    {
+      "code": "import { z } from "zod";
+
+const baseSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  age: z.coerce.number().min(0).max(120).optional(),
+  country: z.string().min(1, "Country is required"),
+  city: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  agree: z.boolean(),
+  dob: z.string().optional(),
+  bio: z.string().optional(),
+});
+
+export const formSchema = baseSchema;
+
+export type FormValues = z.infer<typeof formSchema>;",
+      "language": "typescript",
+      "name": "formSchema.ts",
+      "path": "forms/formSchema.ts",
+    },
+    {
+      "code": "import axios from "axios";
+import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+
+const API_BASE = "/api";
+
+/**
+ * Normalize any backend payload to AfnoUI's expected shape:
+ * { success: false, message: string, errors?: [{ field, message }] }
+ *
+ * If your API uses a different format, edit only this function.
+ */
+function normalizeBackendError(data: unknown): BackendErrorResponse {
+  if (typeof data !== "object" || data === null) {
+    return { success: false, message: "Server error", errors: [] };
+  }
+
+  const payload = data as Record<string, unknown>;
+  const message =
+    (typeof payload.message === "string" && payload.message) ||
+    (typeof payload.error === "string" && payload.error) ||
+    "Server error";
+
+  let errors: BackendFieldError[] = [];
+
+  // Shape A: { errors: [{ field, message }] }
+  if (Array.isArray(payload.errors)) {
+    errors = payload.errors
+      .map((item) => {
+        if (typeof item !== "object" || item === null) return null;
+        const e = item as Record<string, unknown>;
+        const field = typeof e.field === "string" ? e.field : (typeof e.path === "string" ? e.path : null);
+        const text = typeof e.message === "string" ? e.message : null;
+        return field && text ? { field, message: text } : null;
+      })
+      .filter((e): e is BackendFieldError => e !== null);
+  }
+
+  // Shape B: { fieldErrors: { email: "Invalid", password: ["Too short"] } }
+  if (errors.length === 0 && typeof payload.fieldErrors === "object" && payload.fieldErrors !== null) {
+    const map = payload.fieldErrors as Record<string, unknown>;
+    errors = Object.entries(map).flatMap(([field, raw]) => {
+      if (typeof raw === "string") return [{ field, message: raw }];
+      if (Array.isArray(raw)) {
+        return raw
+          .filter((x): x is string => typeof x === "string" && x.length > 0)
+          .map((message) => ({ field, message }));
+      }
+      return [];
+    });
+  }
+
+  return { success: false, message, errors };
+}
+
+export const formService = {
+  async submitForm(data: Record<string, unknown>): Promise<void> {
+    try {
+      await axios.post(\`\${API_BASE}/forms/submit\`, data);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.data !== undefined) {
+        throw normalizeBackendError(error.response.data);
+      }
+      throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
+    }
+  },
+};
+",
+      "language": "typescript",
+      "name": "formService.ts",
+      "path": "forms/formService.ts",
+    },
+    {
+      "code": "import { useState } from "react";
+import { useForm } from "@tanstack/react-form";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { AlertCircle, X } from "lucide-react";
+import { TanstackFormProvider } from "../components/forms/tanstack-forms/TanstackFormContext";
+import { TextField } from "../components/forms/tanstack-forms/fields/TextField";
+import { SelectField } from "../components/forms/tanstack-forms/fields/SelectField";
+import { AsyncSelectField } from "../components/forms/tanstack-forms/fields/AsyncSelectField";
+import { MultiselectField } from "../components/forms/tanstack-forms/fields/MultiselectField";
+import { CheckboxField } from "../components/forms/tanstack-forms/fields/CheckboxField";
+import { DateField } from "../components/forms/tanstack-forms/fields/DateField";
+import { TextareaField } from "../components/forms/tanstack-forms/fields/TextareaField";
+import { formService } from "./formService";
+import { formSchema } from "./formSchema";
+
+export default function MyFormPage() {
+  const [globalError, setGlobalError] = useState<string | null>(null);
+  const SUBMIT_EXCLUDED = new Set<string>();
+
+  const form = useForm({
+    defaultValues: {
+        "name": "",
+        "age": "",
+        "country": "",
+        "city": "",
+        "tags": [],
+        "agree": false,
+        "dob": "",
+        "bio": ""
+    },
+    validators: {
+      onSubmit: formSchema,
+    },
+    onSubmit: async ({ value }) => {
+      setGlobalError(null);
+      try {
+        const payload = { ...(value as Record<string, unknown>) };
+        for (const name of SUBMIT_EXCLUDED) {
+          delete payload[name];
+          const p = \`\${name}__\`;
+          for (const k of Object.keys(payload)) {
+            if (k.startsWith(p)) delete payload[k];
+          }
+        }
+        await formService.submitForm(payload);
+      } catch (error: any) {
+        setGlobalError(error?.message || "An unexpected error occurred");
+      }
+    },
+  });
+
+  return (
+    <div className="container mx-auto py-8 max-w-3xl">
+      <TanstackFormProvider value={{ form, values: form.state.values as Record<string, unknown> }}>
+        <form
+          onSubmit={(e) => { e.preventDefault(); form.handleSubmit(); }}
+          className="space-y-6"
+        >
+          {globalError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="flex items-center justify-between">
+                {globalError}
+                <button type="button" onClick={() => setGlobalError(null)}><X className="h-4 w-4" /></button>
+              </AlertDescription>
+            </Alert>
+          )}
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Identity</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+              <TextField config={{
+                  "name": "name",
+                  "type": "text",
+                  "label": "Name",
+                  "required": true,
+                  "minLength": 2
+                }} />
+              <TextField config={{
+                  "name": "age",
+                  "type": "number",
+                  "label": "Age",
+                  "min": 0,
+                  "max": 120
+                }} />
+              <SelectField config={{
+                  "name": "country",
+                  "type": "select",
+                  "label": "Country",
+                  "options": [
+                    {
+                      "value": "us",
+                      "label": "US"
+                    },
+                    {
+                      "value": "np",
+                      "label": "NP"
+                    }
+                  ],
+                  "required": true
+                }} />
+              <AsyncSelectField config={{
+                  "name": "city",
+                  "type": "asyncselect",
+                  "label": "City",
+                  "api": {
+                    "url": "https://api.example.com/cities",
+                    "method": "GET",
+                    "responseMapping": {
+                      "dataPath": "data",
+                      "labelKey": "name",
+                      "valueKey": "id"
+                    }
+                  }
+                }} />
+              <MultiselectField config={{
+                  "name": "tags",
+                  "type": "multiselect",
+                  "label": "Tags",
+                  "options": [
+                    {
+                      "value": "a",
+                      "label": "A"
+                    }
+                  ]
+                }} />
+              <CheckboxField config={{
+                  "name": "agree",
+                  "type": "checkbox",
+                  "label": "Agree",
+                  "required": true
+                }} />
+              <DateField config={{
+                  "name": "dob",
+                  "type": "date",
+                  "label": "Date of birth"
+                }} />
+              <TextareaField config={{
+                  "name": "bio",
+                  "type": "textarea",
+                  "label": "Bio",
+                  "maxLength": 500
+                }} />
+              </CardContent>
+            </Card>
+
+          <form.Subscribe selector={(state) => state.isSubmitting}>
+            {(isSubmitting) => (
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Submitting..." : "Submit"}
+              </Button>
+            )}
+          </form.Subscribe>
+        </form>
+      </TanstackFormProvider>
+    </div>
+  );
+}
+",
+      "language": "tsx",
+      "name": "MyFormPage.tsx",
+      "path": "pages/MyFormPage.tsx",
+    },
+  ],
+}
+`;
+
+exports[`formCodeGenerator / generatePageComponentCode (per stack × per mode × per schema) > action / config / compile-time — locked snapshot 1`] = `
+"import { useMemo } from "react";
+import { ActionForm } from "../components/forms/action-forms";
+import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
+import { formService } from "./formService";
+import { formConfig } from "./formConfig";
+import { formSchema } from "./formSchema";
+
+export default function MyFormPage() {
+  const schema = formSchema;
+
+  const handleSubmit = async (data: Record<string, unknown>) => {
+    await formService.submitForm(data);
+  };
+
+  return (
+    <div className="container mx-auto py-8 max-w-3xl">
+      <ActionForm config={formConfig} schema={schema} onSubmit={handleSubmit} />
+    </div>
+  );
+}
+"
+`;
+
+exports[`formCodeGenerator / generatePageComponentCode (per stack × per mode × per schema) > action / config / runtime — locked snapshot 1`] = `
+"import { useMemo } from "react";
+import { ActionForm } from "../components/forms/action-forms";
+import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
+import { formService } from "./formService";
+import { formConfig } from "./formConfig";
+import { buildZodSchema } from "../components/forms/utils/zodSchemaBuilder";
+import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
+
+export default function MyFormPage() {
+  const schema = useMemo(() => buildZodSchema(extractFields(formConfig)), []);
+
+  const handleSubmit = async (data: Record<string, unknown>) => {
+    await formService.submitForm(data);
+  };
+
+  return (
+    <div className="container mx-auto py-8 max-w-3xl">
+      <ActionForm config={formConfig} schema={schema} onSubmit={handleSubmit} />
+    </div>
+  );
+}
+"
+`;
+
+exports[`formCodeGenerator / generatePageComponentCode (per stack × per mode × per schema) > action / static / compile-time — locked snapshot 1`] = `
+"import { useState, useCallback } from "react";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { AlertCircle, X } from "lucide-react";
+import { ActionFormProvider } from "../components/forms/action-forms/ActionFormContext";
+import { TextField } from "../components/forms/action-forms/fields/TextField";
+import { CheckboxField } from "../components/forms/action-forms/fields/CheckboxField";
+import { formService } from "./formService";
+import { formSchema } from "./formSchema";
+
+export default function MyFormPage() {
+  const SUBMIT_EXCLUDED = new Set<string>();
+  const [values, setValues] = useState<Record<string, unknown>>({
+      "email": "",
+      "password": "",
+      "remember": false
+  });
+  const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const [globalError, setGlobalError] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
+
+  const setValue = useCallback((name: string, value: unknown) => {
+    setValues((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => { const next = { ...prev }; delete next[name]; return next; });
+    if (globalError) setGlobalError(null);
+  }, [globalError]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsPending(true);
+    setGlobalError(null);
+
+    const result = formSchema.safeParse(values);
+    if (!result.success) {
+      const flat = result.error.flatten().fieldErrors as Record<string, string[]>;
+      setErrors(flat);
+      setIsPending(false);
+      return;
+    }
+
+    try {
+      const payload = { ...(result.data as Record<string, unknown>) };
+      for (const name of SUBMIT_EXCLUDED) {
+        delete payload[name];
+        const p = \`\${name}__\`;
+        for (const k of Object.keys(payload)) {
+          if (k.startsWith(p)) delete payload[k];
+        }
+      }
+      await formService.submitForm(payload);
+    } catch (error: any) {
+      setGlobalError(error?.message || "An unexpected error occurred");
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return (
+    <div className="container mx-auto py-8 max-w-3xl">
+      <ActionFormProvider value={{ values, setValue, errors, isPending }}>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {globalError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="flex items-center justify-between">
+                {globalError}
+                <button type="button" onClick={() => setGlobalError(null)}><X className="h-4 w-4" /></button>
+              </AlertDescription>
+            </Alert>
+          )}
+
+            <div className="grid gap-4">
+              <TextField config={{
+                  "name": "email",
+                  "type": "email",
+                  "label": "Email",
+                  "required": true
+                }} />
+              <TextField config={{
+                  "name": "password",
+                  "type": "password",
+                  "label": "Password",
+                  "required": true
+                }} />
+              <CheckboxField config={{
+                  "name": "remember",
+                  "type": "checkbox",
+                  "label": "Remember me"
+                }} />
+            </div>
+
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Submitting..." : "Submit"}
+            </Button>
+        </form>
+      </ActionFormProvider>
+    </div>
+  );
+}
+"
+`;
+
+exports[`formCodeGenerator / generatePageComponentCode (per stack × per mode × per schema) > rhf / config / compile-time — locked snapshot 1`] = `
+"import { useMemo } from "react";
+import { ReactHookForm } from "../components/forms/react-hook-form";
+import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
+import { formService } from "./formService";
+import { formConfig } from "./formConfig";
+import { formSchema } from "./formSchema";
+
+export default function MyFormPage() {
+  const schema = formSchema;
+
+  const handleSubmit = async (data: Record<string, unknown>) => {
+    await formService.submitForm(data);
+  };
+
+  return (
+    <div className="container mx-auto py-8 max-w-3xl">
+      <ReactHookForm config={formConfig} schema={schema} onSubmit={handleSubmit} />
+    </div>
+  );
+}
+"
+`;
+
+exports[`formCodeGenerator / generatePageComponentCode (per stack × per mode × per schema) > rhf / config / runtime — locked snapshot 1`] = `
+"import { useMemo } from "react";
+import { ReactHookForm } from "../components/forms/react-hook-form";
+import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
+import { formService } from "./formService";
+import { formConfig } from "./formConfig";
+import { buildZodSchema } from "../components/forms/utils/zodSchemaBuilder";
+import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
+
+export default function MyFormPage() {
+  const schema = useMemo(() => buildZodSchema(extractFields(formConfig)), []);
+
+  const handleSubmit = async (data: Record<string, unknown>) => {
+    await formService.submitForm(data);
+  };
+
+  return (
+    <div className="container mx-auto py-8 max-w-3xl">
+      <ReactHookForm config={formConfig} schema={schema} onSubmit={handleSubmit} />
+    </div>
+  );
+}
+"
+`;
+
+exports[`formCodeGenerator / generatePageComponentCode (per stack × per mode × per schema) > rhf / static / compile-time — locked snapshot 1`] = `
+"import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form } from "../components/ui/form";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
+import { TextField } from "../components/forms/react-hook-form/fields/TextField";
+import { CheckboxField } from "../components/forms/react-hook-form/fields/CheckboxField";
+import { formService } from "./formService";
+import { formSchema } from "./formSchema";
+
+export default function MyFormPage() {
+  const SUBMIT_EXCLUDED = new Set<string>();
+
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+        "email": "",
+        "password": "",
+        "remember": false
+    },
+    mode: "onSubmit",
+  });
+
+  const onSubmit = form.handleSubmit(async (data) => {
+    const payload = { ...data } as Record<string, unknown>;
+    for (const name of SUBMIT_EXCLUDED) {
+      delete payload[name];
+      const p = \`\${name}__\`;
+      for (const k of Object.keys(payload)) {
+        if (k.startsWith(p)) delete payload[k];
+      }
+    }
+    await formService.submitForm(payload);
+  });
+
+  return (
+    <div className="container mx-auto py-8 max-w-3xl">
+      <Form {...form}>
+        <form onSubmit={onSubmit} className="space-y-6">
+            <div className="grid gap-4">
+              <TextField config={{
+                  "name": "email",
+                  "type": "email",
+                  "label": "Email",
+                  "required": true
+                }} />
+              <TextField config={{
+                  "name": "password",
+                  "type": "password",
+                  "label": "Password",
+                  "required": true
+                }} />
+              <CheckboxField config={{
+                  "name": "remember",
+                  "type": "checkbox",
+                  "label": "Remember me"
+                }} />
+            </div>
+
+            <Button type="submit" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? "Submitting..." : "Submit"}
+            </Button>
+        </form>
+      </Form>
+    </div>
+  );
+}
+"
+`;
+
+exports[`formCodeGenerator / generatePageComponentCode (per stack × per mode × per schema) > tanstack / config / compile-time — locked snapshot 1`] = `
+"import { useMemo } from "react";
+import { TanstackForm } from "../components/forms/tanstack-forms";
+import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
+import { formService } from "./formService";
+import { formConfig } from "./formConfig";
+import { formSchema } from "./formSchema";
+
+export default function MyFormPage() {
+  const schema = formSchema;
+
+  const handleSubmit = async (data: Record<string, unknown>) => {
+    await formService.submitForm(data);
+  };
+
+  return (
+    <div className="container mx-auto py-8 max-w-3xl">
+      <TanstackForm config={formConfig} schema={schema} onSubmit={handleSubmit} />
+    </div>
+  );
+}
+"
+`;
+
+exports[`formCodeGenerator / generatePageComponentCode (per stack × per mode × per schema) > tanstack / config / runtime — locked snapshot 1`] = `
+"import { useMemo } from "react";
+import { TanstackForm } from "../components/forms/tanstack-forms";
+import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
+import { formService } from "./formService";
+import { formConfig } from "./formConfig";
+import { buildZodSchema } from "../components/forms/utils/zodSchemaBuilder";
+import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
+
+export default function MyFormPage() {
+  const schema = useMemo(() => buildZodSchema(extractFields(formConfig)), []);
+
+  const handleSubmit = async (data: Record<string, unknown>) => {
+    await formService.submitForm(data);
+  };
+
+  return (
+    <div className="container mx-auto py-8 max-w-3xl">
+      <TanstackForm config={formConfig} schema={schema} onSubmit={handleSubmit} />
+    </div>
+  );
+}
+"
+`;
+
+exports[`formCodeGenerator / generatePageComponentCode (per stack × per mode × per schema) > tanstack / static / compile-time — locked snapshot 1`] = `
+"import { useState } from "react";
+import { useForm } from "@tanstack/react-form";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { AlertCircle, X } from "lucide-react";
+import { TanstackFormProvider } from "../components/forms/tanstack-forms/TanstackFormContext";
+import { TextField } from "../components/forms/tanstack-forms/fields/TextField";
+import { CheckboxField } from "../components/forms/tanstack-forms/fields/CheckboxField";
+import { formService } from "./formService";
+import { formSchema } from "./formSchema";
+
+export default function MyFormPage() {
+  const [globalError, setGlobalError] = useState<string | null>(null);
+  const SUBMIT_EXCLUDED = new Set<string>();
+
+  const form = useForm({
+    defaultValues: {
+        "email": "",
+        "password": "",
+        "remember": false
+    },
+    validators: {
+      onSubmit: formSchema,
+    },
+    onSubmit: async ({ value }) => {
+      setGlobalError(null);
+      try {
+        const payload = { ...(value as Record<string, unknown>) };
+        for (const name of SUBMIT_EXCLUDED) {
+          delete payload[name];
+          const p = \`\${name}__\`;
+          for (const k of Object.keys(payload)) {
+            if (k.startsWith(p)) delete payload[k];
+          }
+        }
+        await formService.submitForm(payload);
+      } catch (error: any) {
+        setGlobalError(error?.message || "An unexpected error occurred");
+      }
+    },
+  });
+
+  return (
+    <div className="container mx-auto py-8 max-w-3xl">
+      <TanstackFormProvider value={{ form, values: form.state.values as Record<string, unknown> }}>
+        <form
+          onSubmit={(e) => { e.preventDefault(); form.handleSubmit(); }}
+          className="space-y-6"
+        >
+          {globalError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="flex items-center justify-between">
+                {globalError}
+                <button type="button" onClick={() => setGlobalError(null)}><X className="h-4 w-4" /></button>
+              </AlertDescription>
+            </Alert>
+          )}
+
+            <div className="grid gap-4">
+              <TextField config={{
+                  "name": "email",
+                  "type": "email",
+                  "label": "Email",
+                  "required": true
+                }} />
+              <TextField config={{
+                  "name": "password",
+                  "type": "password",
+                  "label": "Password",
+                  "required": true
+                }} />
+              <CheckboxField config={{
+                  "name": "remember",
+                  "type": "checkbox",
+                  "label": "Remember me"
+                }} />
+            </div>
+
+          <form.Subscribe selector={(state) => state.isSubmitting}>
+            {(isSubmitting) => (
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Submitting..." : "Submit"}
+              </Button>
+            )}
+          </form.Subscribe>
+        </form>
+      </TanstackFormProvider>
+    </div>
+  );
+}
+"
+`;

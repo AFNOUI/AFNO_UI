@@ -1,0 +1,12 @@
+{
+  "name": "charts/pie/default",
+  "category": "charts",
+  "variant": "pie/default",
+  "files": [
+    {
+      "path": "charts/pie/defaultChart.tsx",
+      "type": "registry:variant",
+      "content": "import { PieChart } from \"../../components/charts/pie\";\n\nconst data = \"Desktop\\n55\\nMobile\\n30\\nTablet\\n15\";\n\nexport default function PieChartDefaultExample() {\n  return <PieChart data={data} variant=\"default\" title=\"Default\" />;\n}"
+    }
+  ]
+}

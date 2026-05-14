@@ -1,0 +1,12 @@
+{
+  "name": "badge/badge-secondary",
+  "category": "badge",
+  "variant": "badge-secondary",
+  "files": [
+    {
+      "path": "components/ui/badge/badge-secondary.tsx",
+      "type": "registry:variant",
+      "content": "import React from \"react\";\nimport { Badge } from \"@/components/ui/badge\";\n\nconst data = [\n  {\n    \"text\": \"Secondary\"\n  }\n];\n\nexport default function BadgeSecondaryExample() {\n  return (\n    <div className=\"flex flex-wrap gap-3\">\n      {data.map((item, index) => (\n        <Badge key={index} variant=\"secondary\">{item.text}</Badge>\n      ))}\n    </div>\n  );\n}"
+    }
+  ]
+}

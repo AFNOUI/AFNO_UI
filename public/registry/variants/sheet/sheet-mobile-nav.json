@@ -1,0 +1,12 @@
+{
+  "name": "sheet/sheet-mobile-nav",
+  "category": "sheet",
+  "variant": "sheet-mobile-nav",
+  "files": [
+    {
+      "path": "components/ui/sheet/sheet-mobile-nav.tsx",
+      "type": "registry:variant",
+      "content": "\"use client\";\n\nimport React from \"react\";\nimport { User, Settings, Bell, ShoppingCart } from \"lucide-react\";\nimport {\n  Sheet,\n  SheetContent,\n  SheetDescription,\n  SheetHeader,\n  SheetTitle,\n  SheetTrigger,\n} from \"@/components/ui/sheet\";\nimport { Button } from \"@/components/ui/button\";\nimport { Menu } from \"lucide-react\";\n\nconst data = {\n  \"title\": \"Navigation\",\n  \"description\": \"Mobile navigation menu sheet\",\n  \"navItems\": [\n    {\n      \"icon\": \"User\",\n      \"label\": \"Profile\"\n    },\n    {\n      \"icon\": \"Settings\",\n      \"label\": \"Settings\"\n    },\n    {\n      \"icon\": \"Bell\",\n      \"label\": \"Notifications\"\n    },\n    {\n      \"icon\": \"ShoppingCart\",\n      \"label\": \"Cart\"\n    }\n  ]\n};\nconst icons: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = { User, Settings, Bell, ShoppingCart };\n\nexport default function SheetMobileNavExample() {\n  return (\n    <Sheet>\n      <SheetTrigger asChild>\n        <Button variant=\"outline\" size=\"icon\">\n          <Menu className=\"h-4 w-4\" />\n        </Button>\n      </SheetTrigger>\n      <SheetContent side=\"left\" className=\"w-[300px]\">\n        <SheetHeader>\n          <SheetTitle>{data.title}</SheetTitle>\n          <SheetDescription>{data.description}</SheetDescription>\n        </SheetHeader>\n        <div className=\"py-4 space-y-1\">\n          {data.navItems.map((item) => {\n            const Icon = icons[item.icon];\n            return (\n              <Button key={item.label} variant=\"ghost\" className=\"w-full justify-start\">\n                <Icon className=\"me-2 h-4 w-4\" />\n                {item.label}\n              </Button>\n            );\n          })}\n        </div>\n      </SheetContent>\n    </Sheet>\n  );\n}\n"
+    }
+  ]
+}
