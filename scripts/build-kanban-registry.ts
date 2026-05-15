@@ -12,13 +12,13 @@
  *   components/kanban/types.ts              (KanbanBuilderConfig + …)
  *   utils/cellJsRunner.ts                   (shared with tables, lives at <base>/utils/)
  *   utils/rowDialogTemplate.ts              (shared with tables, lives at <base>/utils/)
- *   lib/dnd/index.ts                        (custom pointer DnD library)
- *   lib/dnd/DndContext.tsx
- *   lib/dnd/useDraggable.ts
- *   lib/dnd/useDropZone.ts
- *   lib/dnd/DropIndicator.tsx
- *   lib/dnd/types.ts
- *   lib/dnd/dnd.css
+ *   components/dnd/index.ts                 (custom pointer DnD library)
+ *   components/dnd/DndContext.tsx
+ *   components/dnd/useDraggable.ts
+ *   components/dnd/useDropZone.ts
+ *   components/dnd/DropIndicator.tsx
+ *   components/dnd/types.ts
+ *   components/dnd/dnd.css
  *
  * Outputs:
  *   - app/registry/kanbanRegistryGenerated.ts  (template-literal mirror; consumed by
@@ -151,49 +151,49 @@ const KANBAN_SHARED_SOURCES: KanbanSharedSource[] = [
   // ─── DnD library (no @dnd-kit dependency) ──────────────────────────────────
   {
     sourcePath: "app/components/ui/dnd/index.ts",
-    targetPath: "lib/dnd/index.ts",
+    targetPath: "components/dnd/index.ts",
     name: "dnd/index.ts",
     language: "typescript",
     description: "Custom Pointer DnD — public surface (no @dnd-kit dependency).",
   },
   {
     sourcePath: "app/components/ui/dnd/DndContext.tsx",
-    targetPath: "lib/dnd/DndContext.tsx",
+    targetPath: "components/dnd/DndContext.tsx",
     name: "dnd/DndContext.tsx",
     language: "tsx",
     description: "DnD provider with autoscroll, prefers-reduced-motion, RTL index resolution.",
   },
   {
     sourcePath: "app/components/ui/dnd/useDraggable.ts",
-    targetPath: "lib/dnd/useDraggable.ts",
+    targetPath: "components/dnd/useDraggable.ts",
     name: "dnd/useDraggable.ts",
     language: "typescript",
     description: "Draggable hook with activation distance + custom React preview.",
   },
   {
     sourcePath: "app/components/ui/dnd/useDropZone.ts",
-    targetPath: "lib/dnd/useDropZone.ts",
+    targetPath: "components/dnd/useDropZone.ts",
     name: "dnd/useDropZone.ts",
     language: "typescript",
     description: "DropZone hook with animated sibling 'make room' translation.",
   },
   {
     sourcePath: "app/components/ui/dnd/DropIndicator.tsx",
-    targetPath: "lib/dnd/DropIndicator.tsx",
+    targetPath: "components/dnd/DropIndicator.tsx",
     name: "dnd/DropIndicator.tsx",
     language: "tsx",
     description: "Visual ghost-slot indicator at the computed insertion index.",
   },
   {
     sourcePath: "app/components/ui/dnd/types.ts",
-    targetPath: "lib/dnd/types.ts",
+    targetPath: "components/dnd/types.ts",
     name: "dnd/types.ts",
     language: "typescript",
     description: "Shared DnD type contracts.",
   },
   {
     sourcePath: "app/components/ui/dnd/dnd.css",
-    targetPath: "lib/dnd/dnd.css",
+    targetPath: "components/dnd/dnd.css",
     name: "dnd/dnd.css",
     language: "css",
     description: "DnD overlay/indicator animations + cursor styles. @import once at app entry.",
@@ -214,8 +214,8 @@ function rewriteSharedFileImports(source: string): string {
       .replace(/from\s+(["'])@\/kanban\/KanbanCard\1/g, "from $1./KanbanCard$1")
       .replace(/from\s+(["'])@\/kanban\/KanbanCardDialog\1/g, "from $1./KanbanCardDialog$1")
       .replace(/from\s+(["'])@\/kanban\/KanbanAddCardDialog\1/g, "from $1./KanbanAddCardDialog$1")
-      // DnD library — consumer keeps the @/lib/dnd alias.
-      .replace(/from\s+(["'])@\/kanban\/dnd\1/g, "from $1@/lib/dnd$1")
+      // DnD library — consumer keeps the @/components/dnd alias.
+      .replace(/from\s+(["'])@\/kanban\/dnd\1/g, "from $1@/components/dnd$1")
       // Shared sandbox helpers ship to a sibling `utils/` folder (not under
       // `components/tables/`). Both kanban engine entry points (`KanbanBoard.tsx`
       // at `components/kanban/KanbanBoard.tsx` and `KanbanCardDialog.tsx` at

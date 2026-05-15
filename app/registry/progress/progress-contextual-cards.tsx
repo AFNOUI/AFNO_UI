@@ -14,7 +14,7 @@ export const code = `"use client";
 import { useState, useEffect } from "react";
 import { Download, Upload, Zap } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { SegmentedProgress } from "@/components/lab/progress/progress-shared";
+import { SegmentedProgress } from "@/components/ui/progress-shared";
 
 const data = ${dataStr};
 

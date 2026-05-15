@@ -11,7 +11,7 @@ export interface KanbanRegistryFile {
   description: string;
 }
 
-export const kanbanRegistryGeneratedAt = "2026-05-14T14:05:03.947Z";
+export const kanbanRegistryGeneratedAt = "2026-05-15T06:55:27.172Z";
 
 export const kanbanInstall = {
   "npmDependencies": [
@@ -58,7 +58,7 @@ import {
   useDraggable,
   DropIndicator,
   type DropResult,
-} from "@/lib/dnd";
+} from "@/components/dnd";
 import { cn } from "@/lib/utils";
 import { runCellJs } from "../../utils/cellJsRunner";
 import type {
@@ -1607,7 +1607,7 @@ export function renderRowDialogText(
   return out;
 }
 `;
-const lib_dnd_indexRaw = `/**
+const components_dnd_indexRaw = `/**
  * Custom Pointer DnD library — public surface.
  *
  * A lightweight, pointer-event–based drag-and-drop primitive. More advanced
@@ -1641,7 +1641,7 @@ export type {
   DndContextValue,
 } from "./types";
 `;
-const lib_dnd_DndContextRaw = `/**
+const components_dnd_DndContextRaw = `/**
  * Custom Pointer DnD — Context Provider (shared library).
  *
  * Promoted from \`src/components/kanban/dnd\` so it can power any builder
@@ -2235,12 +2235,23 @@ export function DndProvider({
             const vh = typeof window !== "undefined" ? window.innerHeight : 0;
             const rawLeft = overlay.x - offX;
             const rawTop = overlay.y - offY;
-            // Clamp so the preview always stays on screen.
-            const left = Math.max(
-              4,
-              Math.min(rawLeft, vw - Math.max(w, 40) - 4),
-            );
-            const top = Math.max(4, Math.min(rawTop, vh - Math.max(h, 24) - 4));
+            // Soft on-screen clamp: keep a small handle of the preview visible
+            // rather than trying to fit the entire rectangle inside the
+            // viewport. The old behavior (\`left ≤ vw - w - 4\`) broke wide
+            // previews — e.g. a \`flex-1\` sortable row in the trash demo —
+            // because as soon as \`w\` approached the viewport width, the
+            // upper bound collapsed and the preview "stuck" mid-screen while
+            // the cursor moved on. We now anchor on the cursor: it can drift
+            // up to \`MIN_VISIBLE\` pixels past the preview's far edge, but no
+            // further. That lets oversized previews slide partly off-screen
+            // (so they keep tracking the pointer) without ever vanishing.
+            const MIN_VISIBLE = 24;
+            const minLeft = MIN_VISIBLE - Math.max(w, MIN_VISIBLE);
+            const maxLeft = vw - MIN_VISIBLE;
+            const minTop = MIN_VISIBLE - Math.max(h, MIN_VISIBLE);
+            const maxTop = vh - MIN_VISIBLE;
+            const left = Math.max(minLeft, Math.min(rawLeft, maxLeft));
+            const top = Math.max(minTop, Math.min(rawTop, maxTop));
             return (
               <div
                 style={{
@@ -2273,7 +2284,7 @@ export function useDndContext(): DndContextValue {
   return ctx;
 }
 `;
-const lib_dnd_useDraggableRaw = `"use client";
+const components_dnd_useDraggableRaw = `"use client";
 
 /**
  * useDraggable — turn any element into a draggable handle.
@@ -2382,7 +2393,7 @@ export function useDraggable<T extends DragData = DragData>(options: UseDraggabl
   return { dragProps, isDragging };
 }
 `;
-const lib_dnd_useDropZoneRaw = `"use client";
+const components_dnd_useDropZoneRaw = `"use client";
 
 /**
  * useDropZone — turn any element into a target for dropped draggables.
@@ -2519,7 +2530,7 @@ export function useDropZone<TZone extends DragData = DragData, TItem extends Dra
     animationsEnabled,
   };
 }`;
-const lib_dnd_DropIndicatorRaw = `/**
+const components_dnd_DropIndicatorRaw = `/**
  * Visual slot indicator rendered at the computed insertion index inside a zone.
  * Stable identity — same element, same key, no animation churn — eliminates the
  * "indicator flicker" that pure HTML5 DnD produces. Smoothly fades + scales in
@@ -2566,7 +2577,7 @@ export function DropIndicator({ className, axis = "y", size, animated = true }: 
     />
   );
 }`;
-const lib_dnd_typesRaw = `/**
+const components_dnd_typesRaw = `/**
  * Type contracts for the custom Pointer DnD library.
  *
  * The library is **pointer-event based** (not HTML5 native drag) so it:
@@ -2702,7 +2713,7 @@ export interface UseDropZoneOptions<TZone extends DragData = DragData, TItem ext
   getItemIndex?: (drag: DragSnapshot<TItem>) => number | null;
 }
 `;
-const lib_dnd_dndRaw = `/**
+const components_dnd_dndRaw = `/**
  * Custom Pointer DnD — global styles.
  *
  * - Smooth transform transitions on items inside an active drop zone so that
@@ -2779,50 +2790,50 @@ export const generatedSharedKanbanFiles: KanbanRegistryFile[] = [
   },
   {
     name: "dnd/index.ts",
-    path: "lib/dnd/index.ts",
-    code: lib_dnd_indexRaw,
+    path: "components/dnd/index.ts",
+    code: components_dnd_indexRaw,
     language: "typescript",
     description: "Custom Pointer DnD — public surface (no @dnd-kit dependency).",
   },
   {
     name: "dnd/DndContext.tsx",
-    path: "lib/dnd/DndContext.tsx",
-    code: lib_dnd_DndContextRaw,
+    path: "components/dnd/DndContext.tsx",
+    code: components_dnd_DndContextRaw,
     language: "tsx",
     description: "DnD provider with autoscroll, prefers-reduced-motion, RTL index resolution.",
   },
   {
     name: "dnd/useDraggable.ts",
-    path: "lib/dnd/useDraggable.ts",
-    code: lib_dnd_useDraggableRaw,
+    path: "components/dnd/useDraggable.ts",
+    code: components_dnd_useDraggableRaw,
     language: "typescript",
     description: "Draggable hook with activation distance + custom React preview.",
   },
   {
     name: "dnd/useDropZone.ts",
-    path: "lib/dnd/useDropZone.ts",
-    code: lib_dnd_useDropZoneRaw,
+    path: "components/dnd/useDropZone.ts",
+    code: components_dnd_useDropZoneRaw,
     language: "typescript",
     description: "DropZone hook with animated sibling 'make room' translation.",
   },
   {
     name: "dnd/DropIndicator.tsx",
-    path: "lib/dnd/DropIndicator.tsx",
-    code: lib_dnd_DropIndicatorRaw,
+    path: "components/dnd/DropIndicator.tsx",
+    code: components_dnd_DropIndicatorRaw,
     language: "tsx",
     description: "Visual ghost-slot indicator at the computed insertion index.",
   },
   {
     name: "dnd/types.ts",
-    path: "lib/dnd/types.ts",
-    code: lib_dnd_typesRaw,
+    path: "components/dnd/types.ts",
+    code: components_dnd_typesRaw,
     language: "typescript",
     description: "Shared DnD type contracts.",
   },
   {
     name: "dnd/dnd.css",
-    path: "lib/dnd/dnd.css",
-    code: lib_dnd_dndRaw,
+    path: "components/dnd/dnd.css",
+    code: components_dnd_dndRaw,
     language: "css",
     description: "DnD overlay/indicator animations + cursor styles. @import once at app entry.",
   },

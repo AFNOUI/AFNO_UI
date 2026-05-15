@@ -15,6 +15,20 @@ uilab/
 │   └── registry/                ← THE single source of truth (shipped over HTTP).
 ├── scripts/                     ← Build-time tooling (registry generators + verifiers).
 ├── tests/                       ← Workspace-level Vitest suite (codegen + utils).
+├── .ai-brain/                   ← Authoritative docs for humans + AI agents (read FIRST).
+│   ├── CORE_IDENTITY.md         ← Who we are, what we ship.
+│   ├── STRUCTURAL_MAP.md        ← This file.
+│   ├── DATA_AND_LOGIC_FLOW.md   ← Source → registry → CLI → consumer pipeline.
+│   ├── THE_DECISION_LOG.md      ← Decisions + forbidden changes + past mistakes.
+│   ├── CURRENT_SPRINT.md        ← Wave status, roadmap, quality gates.
+│   ├── AI_AGENT_RULES.md        ← Numbered rules (R-00…R-52, F-01…F-16). Cite by number.
+│   └── CLI_REFERENCE.md         ← Exhaustive `afnoui` command/flag/alias docs (Wave-8).
+├── AGENTS.md                    ← Wave-8: universal AI-tool entry (agents.md convention).
+├── CLAUDE.md                    ← Wave-8: Anthropic Claude Code entry point.
+├── .cursor/                     ← Wave-8: Cursor IDE config.
+│   └── rules/                   ← Cursor-native .mdc rules (afnoui.mdc, cli.mdc).
+├── .github/                     ← Wave-8: GitHub-side config.
+│   └── copilot-instructions.md  ← GitHub Copilot Chat repo-level instructions.
 ├── package.json                 ← Website + workspace scripts.
 ├── tsconfig.json                ← Workspace TS config. Excludes `afnoui-cli/`.
 ├── eslint.config.mjs            ← ESLint v9 flat config.
@@ -23,6 +37,12 @@ uilab/
 ├── components.json              ← shadcn-ui registry pointer (we use it as a manifest).
 └── README.md                    ← Bootstrapped by create-next-app. Light.
 ```
+
+**AI-rule rule of one source:** `.ai-brain/AI_AGENT_RULES.md` and
+`.ai-brain/CLI_REFERENCE.md` are the substance. Every tool-specific entry
+file (`AGENTS.md`, `CLAUDE.md`, `.cursor/rules/*.mdc`,
+`.github/copilot-instructions.md`) is a thin pointer. Adding a rule means
+editing `AI_AGENT_RULES.md` ONLY. See `THE_DECISION_LOG.md § 1.16`.
 
 ---
 
@@ -38,7 +58,14 @@ app/
 ├── globals.css                  ← Theme tokens + base + utility resets.
 ├── (pages)/                     ← Route group; segments inside become URLs.
 │   ├── components/<slug>/page.tsx   ← One demo page per UI primitive (button, card, …).
-│   ├── charts/<type>/page.tsx       ← Chart-type demo page (bar, line, pie, area, …).
+│   ├── charts/                      ← Chart lab section.
+│   │   ├── layout.tsx               ← Shared chrome: PageBreadcrumb + ChartsLabPrereqBanner.
+│   │   ├── page.tsx                 ← Aggregator (every chart × every variant).
+│   │   └── <type>/page.tsx          ← Per-chart-type variant gallery.
+│   ├── dnd/                         ← DnD lab section (mirrors charts).
+│   │   ├── layout.tsx               ← Shared chrome + single DndProvider mount.
+│   │   ├── page.tsx                 ← Aggregator (every dnd variant, live demo).
+│   │   └── <slug>/page.tsx          ← Per-variant DndVariantGallery (one of 9).
 │   ├── forms/page.tsx               ← Form variants gallery.
 │   ├── tables/page.tsx              ← Table variants gallery.
 │   ├── kanban/page.tsx              ← Kanban variants gallery.
@@ -65,6 +92,37 @@ app/components/
 │   └── …
 ├── lab/                         ← Demo components used ONLY on (pages)/components/<slug>.
 │   ├── <primitive>/<VariantName>.tsx              ← One TSX per registered variant.
+│   ├── shared/                                    ← Lab primitives reused across sections.
+│   │   ├── LabPrereqBanner.tsx                    ← Reusable `afnoui init` banner.
+│   │   └── sectionBreadcrumb.ts                   ← Pathname → crumbs (charts + dnd + …).
+│   ├── charts/                                    ← Charts lab module.
+│   │   ├── ChartsLabPrereqBanner.tsx              ← Thin wrapper over LabPrereqBanner.
+│   │   ├── ChartVariantGallery.tsx                ← Per-chart-type gallery (LTR/RTL toggle).
+│   │   ├── chartVariantSources.ts                 ← Variant registry consumed by build script.
+│   │   └── chartUiFullSourceGenerated.ts          ← AUTO-GEN: embedded UI chart source for the "Component" tab.
+│   ├── dnd/                                       ← DnD lab module (mirrors charts).
+│   │   ├── DndLabPrereqBanner.tsx                 ← Thin wrapper over LabPrereqBanner.
+│   │   ├── DndVariantGallery.tsx                  ← Per-variant detail page renderer (no direction toggle).
+│   │   ├── dndVariantSources.ts                   ← Variant registry consumed by build script.
+│   │   ├── shared/SortableDropShadow.tsx          ← Animated "make-room" target shared across variants.
+│   │   └── variants/<slug>.tsx                    ← Per-variant in-app Demo + installable snippet.
+│   │                                                Snippets must use `useDraggable<T>` /
+│   │                                                `useDropZone<TZone, TItem>` with named
+│   │                                                `type X = { … } & Record<string, unknown>`
+│   │                                                (NOT `interface X`) so the `T extends DragData`
+│   │                                                constraint is satisfied under consumer-side
+│   │                                                strict TS. Drop targets spread `{...zoneProps}`
+│   │                                                only — never `ref={zoneProps.ref} {...zoneProps}`
+│   │                                                (newer React/TS treat the duplicate `ref` as
+│   │                                                a hard error). See DECISION 1.15.
+│   ├── progress/                                  ← Progress lab module.
+│   │   ├── progress-shared.tsx                    ← In-app SOURCE for progress utilities used by
+│   │   │                                            ALL progress variants. Ships to consumers at
+│   │   │                                            `components/ui/progress-shared.tsx` (DIRECTLY
+│   │   │                                            under `ui/`, NOT `ui/progress/`) — see
+│   │   │                                            scripts/build-registry.ts target mapping
+│   │   │                                            and DECISION 1.15.
+│   │   └── …                                      ← Per-variant lab demos.
 │   └── …
 ├── shared/                      ← Reused across pages: CodeBlock, InstallCommand, etc.
 └── forms/                       ← Page-level form wrappers (FormsCodePanel, FormsVariantsSwitcher).
@@ -86,7 +144,8 @@ app/tables/                      ← Table runtime types + engine consumed by re
 │                                  (Engine TSX lives in app/components/tables/* and ships
 │                                   to consumers via tables.json's `shared` array, NOT via
 │                                   @dnd-kit. Custom Pointer DnD ships from app/components/ui/dnd
-│                                   and is rewritten to lib/dnd/* on the consumer side.)
+│                                   and is rewritten to **components/dnd/*** on the consumer side
+│                                   (Wave-7 — was `lib/dnd/*` pre-7).)
 
 app/kanban/                      ← Kanban runtime engine.
 │   ├── KanbanBoard.tsx          ← Three-layout board (board / compact / swimlane).
@@ -106,9 +165,15 @@ app/components/ui/dnd/           ← Custom Pointer DnD library, single source o
 │   ├── types.ts                 ← Shared DnD type contracts.
 │   ├── dnd.css                  ← Animation/cursor utilities (NOT inlined into JS).
 │   └── index.ts                 ← Public surface barrel.
-│   (Used by kanban + tables + ui-builder. Shipped via BOTH tables.json AND kanban.json
-│    `shared` arrays — both build scripts rewrite `@/components/ui/dnd` → `../../lib/dnd`
-│    so the file lands at the consumer's `<libBase>/dnd/*` and resolves naturally.)
+│   (Used by kanban + tables + ui-builder + the standalone DnD lab. Shipped via THREE
+│    registries — `tables.json`, `kanban.json`, AND `dnd.json` (built by
+│    `scripts/build-dnd-registry.ts`). All three rewrite `@/components/ui/dnd` →
+│    `components/dnd/` so the files land at the consumer's `<componentsBase>/dnd/*` and
+│    resolve naturally. Identical content across all three registries means installing
+│    one then another produces no churn — the CLI's idempotency check sees the bytes
+│    match and skips writes. **Wave-7**: consumer install location moved from
+│    `lib/dnd/*` to `components/dnd/*` so the DnD library sits next to its sibling
+│    primitives — see DECISION 1.15.)
 
 app/utils/                       ← Sandboxed runtime utilities (also shipped).
 │   ├── cellJsRunner.ts          ← Sandboxed JS for cell formatters / dialogJs / cardJs.
@@ -210,6 +275,11 @@ app/registry/
 ├── tableRegistryGenerated.ts    ← AUTO-GENERATED by scripts/build-tables-registry.ts.
 ├── kanbanRegistry.ts            ← Facade. Exports kanbanInstall, getSharedKanbanFiles, ….
 ├── kanbanRegistryGenerated.ts   ← AUTO-GENERATED by scripts/build-kanban-registry.ts.
+├── dndRegistryGenerated.ts      ← AUTO-GENERATED by scripts/build-dnd-registry.ts.
+│                                  Standalone Pointer DnD lib (`components/dnd/*` — Wave-7,
+│                                  was `lib/dnd/*`) shipped via `dnd.json` so
+│                                  `afnoui add dnd/<slug>` + `afnoui init --dnd` can install
+│                                  the engine without dragging in kanban/tables.
 └── <primitive>/<variant>.tsx    ← Per-variant TSX files used by both the website demo
                                     AND copied verbatim into public/registry/variants/<slug>.json.
 ```
@@ -225,12 +295,18 @@ public/registry/
 ├── forms.json                   ← Output of generate-registry.ts. Has stackInstall + per-stack files.
 ├── tables.json                  ← Output of build-tables-registry.ts. tableInstall (NO @dnd-kit/* —
 │                                  uses custom Pointer DnD). shared array contains 13 files:
-│                                  engine TSX (TablePreview etc.), 7 lib/dnd/* files,
+│                                  engine TSX (TablePreview etc.), 7 **components/dnd/*** files,
 │                                  utils/cellJsRunner.ts, utils/rowDialogTemplate.ts.
 ├── kanban.json                  ← Output of build-kanban-registry.ts. kanbanInstall + shared (14 files):
 │                                  engine TSX (KanbanBoard, KanbanCard, KanbanCardDialog,
-│                                  KanbanAddCardDialog, types.ts), 7 lib/dnd/* files,
+│                                  KanbanAddCardDialog, types.ts), 7 **components/dnd/*** files,
 │                                  utils/cellJsRunner.ts, utils/rowDialogTemplate.ts.
+├── dnd.json                     ← Output of build-dnd-registry.ts. dndInstall + shared (7 files):
+│                                  the 7 **components/dnd/*** primitives ONLY (no kanban/table-specific
+│                                  files). `dndInstall.uiComponents = ["utils"]` so the CLI
+│                                  installs `lib/utils.ts` (the `cn` helper) too. Consumed by
+│                                  `afnoui init --dnd` and `afnoui add dnd/<slug>` via
+│                                  `ensureDndSystemForVariantSlugs` (see CLI § 5).
 └── variants/
     ├── components/<category>/<slug>.json
     ├── forms/<slug>.json        ← e.g. forms-contact, forms-job-application, … (~25 entries).
@@ -239,6 +315,24 @@ public/registry/
     ├── kanban/<slug>.json       ← 12 entries (personal-tasks, sprint-board, hiring-pipeline,
     │                              content-calendar, infinite-scroll-demo, rtl-sprint-timeline, …).
     │                              All emitted by build-variants-registry.ts from kanbanTemplates.
+    ├── dnd/<slug>.json          ← 9 entries (sortable-list, horizontal-reorder, multi-list,
+    │                              image-grid, trash, buckets, tree, files, table-reorder).
+    │                              **Wave-7**: each ships ONE file at logical path
+    │                              `dnd/<slug>/<Pascal>Demo.tsx` (top-level, sibling of
+    │                              `components/`, mirroring `forms/`, `tables/`, `kanban/`,
+    │                              `charts/`). Routed via the new `dndVariants` alias
+    │                              (defaults to `dnd`). Imports inside the snippet are
+    │                              pre-rewritten to relative `../../components/dnd` +
+    │                              `../../lib/utils`. Engine (`components/dnd/*`) is
+    │                              auto-installed by the CLI via
+    │                              `ensureDndSystemForVariantSlugs` (fired from `afnoui add`
+    │                              whenever any slug starts with `dnd/`). Standalone install
+    │                              is `afnoui init --dnd`. Falls back to whatever the host
+    │                              project already has if `kanban` / `tables` was installed.
+    │                              Snippets use `useDraggable<TData>` /
+    │                              `useDropZone<TZone, TItem>` with `TData = { id: string } &
+    │                              Record<string, unknown>` so consumer-side strict TS
+    │                              accepts the named alias against `T extends DragData`.
     └── charts/<type>/<slug>.json
 ```
 
@@ -267,10 +361,12 @@ The CLI never imports these JSONs from disk in the consumer’s project — it a
 | `generate-registry.ts --ts` | `app/forms/**`, `app/forms/types/**`, `app/components/ui/form*.tsx` | `public/registry/forms.json` + `app/registry/formRegistryGenerated.ts` | `pnpm run build:forms-registry` |
 | `build-tables-registry.ts` | `app/tables/**`, `app/components/tables/*` (engine), shared utils | `public/registry/tables.json` + `app/registry/tableRegistryGenerated.ts` | `pnpm run build:tables-registry` |
 | `build-kanban-registry.ts` | `app/kanban/**`, shared utils, DnD lib | `public/registry/kanban.json` + `app/registry/kanbanRegistryGenerated.ts` | `pnpm run build:kanban-registry` |
-| `build-variants-registry.ts` | `app/{form,table,kanban}-builder/data/*Templates.ts`, chart variant configs | `public/registry/variants/**/*.json` (forms + tables + kanban + charts; tables + kanban + charts use the in-app template tables as the single source of truth) | `pnpm run build:variants-registry` |
+| `build-dnd-registry.ts` | `app/components/ui/dnd/**` only | `public/registry/dnd.json` + `app/registry/dndRegistryGenerated.ts` | `pnpm run build:dnd-registry` |
+| `build-variants-registry.ts` | `app/{form,table,kanban}-builder/data/*Templates.ts`, chart + dnd variant configs | `public/registry/variants/**/*.json` (forms + tables + kanban + charts + dnd; charts/tables/kanban/dnd all read their in-app source-of-truth tables) | `pnpm run build:variants-registry` |
 | `verify-forms-registry-sync.mjs` | `forms.json` ↔ disk | exit 0/1 | `pnpm run verify:forms-registry` |
 | `verify-tables-registry-sync.mjs` | `tables.json` ↔ disk | exit 0/1 | `pnpm run verify:tables-registry` |
 | `verify-kanban-registry-sync.mjs` | `kanban.json` ↔ disk | exit 0/1 | `pnpm run verify:kanban-registry` |
+| `verify-dnd-registry-sync.mjs` | `dnd.json` ↔ disk | exit 0/1 | `pnpm run verify:dnd-registry` |
 | `verify-theme-export-sync.mjs` | `themeExport.ts` ↔ `public/registry/theme.json` | exit 0/1 | `pnpm run verify:theme-export-sync` |
 | `validate-installed-variants.ts` | live dev server | runs CLI installs into a temp project, asserts result | `pnpm run validate:variants` (requires `pnpm dev`) |
 
@@ -299,11 +395,21 @@ afnoui-cli/
 │   │   ├── types.ts             ← AfnoConfig, *RegistryJson, FormStackKind, ….
 │   │   └── helpers/
 │   │       ├── installPaths.ts  ← Alias routing + WeakMap caches + getAliasPatterns.
-│   │       │                      Special branches:
-│   │       │                        • `forms/<slug>/...` → aliases.formVariants
-│   │       │                        • `tables/<slug>/...` → aliases.tableVariants
-│   │       │                        • `kanban/<slug>/...` → aliases.kanbanVariants
-│   │       │                        • `charts/<type>/<slug>/...` → aliases.chartVariants
+│   │       │                      Special "variant root" branches:
+│   │       │                        • `forms/<slug>/...`             → aliases.formVariants
+│   │       │                        • `tables/<slug>/...`            → aliases.tableVariants
+│   │       │                        • `kanban/<slug>/...`            → aliases.kanbanVariants
+│   │       │                        • `charts/<type>/<slug>/...`     → aliases.chartVariants
+│   │       │                        • `dnd/<slug>/...`               → aliases.dndVariants  (Wave-7)
+│   │       │                          (DnD VARIANTS now ship at top-level `dnd/`,
+│   │       │                           sibling of `components/`, mirroring forms /
+│   │       │                           tables / kanban / charts. The DnD PRIMITIVES
+│   │       │                           install at `components/dnd/*` via
+│   │       │                           `ensureDndSystemForVariantSlugs` which fetches
+│   │       │                           `dnd.json` and writes its 7 shared files plus
+│   │       │                           the `dnd.css` import hint. Same pathway is used
+│   │       │                           by `afnoui init --dnd`. See DECISIONS 1.13
+│   │       │                           (superseded), 1.14, 1.15.)
 │   │       │                        • `utils/<file>` → resolveUtilsHelperPath →
 │   │       │                          `<libBase>/utils/<file>` (NOT the `utils` alias,
 │   │       │                          which points at lib/utils.ts — see DECISION 1.11).

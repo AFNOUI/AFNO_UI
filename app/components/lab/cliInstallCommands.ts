@@ -36,3 +36,24 @@ export function getAfnouiInitCommand(pm: PackageManager): string {
       return "bunx afnoui init";
   }
 }
+
+/**
+ * `afnoui init --dnd` — full project init AND the Pointer DnD primitives
+ * (`components/dnd/*`) so DnD lab snippets compile after a single command.
+ *
+ * Use this on the DnD lab pages so a user who copies code from the Component
+ * tab has everything required (DnD lib, `cn`, lucide-react, clsx,
+ * tailwind-merge) without having to run `afnoui add dnd/<variant>` first.
+ */
+export function getAfnouiDndInitCommand(pm: PackageManager): string {
+  switch (pm) {
+    case "npm":
+      return "npx afnoui init --dnd";
+    case "pnpm":
+      return "pnpm dlx afnoui init --dnd";
+    case "yarn":
+      return "yarn dlx afnoui init --dnd";
+    case "bun":
+      return "bunx afnoui init --dnd";
+  }
+}

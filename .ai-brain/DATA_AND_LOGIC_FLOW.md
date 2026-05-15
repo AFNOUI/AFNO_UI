@@ -198,7 +198,8 @@ USER OUTCOME (in their repo):
 Equivalent for `npx afnoui add kanban/kanban-personal-tasks`:
   src/components/ui/{button,badge,scroll-area,…}.tsx ← shadcn primitives
   src/components/kanban/{KanbanBoard,KanbanCard,…}.tsx  ← engine
-  src/lib/dnd/{DndContext,useDraggable,…}.tsx + dnd.css ← custom DnD library
+  src/components/dnd/{DndContext,useDraggable,…}.tsx + dnd.css ← custom DnD library
+                                                         (Wave-7: was `src/lib/dnd/*`)
                                                          (NOT @dnd-kit — see decision 1.5)
   src/utils/cellJsRunner.ts                              ← sandbox helper, NEUTRAL location
   src/utils/rowDialogTemplate.ts                         ← template helper, NEUTRAL location
@@ -206,6 +207,13 @@ Equivalent for `npx afnoui add kanban/kanban-personal-tasks`:
   src/kanban/kanban-personal-tasks/                      ← variant bundle (relative imports already)
   package.json — deps added: lucide-react, class-variance-authority, clsx,
                   tailwind-merge (no @dnd-kit/* anywhere)
+
+Equivalent for `npx afnoui add dnd/buckets`:
+  src/components/ui/utils.ts                             ← cn helper (only required UI primitive)
+  src/components/dnd/{DndContext,useDraggable,…}.tsx + dnd.css ← primitives
+  src/dnd/buckets/BucketsDemo.tsx                        ← snippet (top-level, sibling of `components/`)
+  package.json — deps added: lucide-react, class-variance-authority, clsx, tailwind-merge
+                  (no @dnd-kit/* anywhere; no kanban/table engine pulled in)
 ──────────────────────────────────────────────────────────────────────────────
 ```
 
@@ -215,6 +223,7 @@ Equivalent for `npx afnoui add kanban/kanban-personal-tasks`:
    - `tables/<slug>/...` → `aliases.tableVariants` root.
    - `kanban/<slug>/...` → `aliases.kanbanVariants` root.
    - `charts/<type>/<variant>/...` → `aliases.chartVariants` root.
+   - `dnd/<slug>/...` → `aliases.dndVariants` root (Wave-7 — see decision 1.15).
    - **`utils/<file>`** → `resolveUtilsHelperPath(...)` returns `<libBase>/utils/<file>` (app-dir → `app/utils/`, src-rooted → `src/utils/`, flat → `utils/`). This **bypasses the generic alias loop** because the `utils` alias points at `lib/utils.ts` (the cn helper *file*) — using the alias would create `lib/utils/cellJsRunner.ts` next to `lib/utils.ts` which collides on case-insensitive filesystems. See THE_DECISION_LOG 1.11.
    - Anything else: longest-alias-first match against `aliases.{components, ui, hooks, lib, …}`. Cached with WeakMap (`getNonVariantAliasEntries`).
 2. **Source-text transformation** — `transformPath(content, cfg)` (`operations.ts`):

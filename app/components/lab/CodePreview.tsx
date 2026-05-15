@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Copy, Check, Code2, Eye, FileCode } from "lucide-react";
 
@@ -16,69 +16,39 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface CodePreviewProps {
+  /** Short, illustrative usage snippet — shown in the "Snippet" tab. */
   code: string;
+  /** Card title. */
   title: string;
+  /**
+   * Full standalone component source — shown in the "Component" tab. When
+   * absent the Component tab is hidden entirely (no auto-generation: the
+   * previous heuristic produced broken wrappers for non-trivial demos like
+   * the DnD variants).
+   */
   fullCode?: string;
   className?: string;
   children: React.ReactNode;
 }
 
-function generateFullComponent(title: string, snippet: string): string {
-  const componentName = title.replace(/[^a-zA-Z0-9]/g, "").replace(/\s+/g, "") + "Example";
+type CodeTab = "preview" | "code" | "component";
 
-  const cleanSnippet = snippet
-    .replace(/import[\s\S]*?from\s+['"].*?['"];?/g, "")
-    .replace(/import\s*{[\s\S]*?}\s*from\s+['"].*?['"];?/g, "")
-    .trim();
-
-  const uiMatches = Array.from(cleanSnippet.matchAll(/<([A-Z][a-zA-Z0-9]*)/g)).map(m => m[1]);
-  const commonIcons = ["Mail", "Settings", "Plus", "Trash", "Check", "Copy", "ChevronRight", "Search"];
-  const detectedIcons = Array.from(new Set(uiMatches.filter(name => commonIcons.includes(name))));
-  const detectedUI = Array.from(new Set(uiMatches.filter(name => !commonIcons.includes(name))));
-
-  const groups: Record<string, string[]> = {};
-  detectedUI.forEach(comp => {
-    const folder = comp.split(/(?=[A-Z])/)[0].toLowerCase();
-    if (!groups[folder]) groups[folder] = [];
-    if (!groups[folder].includes(comp)) groups[folder].push(comp);
-  });
-
-  const importLines: string[] = [`import React from "react";`];
-  Object.entries(groups).forEach(([folder, components]) => {
-    importLines.push(`import { ${components.join(", ")} } from "@/components/ui/${folder}";`);
-  });
-  if (detectedIcons.length > 0) {
-    importLines.push(`import { ${detectedIcons.join(", ")} } from "lucide-react";`);
-  }
-
-  // Allow snippets to include setup code (e.g. const data = "...") before JSX.
-  // That prelude is hoisted above return in the generated component.
-  const firstJsxIndex = cleanSnippet.search(/^\s*</m);
-  const prelude = firstJsxIndex > 0 ? cleanSnippet.slice(0, firstJsxIndex).trim() : "";
-  const jsxSnippet = firstJsxIndex >= 0 ? cleanSnippet.slice(firstJsxIndex).trim() : cleanSnippet;
-  const preludeBlock = prelude ? `${prelude.split("\n").map((line) => `  ${line}`).join("\n")}\n\n` : "";
-
-  return `${importLines.join("\n")}
-
-export default function ${componentName}() {
-${preludeBlock}  return (
-    <div className="w-full p-4 md:p-8 flex justify-center">
-      <div className="w-full max-w-2xl">
-        ${jsxSnippet.split('\n').join('\n        ')}
-      </div>
-    </div>
-  );
-}
-`;
-}
-
-export default function CodePreview({ title, code, children, className, fullCode }: CodePreviewProps) {
+export default function CodePreview({
+  title,
+  code,
+  children,
+  className,
+  fullCode,
+}: CodePreviewProps) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<"preview" | "code" | "component">("preview");
+  const [activeTab, setActiveTab] = useState<CodeTab>("preview");
+  const hasFullCode = typeof fullCode === "string" && fullCode.trim().length > 0;
 
-  const finalComponentCode = fullCode || generateFullComponent(title, code);
-  const displayCode = activeTab === "component" ? finalComponentCode : code;
+  const displayCode = useMemo(() => {
+    if (activeTab === "component" && hasFullCode) return fullCode as string;
+    return code;
+  }, [activeTab, code, fullCode, hasFullCode]);
 
   const copyCode = async (text: string) => {
     await navigator.clipboard.writeText(text);
@@ -87,42 +57,62 @@ export default function CodePreview({ title, code, children, className, fullCode
   };
 
   return (
-  <div className={cn("border border-border rounded-lg bg-card w-full min-w-0 max-w-full", className)}>
-      {/* Header */}
+    <div
+      className={cn(
+        "border border-border rounded-lg bg-card w-full min-w-0 max-w-full",
+        className,
+      )}
+    >
       <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
         <span className="text-sm font-medium">{title}</span>
 
         <div className="flex items-center gap-2">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "preview" | "code" | "component")}>
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v as CodeTab)}
+          >
             <TabsList className="h-7 p-0.5">
-              <TabsTrigger value="preview" className="h-6 px-2 text-xs gap-1 cursor-pointer">
+              <TabsTrigger
+                value="preview"
+                className="h-6 px-2 text-xs gap-1 cursor-pointer"
+              >
                 <Eye size={12} />
                 {t("code.preview")}
               </TabsTrigger>
 
-              <TabsTrigger value="code" className="h-6 px-2 text-xs gap-1 cursor-pointer">
+              <TabsTrigger
+                value="code"
+                className="h-6 px-2 text-xs gap-1 cursor-pointer"
+              >
                 <Code2 size={12} />
                 {t("code.snippet")}
               </TabsTrigger>
 
-              <TabsTrigger value="component" className="h-6 px-2 text-xs gap-1 cursor-pointer">
-                <FileCode size={12} />
-                {t("code.component")}
-              </TabsTrigger>
+              {hasFullCode && (
+                <TabsTrigger
+                  value="component"
+                  className="h-6 px-2 text-xs gap-1 cursor-pointer"
+                >
+                  <FileCode size={12} />
+                  {t("code.component")}
+                </TabsTrigger>
+              )}
             </TabsList>
           </Tabs>
         </div>
       </div>
 
-      {/* Content */}
       {activeTab === "preview" ? (
-      <div className="p-3 sm:p-4 md:p-6 bg-background min-w-0 w-full max-w-full">
+        <div className="p-3 sm:p-4 md:p-6 bg-background min-w-0 w-full max-w-full">
           <div className="w-full min-w-0 max-w-full [&_.relative]:max-w-full">
             {children}
           </div>
         </div>
       ) : (
-        <div dir="ltr" className="relative grid grid-cols-1 w-full min-w-0 overflow-hidden bg-muted/20">
+        <div
+          dir="ltr"
+          className="relative grid grid-cols-1 w-full min-w-0 overflow-hidden bg-muted/20"
+        >
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -146,9 +136,7 @@ export default function CodePreview({ title, code, children, className, fullCode
 
           <ScrollArea className="h-[400px] w-full border-t border-border">
             <pre className="p-4 text-xs font-mono leading-relaxed overflow-x-auto">
-              <code className="text-foreground">
-                {displayCode}
-              </code>
+              <code className="text-foreground">{displayCode}</code>
             </pre>
 
             <ScrollBar orientation="horizontal" />

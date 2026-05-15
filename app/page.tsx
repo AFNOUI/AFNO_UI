@@ -46,14 +46,6 @@ const features = [
       "Drag-and-drop form builder with 25+ field types including async, infinite scroll, and combobox variants. Export production-ready React + TypeScript code.",
   },
   {
-    icon: MousePointer2,
-    href: "/ui-builder",
-    title: "UI Builder",
-    badges: ["Drag & Drop", "Responsive", "Code Export", "50+ Components"],
-    description:
-      "Visual drag-and-drop UI builder with 50+ components, responsive breakpoint controls, layout recipes, and real-time code export.",
-  },
-  {
     icon: Palette,
     title: "Component Lab",
     description:
@@ -237,12 +229,6 @@ export default function LandingPage() {
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Form Builder
-            </Link>
-            <Link
-              href="/ui-builder"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              UI Builder
             </Link>
             <Link
               href="/lab"

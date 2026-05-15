@@ -8,7 +8,7 @@ export const code = `"use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { StepProgress } from "@/components/lab/progress/progress-shared";
+import { StepProgress } from "@/components/ui/progress-shared";
 
 const data = ${dataStr};
 

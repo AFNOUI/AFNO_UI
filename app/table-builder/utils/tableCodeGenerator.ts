@@ -10,7 +10,7 @@
  * • The hook also exposes feature-aware mutators (updateCell, deleteRows,
  *   reorderRows) — only emitted when the matching feature is enabled.
  * • Fixed shared engine files (TablePreview / types / useTablePreview /
- *   ui/table / lib/dnd) are listed once. `@tanstack/react-virtual` ships when
+ *   ui/table / components/dnd) are listed once. `@tanstack/react-virtual` ships when
  *   the engine is installed (TablePreview imports it whenever virtualization is used).
  */
 
@@ -775,7 +775,7 @@ export function getDependencyReport(config: TableBuilderConfig): DependencyRepor
   const notes: string[] = [];
   if (config.enableDnD) {
     notes.push(
-      "Row drag-and-drop uses the bundled custom Pointer DnD library (src/lib/dnd) — zero external deps.",
+      "Row drag-and-drop uses the bundled custom Pointer DnD library (components/dnd) — zero external deps.",
     );
   }
   if (config.enableVirtualization) {

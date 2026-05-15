@@ -11,7 +11,7 @@ export const code = `"use client";
 
 import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
-import { GradientProgress, StripedProgress, SegmentedProgress } from "@/components/lab/progress/progress-shared";
+import { GradientProgress, StripedProgress, SegmentedProgress } from "@/components/ui/progress-shared";
 
 const data = ${dataStr};
 

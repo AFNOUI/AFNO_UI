@@ -1,0 +1,75 @@
+---
+description: AfnoUI CLI (`afnoui-cli/`) — every command, flag, and alias. Use this instead of guessing.
+globs:
+  - "afnoui-cli/**"
+  - "scripts/build-*-registry.ts"
+  - "scripts/verify-*-registry-sync.mjs"
+  - "scripts/validate-installed-variants.ts"
+alwaysApply: false
+---
+
+# CLI rules for AI agents
+
+The AfnoUI CLI is a thin shell over `public/registry/*.json`. Its contract:
+
+- **Commands:** `init`, `add`, `form init`, `update`, `list`, `doctor`,
+  `diagnose`, `clean`, `help`. (See `.ai-brain/CLI_REFERENCE.md` for the
+  full flag matrix.)
+- **Global flags:** `--dry-run`, `--debug`, `--force` — propagated by
+  `cli/program.ts` to every sub-command.
+- **Form stacks:** `rhf` (default), `tanstack`, `action`. Set via
+  `--stack <kind>` or the boolean shortcuts `--react-hook-form` / `--tanstack`
+  / `--action`. Applies to `add forms/...` and `form init`.
+
+## Where each piece lives
+
+```
+afnoui-cli/src/
+├── cli/
+│   ├── program.ts                    # commander wiring (registration order matters)
+│   ├── commands/<cmd>.ts             # one file per command
+│   └── internal/globalsCss.ts        # globals.css setup helper shared by init/add/form
+├── lib/
+│   ├── config.ts                     # afnoui.json reader/writer + alias inference
+│   ├── operations.ts                 # install pipelines (1500 lines, organized by family)
+│   ├── helpers/
+│   │   ├── installPaths.ts           # category prefix → alias routing
+│   │   ├── registryShape.ts          # JSON validators / parsers
+│   │   ├── imports.ts                # import path rewrite logic
+│   │   └── framework.ts              # Next / Vite / CRA detection
+│   ├── network.ts                    # fetch + circuit breaker + cache
+│   ├── locks.ts                      # cross-process install lock
+│   ├── types.ts                      # AfnoConfig, RegistryItem, …
+│   └── constants.ts                  # CLI_VERSION, CACHE_DIR, registry URL
+└── tests/unit/*.test.ts              # vitest suite (106 tests)
+```
+
+## Editing a command
+
+1. Update the relevant `cli/commands/<cmd>.ts`.
+2. Update `cli/commands/help.ts` (the menu) AND `.ai-brain/CLI_REFERENCE.md`.
+3. Add/update a test in `tests/unit/programWiring.test.ts` if you changed
+   the wiring (command name, argument shape, flag set).
+4. `cd afnoui-cli && npm test && npm run build`.
+
+## Adding a new alias key
+
+1. Add to `lib/types.ts → AfnoConfig.aliases`.
+2. Add to `lib/config.ts → DEFAULT_CONFIG.aliases` AND
+   `inferMissingAliasFields` AND `afnoAliasesForBaseDir`.
+3. Add a branch to `lib/helpers/installPaths.ts → resolveRegistryOutputPath`.
+4. Add the new key to `VARIANT_ROOT_ALIASES` if it's a variant root.
+5. Update `.ai-brain/STRUCTURAL_MAP.md § 5` (CLI helpers section) AND
+   `.ai-brain/CLI_REFERENCE.md § 12` (Aliases table).
+6. Add a DECISION-LOG entry.
+
+## Quality gate after CLI changes
+
+```
+cd afnoui-cli && npm test           # 106 tests must pass
+cd afnoui-cli && npm run build      # tsc must emit dist/ cleanly
+npm run validate:variants           # repo root — end-to-end against test/
+cd test && pnpm build               # consumer project must build
+```
+
+See `.ai-brain/CLI_REFERENCE.md` for the public reference.

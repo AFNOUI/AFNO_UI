@@ -592,12 +592,23 @@ export function DndProvider({
             const vh = typeof window !== "undefined" ? window.innerHeight : 0;
             const rawLeft = overlay.x - offX;
             const rawTop = overlay.y - offY;
-            // Clamp so the preview always stays on screen.
-            const left = Math.max(
-              4,
-              Math.min(rawLeft, vw - Math.max(w, 40) - 4),
-            );
-            const top = Math.max(4, Math.min(rawTop, vh - Math.max(h, 24) - 4));
+            // Soft on-screen clamp: keep a small handle of the preview visible
+            // rather than trying to fit the entire rectangle inside the
+            // viewport. The old behavior (`left ≤ vw - w - 4`) broke wide
+            // previews — e.g. a `flex-1` sortable row in the trash demo —
+            // because as soon as `w` approached the viewport width, the
+            // upper bound collapsed and the preview "stuck" mid-screen while
+            // the cursor moved on. We now anchor on the cursor: it can drift
+            // up to `MIN_VISIBLE` pixels past the preview's far edge, but no
+            // further. That lets oversized previews slide partly off-screen
+            // (so they keep tracking the pointer) without ever vanishing.
+            const MIN_VISIBLE = 24;
+            const minLeft = MIN_VISIBLE - Math.max(w, MIN_VISIBLE);
+            const maxLeft = vw - MIN_VISIBLE;
+            const minTop = MIN_VISIBLE - Math.max(h, MIN_VISIBLE);
+            const maxTop = vh - MIN_VISIBLE;
+            const left = Math.max(minLeft, Math.min(rawLeft, maxLeft));
+            const top = Math.max(minTop, Math.min(rawTop, maxTop));
             return (
               <div
                 style={{

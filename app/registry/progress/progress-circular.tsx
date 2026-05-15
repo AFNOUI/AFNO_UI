@@ -9,7 +9,7 @@ const dataStr = JSON.stringify(data, null, 2);
 
 export const code = `"use client";
 
-import { CircularProgress } from "@/components/lab/progress/progress-shared";
+import { CircularProgress } from "@/components/ui/progress-shared";
 
 type ProgressVariant = "primary" | "success" | "warning" | "error";
 

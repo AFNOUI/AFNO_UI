@@ -24,13 +24,13 @@ const TARGET_TO_SOURCE = {
   "components/ui/table.tsx": "app/components/ui/table.tsx",
   "components/shared/VariantJsonConfigPanel.tsx":
     "app/components/shared/VariantJsonConfigPanel.tsx",
-  "lib/dnd/index.ts": "app/components/ui/dnd/index.ts",
-  "lib/dnd/DndContext.tsx": "app/components/ui/dnd/DndContext.tsx",
-  "lib/dnd/useDraggable.ts": "app/components/ui/dnd/useDraggable.ts",
-  "lib/dnd/useDropZone.ts": "app/components/ui/dnd/useDropZone.ts",
-  "lib/dnd/DropIndicator.tsx": "app/components/ui/dnd/DropIndicator.tsx",
-  "lib/dnd/types.ts": "app/components/ui/dnd/types.ts",
-  "lib/dnd/dnd.css": "app/components/ui/dnd/dnd.css",
+  "components/dnd/index.ts": "app/components/ui/dnd/index.ts",
+  "components/dnd/DndContext.tsx": "app/components/ui/dnd/DndContext.tsx",
+  "components/dnd/useDraggable.ts": "app/components/ui/dnd/useDraggable.ts",
+  "components/dnd/useDropZone.ts": "app/components/ui/dnd/useDropZone.ts",
+  "components/dnd/DropIndicator.tsx": "app/components/ui/dnd/DropIndicator.tsx",
+  "components/dnd/types.ts": "app/components/ui/dnd/types.ts",
+  "components/dnd/dnd.css": "app/components/ui/dnd/dnd.css",
 };
 
 /** Same transform used by scripts/build-tables-registry.ts — keep in sync. */
@@ -58,7 +58,7 @@ function rewriteSharedFileImports(source) {
     )
     .replace(
       /from\s+(["'])@\/components\/ui\/dnd\1/g,
-      "from $1../../lib/dnd$1",
+      "from $1../dnd$1",
     );
 }
 

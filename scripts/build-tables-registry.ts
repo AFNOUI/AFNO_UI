@@ -10,7 +10,7 @@
  *   components/tables/useTablePreview.ts (derivations hook)
  *   components/tables/types.ts           (config + column types)
  *   components/ui/table.tsx              (shadcn primitives)
- *   lib/dnd/*                            (custom pointer DnD — bundled, no @dnd-kit)
+ *   components/dnd/*                     (custom pointer DnD — bundled, no @dnd-kit)
  *
  * This script reads them from their canonical source locations, rewrites the two
  * self-referential `@/table-builder/...` import specifiers to paths that make sense
@@ -50,7 +50,7 @@ interface TableSharedSource {
  * Registry install metadata. Mirrors the `stackInstall` block from forms.json so the CLI
  * can install the same ecosystem with a single `afnoui add tables/<variant>` invocation.
  *
- * NOTE: Row DnD is implemented with the bundled `lib/dnd` library (same as Kanban) —
+ * NOTE: Row DnD is implemented with the bundled `components/dnd` library (same as Kanban) —
  * there is no `@dnd-kit/*` dependency. `@tanstack/react-virtual` is required when
  * virtualization is enabled; it is imported from `TablePreview.tsx`, so it stays in
  * `npmDependencies`. `optionalPeers` is kept for schema back-compat.
@@ -154,49 +154,49 @@ const TABLE_SHARED_SOURCES: TableSharedSource[] = [
   // ─── Custom DnD (TablePreview imports from here — NOT @dnd-kit) ─────────────
   {
     sourcePath: "app/components/ui/dnd/index.ts",
-    targetPath: "lib/dnd/index.ts",
+    targetPath: "components/dnd/index.ts",
     name: "dnd/index.ts",
     language: "typescript",
     description: "Custom Pointer DnD — public surface (no @dnd-kit dependency).",
   },
   {
     sourcePath: "app/components/ui/dnd/DndContext.tsx",
-    targetPath: "lib/dnd/DndContext.tsx",
+    targetPath: "components/dnd/DndContext.tsx",
     name: "dnd/DndContext.tsx",
     language: "tsx",
     description: "DnD provider with autoscroll, prefers-reduced-motion, RTL index resolution.",
   },
   {
     sourcePath: "app/components/ui/dnd/useDraggable.ts",
-    targetPath: "lib/dnd/useDraggable.ts",
+    targetPath: "components/dnd/useDraggable.ts",
     name: "dnd/useDraggable.ts",
     language: "typescript",
     description: "Draggable hook with activation distance + custom React preview.",
   },
   {
     sourcePath: "app/components/ui/dnd/useDropZone.ts",
-    targetPath: "lib/dnd/useDropZone.ts",
+    targetPath: "components/dnd/useDropZone.ts",
     name: "dnd/useDropZone.ts",
     language: "typescript",
     description: "DropZone hook with animated sibling 'make room' translation.",
   },
   {
     sourcePath: "app/components/ui/dnd/DropIndicator.tsx",
-    targetPath: "lib/dnd/DropIndicator.tsx",
+    targetPath: "components/dnd/DropIndicator.tsx",
     name: "dnd/DropIndicator.tsx",
     language: "tsx",
     description: "Visual ghost-slot indicator at the computed insertion index.",
   },
   {
     sourcePath: "app/components/ui/dnd/types.ts",
-    targetPath: "lib/dnd/types.ts",
+    targetPath: "components/dnd/types.ts",
     name: "dnd/types.ts",
     language: "typescript",
     description: "Shared DnD type contracts.",
   },
   {
     sourcePath: "app/components/ui/dnd/dnd.css",
-    targetPath: "lib/dnd/dnd.css",
+    targetPath: "components/dnd/dnd.css",
     name: "dnd/dnd.css",
     language: "css",
     description: "DnD overlay/indicator animations + cursor styles. @import once at app entry.",
@@ -245,10 +245,10 @@ function rewriteSharedFileImports(source: string): string {
         /from\s+(["'])@\/table-builder\/utils\/cellJsRunner\1/g,
         "from $1../../utils/cellJsRunner$1",
       )
-      // Table engine lives at `components/tables/`; DnD ships to `lib/dnd/`.
+      // Table engine lives at `components/tables/`; DnD ships to `components/dnd/`.
       .replace(
         /from\s+(["'])@\/components\/ui\/dnd\1/g,
-        "from $1../../lib/dnd$1",
+        "from $1../dnd$1",
       )
   );
 }

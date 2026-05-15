@@ -1,6 +1,7 @@
 /**
- * Compatibility shim — the real DnD library lives at `src/lib/dnd`.
- * Kept so existing kanban imports keep resolving without churn.
+ * Compatibility shim — the real DnD library lives at `app/components/ui/dnd`
+ * (in-repo) and ships to consumers under `components/dnd/*`. Kept so existing
+ * kanban imports keep resolving without churn.
  */
 export {
   DndProvider,

@@ -96,9 +96,13 @@ function ensureTestProject() {
           private: true,
           type: "module",
           scripts: {
+            build: "next build",
+            start: "next start",
+            dev: "next dev",
             typecheck: "tsc --noEmit",
           },
           dependencies: {
+            next: "16.1.4",
             "@radix-ui/react-slot": "^1.2.4",
             "class-variance-authority": "^0.7.1",
             "clsx": "^2.1.1",
@@ -107,8 +111,10 @@ function ensureTestProject() {
             "tailwind-merge": "^3.5.0",
           },
           devDependencies: {
+            "@tailwindcss/postcss": "^4",
             "tailwindcss": "^4",
             "typescript": "^5",
+            "@types/node": "^20",
             "@types/react": "^19",
             "@types/react-dom": "^19",
           },
@@ -130,7 +136,7 @@ function ensureTestProject() {
             lib: ["DOM", "DOM.Iterable", "ES2020"],
             module: "ESNext",
             moduleResolution: "bundler",
-            jsx: "react-jsx",
+            jsx: "preserve",
             strict: true,
             noEmit: true,
             skipLibCheck: true,
@@ -138,15 +144,110 @@ function ensureTestProject() {
             allowSyntheticDefaultImports: true,
             resolveJsonModule: true,
             isolatedModules: true,
+            incremental: true,
+            plugins: [{ name: "next" }],
             baseUrl: ".",
             paths: { "@/*": ["./*"] },
           },
-          include: ["**/*.ts", "**/*.tsx"],
+          include: [
+            "next-env.d.ts",
+            "**/*.ts",
+            "**/*.tsx",
+            ".next/types/**/*.ts",
+          ],
           exclude: ["node_modules"],
         },
         null,
         2
       )
+    );
+  }
+
+  // Minimal Next.js entry so `next build` actually has a page to render. The
+  // CLI installs every variant alongside this stub; Next bundles the app
+  // exactly as a real consumer would (catches Tailwind v4 / RSC contract
+  // regressions before they reach published variants).
+  const testAppDir = path.join(TEST_DIR, "app");
+  const testNextConfig = path.join(TEST_DIR, "next.config.mjs");
+  const testPostcssConfig = path.join(TEST_DIR, "postcss.config.mjs");
+  const testLayout = path.join(testAppDir, "layout.tsx");
+  const testPage = path.join(testAppDir, "page.tsx");
+  const testGlobals = path.join(testAppDir, "globals.css");
+
+  if (!fs.existsSync(testAppDir)) fs.mkdirSync(testAppDir, { recursive: true });
+
+  if (!fs.existsSync(testNextConfig)) {
+    console.log("   Scaffolding test/next.config.mjs...");
+    fs.writeFileSync(
+      testNextConfig,
+      "/** @type {import('next').NextConfig} */\n" +
+        "const nextConfig = {\n" +
+        "  turbopack: {\n" +
+        "    root: import.meta.dirname,\n" +
+        "  },\n" +
+        "};\n\n" +
+        "export default nextConfig;\n",
+    );
+  }
+
+  if (!fs.existsSync(testPostcssConfig)) {
+    console.log("   Scaffolding test/postcss.config.mjs...");
+    fs.writeFileSync(
+      testPostcssConfig,
+      "/** Tailwind v4 PostCSS plugin only. */\n" +
+        "export default {\n" +
+        "  plugins: {\n" +
+        "    \"@tailwindcss/postcss\": {},\n" +
+        "  },\n" +
+        "};\n",
+    );
+  }
+
+  if (!fs.existsSync(testGlobals)) {
+    console.log("   Scaffolding test/app/globals.css...");
+    fs.writeFileSync(testGlobals, "@import \"tailwindcss\";\n");
+  }
+
+  if (!fs.existsSync(testLayout)) {
+    console.log("   Scaffolding test/app/layout.tsx...");
+    fs.writeFileSync(
+      testLayout,
+      "import \"./globals.css\";\n" +
+        "import type { Metadata } from \"next\";\n\n" +
+        "export const metadata: Metadata = {\n" +
+        "  title: \"AfnoUI Test\",\n" +
+        "  description: \"Sandbox project that installs every variant via the Afnoui CLI.\",\n" +
+        "};\n\n" +
+        "export default function RootLayout({\n" +
+        "  children,\n" +
+        "}: {\n" +
+        "  children: React.ReactNode;\n" +
+        "}) {\n" +
+        "  return (\n" +
+        "    <html lang=\"en\">\n" +
+        "      <body>{children}</body>\n" +
+        "    </html>\n" +
+        "  );\n" +
+        "}\n",
+    );
+  }
+
+  if (!fs.existsSync(testPage)) {
+    console.log("   Scaffolding test/app/page.tsx...");
+    fs.writeFileSync(
+      testPage,
+      "export default function Home() {\n" +
+        "  return (\n" +
+        "    <main className=\"min-h-screen flex items-center justify-center bg-background text-foreground\">\n" +
+        "      <div className=\"text-center space-y-2\">\n" +
+        "        <h1 className=\"text-2xl font-bold\">AfnoUI Variant Sandbox</h1>\n" +
+        "        <p className=\"text-sm text-muted-foreground\">\n" +
+        "          Every Afnoui CLI variant is installed alongside this page.\n" +
+        "        </p>\n" +
+        "      </div>\n" +
+        "    </main>\n" +
+        "  );\n" +
+        "}\n",
     );
   }
 
@@ -168,6 +269,8 @@ function ensureTestProject() {
             formVariants: "forms",
             chartVariants: "charts",
             tableVariants: "tables",
+            kanbanVariants: "kanban",
+            dndVariants: "dnd",
             lib: "lib",
           },
         },
@@ -200,6 +303,8 @@ async function main() {
   console.log("🛠️ Step 1b: Forms + Tables registry + Next production build (`next start` prerequisite)...");
   run(pm === "pnpm" ? "pnpm run build:forms-registry" : "npm run build:forms-registry");
   run(pm === "pnpm" ? "pnpm run build:tables-registry" : "npm run build:tables-registry");
+  run(pm === "pnpm" ? "pnpm run build:kanban-registry" : "npm run build:kanban-registry");
+  run(pm === "pnpm" ? "pnpm run build:dnd-registry" : "npm run build:dnd-registry");
   const nextDir = path.join(ROOT, ".next");
   if (fs.existsSync(nextDir)) {
     console.log("   Clearing .next so `public/registry/*` changes ship in the production bundle...");

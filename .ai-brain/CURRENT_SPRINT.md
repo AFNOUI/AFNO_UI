@@ -3,8 +3,10 @@
 > Living document of feature status + the immediate next-step roadmap.
 > Update this file *before* committing new work, not after. Stale sprints are silent technical debt.
 >
-> Last updated: 2026-05-10 — by the AI assistant after the Wave-6 wrap-up (kanban-variant pipeline, sandbox-helper folder relocation, custom-DnD-only tables, schema-engine fit-view fix, form-export field-tab content fix, pinned-column UI hardening) **plus the Wave-6 follow-up** (pinned body-cell bleed-through fix via `zBase`/`--card`/`overflow: hidden`/`stackBias` and `/forms` variant-gallery field-file emission via `generateAllFiles`).
-> Anchor commit reference: working tree against `8f5fba3 Fix: Fixed Table Cli Code Generation Issue` plus the post-summary refactor sweep.
+> Last updated: 2026-05-15 — Wave-8 CLI documentation + cross-tool AI rules pass (`.ai-brain/CLI_REFERENCE.md`, `AGENTS.md`, `.cursor/rules/`, `CLAUDE.md`, `.github/copilot-instructions.md` — all richer command/flag help text in `afnoui-cli/src/cli/commands/*`).
+> Wave 7 — 2026-05-15 — production readiness pass (DnD primitives → `components/dnd/*`, DnD variants → top-level `dnd/`, progress-shared → `components/ui/`, snippet type-safety contract, end-to-end `next build` in `test/`).
+> Previous: 2026-05-10 — Wave-6 wrap-up (kanban-variant pipeline, sandbox-helper folder relocation, custom-DnD-only tables, schema-engine fit-view fix, form-export field-tab content fix, pinned-column UI hardening) **plus the Wave-6 follow-up** (pinned body-cell bleed-through fix via `zBase`/`--card`/`overflow: hidden`/`stackBias` and `/forms` variant-gallery field-file emission via `generateAllFiles`).
+> Anchor commit reference: working tree against `8f5fba3 Fix: Fixed Table Cli Code Generation Issue` plus the post-summary refactor sweep and the Wave-7 production-readiness sweep.
 
 ---
 
@@ -61,7 +63,36 @@
 
 > These are immediate-priority moves in the order they should be tackled. Each step has explicit start/finish criteria.
 
-### Step 0 — DONE in Wave 6 (recorded for traceability)
+### Step 0 — DONE in Wave 8 (recorded for traceability — 2026-05-15)
+
+Wave-8 was a **CLI verifiability + cross-tool AI-rule** pass. Goal: every `afnoui` command discoverable, documented, and verifiable; every AI tool (Cursor, Codex, Claude Code, Copilot, Antigravity) reading from one canonical rule set.
+
+- **Help text overhaul** — every `cli/commands/<cmd>.ts` got a `.summary()` + multi-line `.description()` with copy-pasteable examples covering forms (3 stacks), tables, kanban, charts, dnd. `program.ts` description now shows the quick-start menu. `help.ts` rewritten with grouped sections.
+- **`.ai-brain/CLI_REFERENCE.md`** — authoritative single-page reference: every command, every flag, every alias key, every variant category (319 variants snapshot), and CI recipes.
+- **Cross-tool rule scaffolding** (single source of truth = `.ai-brain/AI_AGENT_RULES.md`):
+  - `AGENTS.md` at repo root — universal entry point (Cursor / Codex / Antigravity / agents.md convention).
+  - `.cursor/rules/afnoui.mdc` + `.cursor/rules/cli.mdc` — Cursor-native rules with frontmatter, globs, `alwaysApply`.
+  - `.github/copilot-instructions.md` — Copilot Chat repo-level instructions.
+  - `CLAUDE.md` — Claude Code entry point.
+  - All four delegate to `.ai-brain/AI_AGENT_RULES.md` + `.ai-brain/CLI_REFERENCE.md` rather than duplicating rules.
+- **End-to-end production gate re-confirmed**: 213/213 vitest tests pass, 106/106 CLI tests pass, lint 0 errors / 45 warnings, all 4 registry verifiers pass, `validate:variants` installs 319/319 variants exit 0, `cd test && pnpm build` exits 0 with all static pages prerendered.
+
+### Step 0a — DONE in Wave 7 (recorded for traceability — 2026-05-15)
+
+Wave-7 was a **layout consistency + production-readiness** pass. Three structural moves landed together so the consumer directory tree matches the mental model "every variant family is a top-level sibling of `components/`":
+
+- **DnD primitives** moved from `lib/dnd/*` to `components/dnd/*` on the consumer side. Source of truth (`app/components/ui/dnd/`) unchanged. Touched build scripts: `scripts/build-dnd-registry.ts`, `scripts/build-tables-registry.ts`, `scripts/build-kanban-registry.ts` (all rewrite `@/components/ui/dnd` → `../../components/dnd` now). Touched verifiers: the three `verify-*-registry-sync.mjs` `TARGET_TO_SOURCE` maps. Touched CLI: `isDndSystemInstalled` probe (`lib/dnd/index.ts` → `components/dnd/index.ts`); `installDndSystemShared` tip text.
+- **DnD variants** moved from `components/dnd-examples/<slug>/<Pascal>Demo.tsx` to `dnd/<slug>/<Pascal>Demo.tsx` (top-level, sibling of `components/`). Mirrors forms / tables / kanban / charts. New CLI alias `dndVariants` (default `"dnd"`); added to `AfnoConfig.aliases`, `DEFAULT_CONFIG`, `inferMissingAliasFields`, `afnoAliasesForBaseDir`, and `VARIANT_ROOT_ALIASES` + new `if (norm.startsWith("dnd/"))` branch in `resolveRegistryOutputPath`. DECISION 1.13 explicitly marked **Superseded** by DECISION 1.15.
+- **`progress-shared.tsx`** moved on the consumer side from `components/lab/progress/progress-shared.tsx` (and a brief intermediate at `components/ui/progress/progress-shared.tsx`) to **`components/ui/progress-shared.tsx`** — directly under `ui/`, mirroring `chart-primitives.tsx` and `form-primitives.tsx`. Single touched build script: `scripts/build-registry.ts` (`target` for the `progress-shared` entry). All 8 `progress-*` variant snippets in `app/registry/popover/progress-*.tsx` updated their import from `@/components/lab/progress/progress-shared` to `@/components/ui/progress-shared`.
+- **Snippet type-safety contract** (NEW, locked in DECISION 1.15):
+  - Every DnD variant snippet declares drag data as `type X = { … } & Record<string, unknown>` (NOT `interface X { … }`). Closed interfaces don't satisfy `T extends DragData = Record<string, unknown>` under consumer-side strict TS.
+  - Drop zones spread `{...zoneProps}` only — `<div ref={zoneProps.ref} {...zoneProps}>` is now a hard build error (duplicate `ref`).
+  - `react-day-picker` v10 API: `<Calendar autoFocus />` (NOT `initialFocus`).
+- **End-to-end production gate** (NEW): `npm run validate:variants` now scaffolds `test/` with a full runnable Next.js app (`next.config.mjs`, `postcss.config.mjs`, `app/{layout,page,globals.css}`, `package.json` with `build`/`start`/`dev` scripts, `tsconfig.json` with Next plugin), installs all 319 variants, and the contributor runs `cd test && pnpm build` as the final gate. Reference baseline this wave: lint 0 errors / 45 warnings, vitest 213/213, CLI 105/105, validate:variants 319/319, `pnpm build` in `test/` clean.
+
+Past mistake `THE_DECISION_LOG.md::3.14` captures the three TS errors that surfaced during Wave-7 and the lessons encoded against them.
+
+### Step 0b — DONE in Wave 6 (recorded for traceability)
 - `afnoui add kanban/<slug>` is no longer a 404 — `scripts/build-variants-registry.ts` emits 12 kanban variant JSONs from `app/kanban-builder/data/kanbanBuilderTemplates.ts`. New helper: `app/kanban-builder/utils/variantBundle.ts` (mirrors `table-builder/utils/variantBundle.ts`).
 - Sandbox helpers (`cellJsRunner.ts`, `rowDialogTemplate.ts`) now ship at `utils/<file>` (not `components/tables/<file>`). CLI’s `resolveRegistryOutputPath` short-circuits `utils/<file>` paths into a sibling `<libBase>/utils/` folder.
 - `tables.json` no longer ships `@dnd-kit/*` — the table engine consumes the project's custom `lib/dnd/*` (7 files: `DndContext.tsx`, `DropIndicator.tsx`, `dnd.css`, `index.ts`, `types.ts`, `useDraggable.ts`, `useDropZone.ts`). Build script rewrites the import from `@/components/ui/dnd` → `../../lib/dnd` at registry-build time.
@@ -166,6 +197,7 @@ pnpm run verify:quick
   └─ verify:forms-registry      ← scripts/verify-forms-registry-sync.mjs
   └─ verify:tables-registry     ← scripts/verify-tables-registry-sync.mjs   (13 shared files)
   └─ verify:kanban-registry     ← scripts/verify-kanban-registry-sync.mjs   (14 shared files)
+  └─ verify:dnd-registry        ← scripts/verify-dnd-registry-sync.mjs      (7 shared files)
   └─ verify:theme-export-sync   ← scripts/verify-theme-export-sync.mjs
   └─ pnpm exec tsc --noEmit     (workspace, excludes afnoui-cli)
   └─ pnpm lint                   (workspace ESLint v9 flat config — floor: 0 errors)
@@ -173,11 +205,19 @@ pnpm run verify:quick
   └─ pnpm run build:cli          (afnoui-cli tsc, also runs its 105 tests)
 
 # Variant pipeline (must rerun after touching template files or shared engine sources)
-pnpm run build:tables-registry && pnpm run build:kanban-registry && pnpm run build:variants-registry
-# Currently emits 310 variants total (forms + tables(21) + kanban(12) + charts + components).
+pnpm run build:tables-registry && pnpm run build:kanban-registry && pnpm run build:dnd-registry && pnpm run build:variants-registry
+# Currently emits 319 variants total (forms + tables(21) + kanban(12) + charts + components + dnd(9)).
+
+# Production-equivalent gate (run before any release-shaped PR — Wave-8 baseline)
+pnpm run validate:variants    # scaffolds test/, installs all 319 variants, next start. ~285s.
+cd test && pnpm build         # ← MUST succeed cleanly. 0 TS errors, 3 static pages prerendered. ~40s.
+
+# Documentation cross-check (Wave-8 baseline — keep in sync with CLI changes)
+# After any change to afnoui-cli/src/cli/commands/* OR afnoui-cli/src/lib/config.ts::DEFAULT_CONFIG
+# update BOTH .ai-brain/CLI_REFERENCE.md AND afnoui-cli/src/cli/commands/help.ts in the same commit.
 ```
 
-Plus `pnpm exec next build` — should compile cleanly. Recent baseline: 22.3s.
+Plus `pnpm exec next build` — should compile cleanly. Recent baseline: 22.3s in `app/`, ~22s in `test/` for the all-variants scaffold.
 
 ---
 

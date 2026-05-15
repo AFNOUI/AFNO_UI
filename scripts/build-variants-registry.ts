@@ -5,6 +5,10 @@ import { pathToFileURL } from "url";
 import type { FormLibrary } from "../app/registry/formRegistry";
 import { buildFormVariantStackFiles } from "../app/form-builder/utils/formCodeGenerator";
 import { buildChartVariantCode, chartVariantSources } from "../app/components/lab/charts/chartVariantSources";
+import {
+  dndVariantFilePath,
+  dndVariantSources,
+} from "../app/components/lab/dnd/dndVariantSources";
 import { tableTemplates } from "../app/table-builder/data/tableBuilderTemplates";
 import type { DataMode } from "../app/table-builder/utils/tableCodeGenerator";
 import { buildTableVariantFiles } from "../app/table-builder/utils/variantBundle";
@@ -28,6 +32,13 @@ import { buildKanbanVariantFiles } from "../app/kanban-builder/utils/variantBund
  *   Chart variants:  npx afnoui add charts/<type>/<variant>  (e.g. charts/bar/default)
  *   Table variants:  npx afnoui add tables/<variant>
  *   Kanban variants: npx afnoui add kanban/<variant>
+ *   DnD variants:    npx afnoui add dnd/<variant>            (e.g. dnd/sortable-list)
+ *
+ * DnD variants ship a single example file at
+ *   `components/dnd-examples/<slug>/<Pascal>Demo.tsx`
+ * with imports rewritten to *relative* paths (`../../../lib/dnd`,
+ * `../../../lib/utils`) so the CLI's standard alias-rewriter never has to
+ * touch them — matching the chart-variants policy (THE_DECISION_LOG 1.12).
  */
 
 type VariantRegistryItemFile = {
@@ -123,11 +134,16 @@ async function buildVariantsRegistry() {
       continue;
     }
 
-    if (category === "charts" || category === "tables" || category === "kanban") {
-      // Charts, tables, and kanban variants are emitted from their template
-      // tables (see the dedicated blocks below), not from the per-file modules
-      // under `app/registry/<category>/`. Skip silently here so legacy module
-      // files (if any) don't double-emit.
+    if (
+      category === "charts" ||
+      category === "tables" ||
+      category === "kanban" ||
+      category === "dnd"
+    ) {
+      // Charts, tables, kanban, and dnd variants are emitted from their
+      // template / source tables (see the dedicated blocks below), not from
+      // per-file modules under `app/registry/<category>/`. Skip silently here
+      // so legacy module files (if any) don't double-emit.
       continue;
     }
 
@@ -329,6 +345,39 @@ async function buildVariantsRegistry() {
       fs.writeFileSync(targetPath, JSON.stringify(item, null, 2));
       index.add(variantName);
     }
+  }
+
+  /**
+   * DnD variants — mirror of the chart pipeline above. Each source carries a
+   * standalone `snippet` (already using relative `../../../lib/{dnd,utils}`
+   * imports) so the CLI ships it verbatim. The destination path lives under
+   * the standard `components` alias, which every consumer layout already
+   * resolves; no new CLI alias is required.
+   */
+  const dndVariantRoot = path.join(REGISTRY_ROOT, "dnd");
+  if (fs.existsSync(dndVariantRoot)) {
+    fs.rmSync(dndVariantRoot, { recursive: true, force: true });
+  }
+  fs.mkdirSync(dndVariantRoot, { recursive: true });
+
+  for (const source of dndVariantSources) {
+    const variantName = `dnd/${source.slug}`;
+    const item: VariantRegistryItem = {
+      name: variantName,
+      category: "dnd",
+      variant: source.slug,
+      files: [
+        {
+          path: dndVariantFilePath(source.slug),
+          type: "registry:variant",
+          content: source.snippet,
+        },
+      ],
+    };
+
+    const targetPath = path.join(dndVariantRoot, `${source.slug}.json`);
+    fs.writeFileSync(targetPath, JSON.stringify(item, null, 2));
+    index.add(variantName);
   }
 
   fs.writeFileSync(

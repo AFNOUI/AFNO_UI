@@ -11,7 +11,7 @@ export const code = `"use client";
 import { useState } from "react";
 import { Battery, Wifi, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BatteryIndicator, WifiIndicator, VolumeIndicator } from "@/components/lab/progress/progress-shared";
+import { BatteryIndicator, WifiIndicator, VolumeIndicator } from "@/components/ui/progress-shared";
 
 const data = ${dataStr};
 

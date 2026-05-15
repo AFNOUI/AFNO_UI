@@ -1,0 +1,82 @@
+---
+description: AfnoUI — registry-driven UI component library + CLI. Read .ai-brain/ before editing.
+globs:
+  - "app/**"
+  - "afnoui-cli/**"
+  - "scripts/**"
+  - "public/registry/**"
+alwaysApply: true
+---
+
+# AfnoUI — Cursor rules
+
+This repo ships UI components two ways: as live demos in this Next.js app
+under `app/`, and as installable bundles under `public/registry/*.json` that
+the `afnoui` CLI (under `afnoui-cli/`) drops into consumer projects.
+
+**Single source of truth for AI agents:**
+
+- High-level orientation: `AGENTS.md` at repo root.
+- Architectural map: `.ai-brain/STRUCTURAL_MAP.md`.
+- Decision log + forbidden changes: `.ai-brain/THE_DECISION_LOG.md`.
+- Hard rules (R-00 — R-52) + forbidden table (F-01 — F-16):
+  `.ai-brain/AI_AGENT_RULES.md`.
+- Exhaustive CLI reference: `.ai-brain/CLI_REFERENCE.md`.
+- Sprint status: `.ai-brain/CURRENT_SPRINT.md`.
+
+**Cite rule numbers** (e.g. "follows R-32 (DnD drag-data type intersection)")
+when you apply or explain a rule. Don't paraphrase rules silently.
+
+## The five rules that bite hardest
+
+1. **Registry rebuild discipline.** If you edit any `app/components/ui/**`,
+   `app/forms/**`, `app/kanban/**`, `app/components/lab/dnd/variants/**`, or
+   `app/registry/**` file, rebuild the matching `pnpm run build:*-registry`
+   in the same commit. The verifiers in `scripts/verify-*-registry-sync.mjs`
+   are the second-tier gate.
+2. **CLI ≠ frontend.** `afnoui-cli/src/**` MUST NOT import from `app/**`.
+   If the CLI needs frontend knowledge, encode it in `public/registry/*.json`.
+3. **No forbidden deps.** `@dnd-kit/*`, `redux`, `zustand`, `jotai`,
+   `valtio`, `prettier`, `playwright`, `cypress` — banned. See
+   `.ai-brain/AI_AGENT_RULES.md § R-04`.
+4. **DnD drag-data is an intersection type.** `type X = { id: string } &
+   Record<string, unknown>` — never `interface X { id: string }`. This is
+   past mistake 3.14 — re-introducing it breaks `cd test && pnpm build`.
+5. **Production gate.** Before declaring "done":
+   ```
+   pnpm lint && pnpm test && pnpm run build:cli &&
+   pnpm run verify:quick && pnpm run validate:variants &&
+   cd test && pnpm build
+   ```
+
+## File-touch decision matrix
+
+| You touched | You must also run / touch |
+|---|---|
+| `app/registry/<name>.tsx` (primitive) | `pnpm run build:registry` |
+| `app/forms/variants/<slug>/**` | `pnpm run generate:registry` |
+| `app/components/tables/**` | `pnpm run build:tables-registry` + verifier |
+| `app/kanban/**` | `pnpm run build:kanban-registry` + verifier |
+| `app/components/ui/dnd/**` | `build:tables-registry` AND `build:kanban-registry` AND `build:dnd-registry` |
+| `app/components/lab/dnd/variants/**` | `pnpm run build:variants-registry` + DnD verifier |
+| `afnoui-cli/src/**` | `cd afnoui-cli && npm test && npm run build` |
+| Theme tokens / `app/utils/themeExport.ts` | `pnpm run verify:theme-export-sync` |
+| Moved a consumer-visible directory | DECISION-LOG supersede + `STRUCTURAL_MAP.md` + `AI_AGENT_RULES.md` + Wave-N sprint entry |
+
+## When the user asks "add a variant"
+
+1. Ask which family: forms / tables / kanban / charts / dnd / progress / other.
+2. Drop the source under the matching `app/...` location.
+3. Run the matching `pnpm run build:...-registry`.
+4. Run `pnpm run verify:<family>-registry-sync`.
+5. Run `pnpm run validate:variants`.
+6. `cd test && pnpm build` — must pass cleanly.
+
+## When the user asks "add a CLI command / flag"
+
+1. Add a `register<X>Command(program)` under `afnoui-cli/src/cli/commands/`.
+2. Wire it in `afnoui-cli/src/cli/program.ts`.
+3. Add a test in `afnoui-cli/tests/unit/programWiring.test.ts`.
+4. Add an entry to `.ai-brain/CLI_REFERENCE.md` AND to the `help` command's
+   table in `afnoui-cli/src/cli/commands/help.ts`.
+5. `cd afnoui-cli && npm test && npm run build`.

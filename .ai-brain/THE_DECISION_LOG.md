@@ -71,7 +71,7 @@
 - @dnd-kit’s RTL handling required wrapping every consumer in extra boilerplate.
 - Our Pointer API approach handles autoscroll, prefers-reduced-motion, and RTL index resolution natively.
 
-**Cost**: We own a small DnD codebase. We must keep it documented and tested (via the kanban *and* tables registry verifiers — both ship the files to user projects). `tables.json` and `kanban.json` both embed `lib/dnd/*` in their `shared` arrays; their build scripts rewrite the source-side `@/components/ui/dnd` import to `../../lib/dnd` so the file lands at the consumer's `<libBase>/dnd/*` and resolves naturally.
+**Cost**: We own a small DnD codebase. We must keep it documented and tested (via the kanban, tables, AND dnd registry verifiers — all three ship the files to user projects). `tables.json`, `kanban.json`, and `dnd.json` all embed the 7 DnD primitives in their `shared` arrays; their build scripts rewrite the source-side `@/components/ui/dnd` import to `../../components/dnd` (Wave-7 — was `../../lib/dnd` before) so the file lands at the consumer's `<componentsBase>/dnd/*` and resolves naturally.
 
 **Forbidden change**: Do NOT add `@dnd-kit/*` back as a dependency. If you need a new DnD primitive, extend `app/components/ui/dnd/`. (Past mistake 3.6 below traces what regressed when `tables.json` accidentally kept the `@dnd-kit/*` deps.)
 
@@ -169,6 +169,246 @@
 - Keeps the CLI's transform layer single-purpose: it only handles top-level alias swaps (`@` → `~`, `app/` → `src/`, etc.), never directory-relative computation.
 
 **Forbidden change**: Do NOT add the chart / table / kanban variant categories to the `rewriteAliasedImportsToRelative` branch in `operations.ts::writeRegistryOutputFile`. Past mistake 3.7 records what happens when this guard is missing.
+
+---
+
+### 1.13 [Superseded by 1.15] DnD variants used to ship under the `components` alias
+**Decision**: `public/registry/variants/dnd/<slug>.json` writes a single file at logical path
+`components/dnd-examples/<slug>/<Pascal>Demo.tsx`. The CLI's existing `components`-alias router
+handles routing; no new alias is introduced. Imports inside the snippet are pre-rewritten to
+relative `../../../lib/dnd` + `../../../lib/utils` (per 1.12).
+
+**Rejected alternative**: Add a fourth variant-style alias (`dndVariants`) alongside
+`{form,table,kanban,chart}Variants` and a matching branch in `installPaths.ts`.
+
+**Reasoning**:
+- The CLI must stay **independent of frontend changes**: per the project mandate, frontend can
+  iterate on `/dnd` routes / snippets at will without bumping CLI version. Reusing the
+  well-known `components` alias means *zero* CLI churn for every new DnD variant we add.
+- Charts / tables / kanban each carry distinct *runtime engines* alongside their variants
+  (chart-primitives, table engine, kanban engine) — they earn their dedicated aliases.
+  DnD variants are pure *example files*; the engine (`lib/dnd/*`) ships via the existing
+  tables.json / kanban.json `shared` arrays, or `afnoui init`.
+- The relative `../../../lib/{dnd,utils}` path resolves identically across app-dir
+  (`app/components/.../Demo.tsx` → `app/lib/dnd`), src-dir, and flat layouts because the
+  `components` ↔ `lib` sibling relationship is fixed by the standard `afnoui.json`.
+
+**Forbidden change** (originally): Do NOT add a `dndVariants` alias or a `dnd/<slug>/...` branch to the
+CLI's `installPaths.ts`. If a future variant ships an engine of its own, write that engine
+as a `shared` array on a new top-level registry JSON instead.
+
+**Why superseded**: real-world layout convention put forms / tables / kanban / charts / dnd
+all at the top level of the consumer project (sibling of `components/`), so DnD was the
+odd-one-out hiding under `components/dnd-examples/`. Wave-7 (DECISION 1.15) promotes DnD to
+match the rest. The `dndVariants` alias the original "forbidden change" warned about is now
+the right call.
+
+---
+
+### 1.14 [Accepted] The Pointer DnD library has its own standalone registry (`dnd.json`)
+**Decision**: Ship the 7-file Pointer DnD primitives (`components/dnd/index.ts`, `DndContext.tsx`,
+`useDraggable.ts`, `useDropZone.ts`, `DropIndicator.tsx`, `types.ts`, `dnd.css` — Wave-7,
+were under `lib/dnd/` originally) as a **dedicated registry** at `public/registry/dnd.json`,
+built by `scripts/build-dnd-registry.ts` and parsed by `parseDndRegistry` on the CLI side.
+Two consumer surfaces:
+
+1. `afnoui init --dnd` — full project init AND the DnD subsystem. The single command
+   advertised on every `/dnd/*` lab page's prereq banner (via `getAfnouiDndInitCommand`).
+2. `afnoui add dnd/<slug>` — auto-installs the DnD primitives first (via the new
+   `ensureDndSystemForVariantSlugs`), then writes the variant example.
+
+**Rejected alternative A**: "The kanban / tables registries already ship `lib/dnd/*` —
+just rely on those." A user who only wants DnD shouldn't have to run
+`afnoui add kanban/<variant>` (and accept the kanban runtime + 11 UI peers) to get the
+primitives. Coupling unrelated subsystems makes `afnoui add dnd/…` unsurprising only by
+accident.
+
+**Rejected alternative B**: "Inline the DnD primitives into each variant snippet." The
+variants weigh in at ~80–300 lines each; the engine is ~1.4 KLoC across 7 files.
+Duplicating the engine per variant inflates registry JSON 9×, breaks idempotency
+(every variant install would prompt about conflicts on subsequent variants), and forks
+the runtime — a bug fix would have to be applied 9 times.
+
+**Reasoning**:
+- The DnD primitives are a genuine reusable library — they were already shipped by
+  `kanban.json` and `tables.json` because those engines depend on them. Promoting them
+  to their own `dnd.json` makes that fact explicit and lets the CLI install them
+  *without* dragging in a kanban or table runtime.
+- The registry-build pipeline already supported the shape (`{ dndInstall, shared }`
+  mirrors `kanbanInstall` exactly). Adding a third instance was ~150 lines of
+  byte-for-byte parallel code in the CLI (`parseDndRegistry`, `installDndSystemShared`,
+  `ensureDndSystemForVariantSlugs`, `refreshDndEngineSharedFiles`,
+  `isDndSystemInstalled`). Maintenance cost: zero — the kanban-side functions are the
+  template, and the verify scripts can be cloned 1:1 when we add `verify:dnd-registry`.
+- `dndInstall.uiComponents = ["utils"]` (not `["button", "card", …]` like kanban)
+  because the DnD primitives themselves don't import any UI components — only the `cn`
+  helper. Variant snippets that need icons get `lucide-react` from
+  `dndInstall.npmDependencies`.
+- The three sources of `lib/dnd/*` (`tables.json`, `kanban.json`, `dnd.json`) all read
+  from the same canonical `app/components/ui/dnd/` source. After any of the three
+  build scripts run, the file bytes are identical; the CLI's idempotency check ("local
+  content matches remote content") silently skips writes when the second registry
+  installs over the first.
+
+**Forbidden change**:
+- Do NOT delete the duplicated `lib/dnd/*` entries from `kanban.json` / `tables.json`
+  "for DRY". Those entries make `afnoui add kanban/<variant>` work without ALSO running
+  `afnoui init --dnd`. Their identical content is the contract.
+- Do NOT add `installComponent("dnd-primitives", …)` to install the engine via the
+  generic component pipeline — the engine is multi-file (7 files across `lib/dnd/`)
+  and includes a `.css` file; the generic `installComponent` does NOT handle CSS, and
+  it lives under the `ui` alias root, not `lib`. The dedicated installer is the right
+  shape.
+- The `init` command's bail-out for "already initialized" projects MUST still honor
+  `--dnd` — if the user runs `afnoui init --dnd` against an already-initialized
+  project, install only the DnD subsystem. Don't `return` early.
+
+---
+
+### 1.15 [Accepted] Wave-7 layout: DnD primitives → `components/dnd/*`, DnD variants → top-level `dnd/`, `progress-shared` → directly under `ui/`
+**Decision** — three sibling moves applied together so the consumer project's directory
+tree is shaped consistently:
+
+| What | Old consumer location | New consumer location |
+|---|---|---|
+| Pointer DnD primitives (7 files) | `lib/dnd/*` | **`components/dnd/*`** |
+| DnD variants (9 demos) | `components/dnd-examples/<slug>/<Pascal>Demo.tsx` | **`dnd/<slug>/<Pascal>Demo.tsx`** (top-level, sibling of `components/`) |
+| Progress shared utilities | `components/lab/progress/progress-shared.tsx` | **`components/ui/progress-shared.tsx`** (directly under `ui/`, NOT `ui/progress/`) |
+
+The in-app SOURCES did not move (`app/components/ui/dnd/*`,
+`app/components/lab/dnd/variants/*.tsx`, `app/components/lab/progress/progress-shared.tsx`).
+Only the **registry build scripts'** target paths and the CLI's idempotency probe + alias
+routing changed.
+
+**Rejected alternative**: leave DnD where it was. Rejected because:
+- DnD was the only variant family hiding inside `components/`. Forms, tables, kanban,
+  charts all live at the top level — the consumer's mental model is "all variant
+  families are siblings of `components/`".
+- The DnD primitive library is structurally identical to other UI primitives
+  (`components/ui/button.tsx`, `components/ui/dialog.tsx`, …). Putting it under `lib/`
+  was a leftover from when we were ambivalent about whether it was "library" or
+  "component". It is unambiguously a component.
+- `progress-shared.tsx` was nested two levels deep (`ui/progress/progress-shared.tsx`),
+  but conceptually it's a shared primitive that all `progress-*` variants import from.
+  Living at `ui/progress-shared.tsx` lets `import "@/components/ui/progress-shared"`
+  match the convention used by every other shared UI module (`ui/chart-primitives`,
+  `ui/form-primitives`).
+
+**Reasoning**:
+- A consumer running `npx afnoui add dnd/buckets` should land files at the same depth
+  as `npx afnoui add kanban/sprint-board` or `npx afnoui add tables/server-crm`. After
+  Wave-7 they do.
+- DnD primitives moved to `components/dnd/*` so the import statement
+  `import { useDraggable } from "@/components/dnd"` reads naturally — same shape as
+  `import { Button } from "@/components/ui/button"`.
+- Progress shared utilities at `components/ui/progress-shared.tsx` keep import paths
+  flat: `import { ProgressValue } from "@/components/ui/progress-shared"` (one level of
+  nesting), matching `import { ChartContainer } from "@/components/ui/chart-primitives"`.
+
+**Variant snippet type-safety contract** (also locked in this decision because the move
+required regenerating every snippet):
+- DnD snippets MUST type their drag data as `type X = { … } & Record<string, unknown>`
+  (NOT `interface X { … }`). Closed interfaces fail the
+  `T extends DragData = Record<string, unknown>` constraint under consumer-side strict
+  TS; the intersection with `Record<string, unknown>` adds the open string-index
+  signature TS requires.
+- Drop targets spread `{...zoneProps}` only — never
+  `<div ref={zoneProps.ref} {...zoneProps}>`. Newer React/TS treat the duplicate `ref`
+  prop as a hard error (`'ref' is specified more than once`).
+- `react-day-picker` snippets use `autoFocus` (NOT `initialFocus` — removed in v10+).
+
+**CLI changes required** (the parts of this decision that genuinely needed CLI work):
+1. `installPaths.ts::resolveRegistryOutputPath` — added `if (norm.startsWith("dnd/"))`
+   branch routing to `aliases.dndVariants`.
+2. `installPaths.ts::VARIANT_ROOT_ALIASES` — added `"dndVariants"`.
+3. `types.ts` — added `dndVariants: string` to `AfnoConfig.aliases`.
+4. `config.ts::DEFAULT_CONFIG` + `inferMissingAliasFields` + `afnoAliasesForBaseDir` —
+   default `dndVariants: "dnd"` plus migration heuristic for older `afnoui.json` files.
+5. `operations.ts::isDndSystemInstalled` — probe path moved from `lib/dnd/index.ts` to
+   `components/dnd/index.ts`.
+6. `operations.ts::installDndSystemShared` — tip text now points consumers at
+   `@/components/dnd` and `components/dnd/dnd.css`.
+
+Pure-content changes (snippet type fixes, duplicate `ref` removal, `initialFocus` →
+`autoFocus`) needed **zero** CLI changes — only `pnpm run build:variants-registry` +
+`pnpm run build:dnd-registry` + redeploy.
+
+**Build/registry changes required**:
+- `scripts/build-dnd-registry.ts` — every shared file's `targetPath` changed from
+  `lib/dnd/*` to `components/dnd/*`.
+- `scripts/build-tables-registry.ts` + `scripts/build-kanban-registry.ts` — same path
+  rename in their copies of the DnD shared block; the engine import rewriter now
+  emits `../../components/dnd` instead of `../../lib/dnd`.
+- `scripts/verify-dnd-registry-sync.mjs` + `verify-tables-registry-sync.mjs` +
+  `verify-kanban-registry-sync.mjs` — `TARGET_TO_SOURCE` maps updated to the new paths.
+- `scripts/build-registry.ts` — `progress-shared` `target` switched to
+  `components/ui/progress-shared.tsx`. The 8 `progress-*` variant snippets in
+  `app/registry/popover/` import via `@/components/ui/progress-shared` (NOT
+  `@/components/lab/progress/progress-shared`).
+- `app/components/lab/dnd/variants/*.tsx` — every snippet (9 files) switched its drag
+  data type aliases to the `& Record<string, unknown>` intersection, removed duplicate
+  `ref={zoneProps.ref}` where present.
+
+**Forbidden change**:
+- Do NOT move DnD primitives back under `lib/dnd/*`. The CLI's
+  `isDndSystemInstalled` probe is now anchored on `components/dnd/index.ts`; flipping
+  one without the other breaks idempotency (the CLI re-installs every time).
+- Do NOT move DnD variants back into `components/dnd-examples/`. Use the
+  `dndVariants` alias (top-level `dnd/`) consistent with forms / tables / kanban /
+  charts.
+- Do NOT collapse `progress-shared.tsx` back into `components/ui/progress/`. The
+  registry target path lives at `components/ui/progress-shared.tsx` and the variant
+  snippets import from that location.
+- Do NOT replace the `& Record<string, unknown>` snippet type idiom with closed
+  `interface`. Past mistake 3.14 below traces what happens when this regresses.
+- Do NOT re-add `ref={zoneProps.ref}` alongside `{...zoneProps}` — it's the same
+  callback ref already bundled in the spread. Past mistake 3.14 covers this too.
+
+---
+
+### 1.16 [Accepted] Wave-8: cross-tool AI-rule files delegate to `.ai-brain/`
+**Decision** — every AI tool (Cursor, Codex, Antigravity, Claude Code, GitHub
+Copilot, …) reads from a small, tool-specific entry file that POINTS at
+`.ai-brain/AI_AGENT_RULES.md` + `.ai-brain/CLI_REFERENCE.md`. The entry files
+do not duplicate the rules.
+
+**Layout:**
+- `AGENTS.md` (repo root) — universal entry point per the
+  [agents.md](https://agents.md) convention. Read by Cursor, OpenAI Codex /
+  Codex CLI, Google Antigravity, Aider, Continue, and any agent following the
+  convention.
+- `.cursor/rules/afnoui.mdc` — `alwaysApply: true`, broad glob, repo-wide rules.
+- `.cursor/rules/cli.mdc` — `alwaysApply: false`, scoped to `afnoui-cli/**` +
+  build / verify / validate scripts.
+- `.github/copilot-instructions.md` — Copilot Chat repo-level instructions.
+- `CLAUDE.md` — Anthropic Claude Code entry point.
+
+**Rejected alternative**: copy the rules into each tool-specific file.
+Rejected because:
+- N tools × M rules = N×M maintenance burden. Wave-8 has 50+ numbered rules
+  in `AI_AGENT_RULES.md` and 16 forbidden-changes entries. Copying these
+  five-way is a guaranteed drift source.
+- A tool's prompt budget is finite. A 30-line pointer file is cheaper than
+  10kb of duplicated rules, AND it directs the model to a *file it can read
+  on demand* (via Read / @-mention) when it actually needs the detail.
+- New AI tools appear quarterly. Adding a one-file pointer is a 60-second
+  task. Adding a 10kb rule duplication is 10 minutes plus drift risk.
+
+**Reasoning**:
+- `.ai-brain/` is the canonical source of truth for human contributors too;
+  reusing it for AI tools keeps the human and AI mental models identical.
+- The tool-specific entry files DO carry tool-native idioms (Cursor's
+  `frontmatter` + `globs` + `alwaysApply`, Copilot's instructions format,
+  Claude Code's prose style). The substance is delegated; only the wrapper
+  varies.
+
+**Forbidden change**:
+- Do NOT duplicate the rule text into the entry files. If you want to add a
+  rule, add it to `AI_AGENT_RULES.md`. If you want to update a flag, update
+  `CLI_REFERENCE.md`. The entry files should only ever change when a NEW
+  tool needs onboarding.
+- Do NOT collapse `AGENTS.md` and `CLAUDE.md` — Anthropic's tool reads
+  `CLAUDE.md` specifically.
 
 ---
 
@@ -546,3 +786,25 @@
 **Snapshots updated**: 6 "file shape locked" snapshots in `tests/codegen/formCodeGenerator.test.ts` (rhf/tanstack/action × config/static) — the new field files are now in the locked output. Future drift is caught immediately.
 
 **Lesson encoded**: every panel that renders "all files for this form" must source from `generateAllFiles()`. If two panels each compute their own union (`generatedFiles` + `requiredComponents.fieldComponents`), they will inevitably drift. The single-list pattern protects against the drift by construction.
+
+---
+
+### 3.14 DnD variant snippets failed `next build` in the consumer project (3 separate TS errors)
+**Symptom**: After Wave-7 introduced the consumer-side path moves (DECISION 1.15), running `pnpm build` in `test/` (the variant-validation sandbox) failed with three different errors across the 9 DnD variant snippets:
+
+1. `Type 'TaskDragData' does not satisfy the constraint 'DragData'. Index signature for type 'string' is missing in type 'TaskDragData'.` — every snippet that named its drag data with `interface XxxDragData { id: string }` failed because `interface` declarations are *closed* (TS treats them as candidates for declaration-merging, so it refuses to widen them to `Record<string, unknown>`). Inline literals (`useDropZone<{ id: string }>`) would have worked but were unwieldy across 3 reuse sites per snippet.
+2. `'ref' is specified more than once, so this usage will be overwritten.` — every drop target rendered `<div ref={zoneProps.ref} {...zoneProps}>`. The spread already carries the `ref` callback (`zoneProps.ref`, set by `useDropZone`), so the explicit `ref={…}` prop is a duplicate. Older React/TS tolerated it; React 19 + Next 16 + TS 5.7 treat it as a hard error.
+3. `Property 'initialFocus' does not exist on type 'IntrinsicAttributes & DayPickerProps'` in `popover-date-picker.tsx`. `react-day-picker` v10 dropped `initialFocus` in favour of `autoFocus`.
+
+**Fix landed**:
+- Every `interface XxxDragData { … }` in `app/components/lab/dnd/variants/*.tsx` (9 files) was rewritten as `type XxxDragData = { … } & Record<string, unknown>`. The intersection with `Record<string, unknown>` adds the open string-index signature TS needs to satisfy the `T extends DragData` constraint, while keeping the explicitly named properties narrowly typed (so `item.data.id` still infers as `string`).
+- Every `<div ref={zoneProps.ref} {...zoneProps}>` was changed to `<div {...zoneProps}>` in the 9 snippet template literals.
+- `app/registry/popover/popover-date-picker.tsx` and `app/components/lab/popover/PopoverDatePicker.tsx` both swapped `initialFocus` for `autoFocus` on the `<Calendar>` component.
+- `pnpm run build:variants-registry` regenerated `public/registry/variants/dnd/*.json` with the corrected snippets.
+- `npm run validate:variants` was rerun end-to-end against a freshly scaffolded `test/` directory; `cd test && pnpm build` succeeded with 0 TypeScript errors and 3 static pages prerendered.
+
+**Lesson encoded**:
+- DnD variant snippets MUST use `type X = { … } & Record<string, unknown>` for their drag data shapes (NOT `interface X { … }`). DECISION 1.15's "type-safety contract" section pins this rule so future variants can't regress.
+- Never co-spread a hook's props bundle AND its individual fields. If `useXxx()` returns `{ ref, onClick, onPointerDown, … }` use `<div {...xxxProps}>` — the spread is the API.
+- Watch upstream API renames (`initialFocus` → `autoFocus` in `react-day-picker` v10) during `next build`, not just at lint-time. The lint passes today; the build is the gate.
+- Variant validation MUST run a real `next build` inside `test/`, not just install variants. `validate:variants` does the install + Next start; the build itself is the user-equivalent gate that catches strict-TS regressions in snippet bodies. `package.json::scripts.verify:full` (TODO) should chain `validate:variants` followed by `cd test && pnpm build`.

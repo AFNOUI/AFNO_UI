@@ -9,7 +9,7 @@ const dataStr = JSON.stringify(data, null, 2);
 export const code = `"use client";
 
 import { useState, useEffect } from "react";
-import { RingProgress } from "@/components/lab/progress/progress-shared";
+import { RingProgress } from "@/components/ui/progress-shared";
 
 const data = ${dataStr};
 

@@ -54,7 +54,7 @@ describe("tableCodeGenerator / pure helpers", () => {
     for (const pkg of ["react", "clsx", "tailwind-merge", "lucide-react"]) {
       expect(report.npmInstall).toContain(pkg);
     }
-    // Bundled custom DnD (`lib/dnd`) — no @dnd-kit. Virtualization peer is engine-level.
+    // Bundled custom DnD (`components/dnd`) — no @dnd-kit. Virtualization peer is engine-level.
     expect(report.npmInstall).not.toContain("@dnd-kit/core");
     expect(report.npmInstall).toContain("@tanstack/react-virtual");
   });

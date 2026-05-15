@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { useState, useEffect, type ReactNode } from "react";
 import {
   Flag, Folder, Trash2, ArrowLeftRight,
   ChevronRight, ChevronDown, Menu, Home, Search,
@@ -29,8 +29,23 @@ import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { TooltipContent, TooltipTrigger, Tooltip, TooltipProvider } from "@/components/ui/tooltip";
 
-/** Charts sidebar + `/charts/*` breadcrumb labels (single source with `NAV_SECTIONS`). */
-export const CHARTS_SIDEBAR_ITEMS: { id: string; name: string; icon: ReactNode; path: string }[] = [
+type SidebarItem = { id: string; name: string; icon: ReactNode; path: string };
+
+/** DnD sidebar + `/dnd/*` breadcrumb labels (single source with `NAV_SECTIONS`). */
+export const DND_SIDEBAR_ITEMS: SidebarItem[] = [
+  { id: "sortable-list", name: "Sortable list", icon: <ListOrdered size={16} />, path: "/dnd/sortable-list" },
+  { id: "horizontal-reorder", name: "Horizontal pill reorder", icon: <MoveHorizontal size={16} />, path: "/dnd/horizontal-reorder" },
+  { id: "multi-list", name: "Multi-list transfer", icon: <ArrowLeftRight size={16} />, path: "/dnd/multi-list" },
+  { id: "image-grid", name: "Image grid sort", icon: <ImageIcon size={16} />, path: "/dnd/image-grid" },
+  { id: "trash", name: "Trash zone", icon: <Trash2 size={16} />, path: "/dnd/trash" },
+  { id: "buckets", name: "Priority buckets", icon: <Flag size={16} />, path: "/dnd/buckets" },
+  { id: "tree", name: "Nested tree reorder", icon: <Layers size={16} />, path: "/dnd/tree" },
+  { id: "files", name: "File → folder drop", icon: <Folder size={16} />, path: "/dnd/files" },
+  { id: "table-reorder", name: "Table row reorder", icon: <Table2 size={16} />, path: "/dnd/table-reorder" },
+];
+
+/** Charts sidebar + `/charts/*` breadcrumb labels. */
+export const CHARTS_SIDEBAR_ITEMS: SidebarItem[] = [
   { id: "charts-bar", name: "Bar chart", icon: <BarChart3 size={16} />, path: "/charts/bar" },
   { id: "charts-line", name: "Line chart", icon: <PanelTop size={16} />, path: "/charts/line" },
   { id: "charts-pie", name: "Pie chart", icon: <CircleDot size={16} />, path: "/charts/pie" },
@@ -74,17 +89,7 @@ const NAV_SECTIONS = [
   },
   {
     title: "DnD Variants",
-    items: [
-      { id: "sortable-list", name: "Sortable list", icon: <ListOrdered size={16} />, path: "/dnd/sortable-list" },
-      { id: "horizontal-reorder",name: "Horizontal pill reorder",icon: <MoveHorizontal size={16} />, path: "/dnd/horizontal-reorder" },
-      { id: "multi-list",name: "Multi-list transfer",icon: <ArrowLeftRight size={16} />, path: "/dnd/multi-list" },
-      { id: "image-grid",name: "Image grid sort",icon: <ImageIcon size={16} />, path: "/dnd/image-grid" },
-      { id: "trash",name: "Trash zone",icon: <Trash2 size={16} />, path: "/dnd/trash" },
-      { id: "buckets",name: "Priority buckets",icon: <Flag size={16} />, path: "/dnd/buckets" },
-      { id: "tree",name: "Nested tree reorder",icon: <Layers size={16} />, path: "/dnd/tree" },
-      { id: "files",name: "File → folder drop",icon: <Folder size={16} />, path: "/dnd/files" },
-      { id: "table-reorder",name: "Table row reorder",icon: <Table2 size={16} />, path: "/dnd/table-reorder" },
-    ],
+    items: DND_SIDEBAR_ITEMS,
   },
   {
     title: "Charts",

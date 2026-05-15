@@ -1,7 +1,7 @@
 export const code = `"use client";
 
 import { Loader2, RefreshCw } from "lucide-react";
-import { SemiCircularProgress, IndeterminateSpinner } from "@/components/lab/progress/progress-shared";
+import { SemiCircularProgress, IndeterminateSpinner } from "@/components/ui/progress-shared";
 
 export default function ProgressSemiCircularExample() {
   return (

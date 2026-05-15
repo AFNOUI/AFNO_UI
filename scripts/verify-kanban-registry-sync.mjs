@@ -23,13 +23,13 @@ const TARGET_TO_SOURCE = {
   // Sandbox helpers ship to a sibling `utils/` folder (NOT under `components/tables/`).
   "utils/cellJsRunner.ts": "app/utils/cellJsRunner.ts",
   "utils/rowDialogTemplate.ts": "app/utils/rowDialogTemplate.ts",
-  "lib/dnd/index.ts": "app/components/ui/dnd/index.ts",
-  "lib/dnd/DndContext.tsx": "app/components/ui/dnd/DndContext.tsx",
-  "lib/dnd/useDraggable.ts": "app/components/ui/dnd/useDraggable.ts",
-  "lib/dnd/useDropZone.ts": "app/components/ui/dnd/useDropZone.ts",
-  "lib/dnd/DropIndicator.tsx": "app/components/ui/dnd/DropIndicator.tsx",
-  "lib/dnd/types.ts": "app/components/ui/dnd/types.ts",
-  "lib/dnd/dnd.css": "app/components/ui/dnd/dnd.css",
+  "components/dnd/index.ts": "app/components/ui/dnd/index.ts",
+  "components/dnd/DndContext.tsx": "app/components/ui/dnd/DndContext.tsx",
+  "components/dnd/useDraggable.ts": "app/components/ui/dnd/useDraggable.ts",
+  "components/dnd/useDropZone.ts": "app/components/ui/dnd/useDropZone.ts",
+  "components/dnd/DropIndicator.tsx": "app/components/ui/dnd/DropIndicator.tsx",
+  "components/dnd/types.ts": "app/components/ui/dnd/types.ts",
+  "components/dnd/dnd.css": "app/components/ui/dnd/dnd.css",
 };
 
 /** Same transform used by scripts/build-kanban-registry.ts — keep in sync. */
@@ -39,7 +39,7 @@ function rewriteSharedFileImports(source) {
     .replace(/from\s+(["'])@\/kanban\/KanbanCard\1/g, "from $1./KanbanCard$1")
     .replace(/from\s+(["'])@\/kanban\/KanbanCardDialog\1/g, "from $1./KanbanCardDialog$1")
     .replace(/from\s+(["'])@\/kanban\/KanbanAddCardDialog\1/g, "from $1./KanbanAddCardDialog$1")
-    .replace(/from\s+(["'])@\/kanban\/dnd\1/g, "from $1@/lib/dnd$1")
+    .replace(/from\s+(["'])@\/kanban\/dnd\1/g, "from $1@/components/dnd$1")
     .replace(/from\s+(["'])@\/utils\/cellJsRunner\1/g, "from $1../../utils/cellJsRunner$1")
     .replace(/from\s+(["'])@\/utils\/rowDialogTemplate\1/g, "from $1../../utils/rowDialogTemplate$1");
 }

@@ -316,7 +316,7 @@ const components: RegistrySource[] = [
         name: "progress-shared",
         registryDependencies: ["utils"],
         dependencies: ["lucide-react"],
-        files: [{ src: "app/components/lab/progress/progress-shared.tsx", target: "components/lab/progress/progress-shared.tsx" }],
+        files: [{ src: "app/components/lab/progress/progress-shared.tsx", target: "components/ui/progress-shared.tsx" }],
     },
     {
         name: "radio-group",

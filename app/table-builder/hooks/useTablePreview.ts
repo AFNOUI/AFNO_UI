@@ -184,7 +184,7 @@ export function useTablePreview<TRow extends TableRow>({
   /**
    * Reorder rows by moving the row with id=`activeId` to slot `toIndex`
    * (relative to the post-removal array — same convention as the custom
-   * `@/lib/dnd` library).
+   * `@/components/dnd` library).
    */
   const moveRow = useCallback((activeId: string, toIndex: number) => {
     setRows(prev => {
