@@ -36,6 +36,8 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { ScrollToTopButton } from "@/components/shared/ScrollToTopButton";
+
 const features = [
   {
     icon: FileText,
@@ -46,28 +48,28 @@ const features = [
       "Drag-and-drop form builder with 25+ field types including async, infinite scroll, and combobox variants. Export production-ready React + TypeScript code.",
   },
   {
+    href: "/lab",
     icon: Palette,
     title: "Component Lab",
+    badges: ["Live Preview", "CSS Variables", "Theme Export"],
     description:
       "Live CSS variable editor for every component. Edit colors, spacing, typography, and see changes in real-time across the entire design system.",
-    href: "/lab",
-    badges: ["Live Preview", "CSS Variables", "Theme Export"],
   },
   {
+    href: "/forms",
     icon: FormInput,
     title: "Form Variants",
+    badges: ["10 Templates", "Validation", "Conditional"],
     description:
       "Pre-built form examples: contact, login, payment, survey, multi-step, and more — same JSON field config with React Hook Form, TanStack Form, or ActionForm (`npx afnoui form init --stack …`).",
-    href: "/forms",
-    badges: ["10 Templates", "Validation", "Conditional"],
   },
   {
-    icon: LayoutDashboard,
+    href: "/dashboard",
     title: "Dashboard",
+    icon: LayoutDashboard,
+    badges: ["Stats Cards", "Data Table", "Activity"],
     description:
       "Analytics dashboard with stats cards, data tables, recent activity feed, and quick actions. Complete with responsive layout and charts.",
-    href: "/dashboard",
-    badges: ["Stats Cards", "Data Table", "Activity"],
   },
   {
     icon: Image,
@@ -78,12 +80,12 @@ const features = [
       "Bar, Line, Pie, and Area charts with 25+ variants — hover tooltips, gradient fills, sparklines, exploded slices, and full RTL/LTR support.",
   },
   {
+    href: "/lab",
     icon: MousePointer2,
     title: "30+ UI Components",
+    badges: ["Radix UI", "Accessible", "Themeable"],
     description:
       "Button, Card, Dialog, Tabs, Accordion, Tooltip, and many more — each with a dedicated preview page showing all variants and states.",
-    href: "/lab",
-    badges: ["Radix UI", "Accessible", "Themeable"],
   },
 ];
 
@@ -94,29 +96,9 @@ const formCapabilities = [
     desc: "Single, Multi-Tab, Wizard, Compact",
   },
   {
-    icon: GitBranch,
-    title: "Conditional Logic",
-    desc: "Show/hide fields based on other field values",
-  },
-  {
-    icon: Zap,
-    title: "Auto-Populate",
-    desc: "Watch fields with transform constraints",
-  },
-  {
     icon: RefreshCw,
     title: "Dependent Options",
     desc: "Cascading dropdowns (Country → State)",
-  },
-  {
-    icon: Database,
-    title: "Form Hydration",
-    desc: "Load dropdown options from backend APIs",
-  },
-  {
-    icon: Code2,
-    title: "Dual Schema",
-    desc: "Runtime or compile-time Zod validation",
   },
   {
     icon: Loader2,
@@ -124,9 +106,29 @@ const formCapabilities = [
     desc: "API-fetched and paginated field types",
   },
   {
+    icon: Code2,
+    title: "Dual Schema",
+    desc: "Runtime or compile-time Zod validation",
+  },
+  {
     icon: Eye,
     title: "Live Preview",
     desc: "Test validation and submit in real-time",
+  },
+  {
+    icon: Database,
+    title: "Form Hydration",
+    desc: "Load dropdown options from backend APIs",
+  },
+  {
+    icon: Zap,
+    title: "Auto-Populate",
+    desc: "Watch fields with transform constraints",
+  },
+  {
+    icon: GitBranch,
+    title: "Conditional Logic",
+    desc: "Show/hide fields based on other field values",
   },
 ];
 
@@ -143,31 +145,31 @@ const techStack = [
 const cliCommands = {
   npm: {
     init: "npx afnoui init",
-    addComponent: "npx afnoui add button card dialog tabs",
-    addVariants: "npx afnoui add button/variants",
     formInit: "npx afnoui form init",
+    addVariants: "npx afnoui add button/variants",
     formAdd: "npx afnoui add forms/forms-contact",
-  },
-  pnpm: {
-    init: "pnpm dlx afnoui init",
-    addComponent: "pnpm dlx afnoui add button card dialog tabs",
-    addVariants: "pnpm dlx afnoui add button/variants",
-    formInit: "pnpm dlx afnoui form init",
-    formAdd: "pnpm dlx afnoui add forms/forms-contact",
-  },
-  yarn: {
-    init: "yarn dlx afnoui init",
-    addComponent: "yarn dlx afnoui add button card dialog tabs",
-    addVariants: "yarn dlx afnoui add button/variants",
-    formInit: "yarn dlx afnoui form init",
-    formAdd: "yarn dlx afnoui add forms/forms-contact",
+    addComponent: "npx afnoui add button card dialog tabs",
   },
   bun: {
     init: "bunx afnoui init",
-    addComponent: "bunx afnoui add button card dialog tabs",
-    addVariants: "bunx afnoui add button/variants",
     formInit: "bunx afnoui form init",
+    addVariants: "bunx afnoui add button/variants",
     formAdd: "bunx afnoui add forms/forms-contact",
+    addComponent: "bunx afnoui add button card dialog tabs",
+  },
+  yarn: {
+    init: "yarn dlx afnoui init",
+    formInit: "yarn dlx afnoui form init",
+    addVariants: "yarn dlx afnoui add button/variants",
+    formAdd: "yarn dlx afnoui add forms/forms-contact",
+    addComponent: "yarn dlx afnoui add button card dialog tabs",
+  },
+  pnpm: {
+    init: "pnpm dlx afnoui init",
+    formInit: "pnpm dlx afnoui form init",
+    addVariants: "pnpm dlx afnoui add button/variants",
+    formAdd: "pnpm dlx afnoui add forms/forms-contact",
+    addComponent: "pnpm dlx afnoui add button card dialog tabs",
   },
 };
 
@@ -702,6 +704,8 @@ export default function LandingPage() {
       {/* Footer */}
       {/* <footer className="border-t border-border py-6">
       </footer> */}
+
+      <ScrollToTopButton />
     </div>
   );
 }

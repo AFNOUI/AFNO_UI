@@ -12,8 +12,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-
 import { Separator } from "@/components/ui/separator";
+
 import ExportPanel from "@/components/lab/ExportPanel";
 import VariableEditor from "@/components/lab/VariableEditor";
 import LanguageSelector from "@/components/lab/LanguageSelector";
@@ -46,11 +46,13 @@ import SeparatorPage from "@/(pages)/components/separator/page";
 import BreadcrumbPage from "@/(pages)/components/breadcrumb/page";
 import ScrollAreaPage from "@/(pages)/components/scroll-area/page";
 import AsyncFieldPage from "@/(pages)/components/async-fields/page";
-import InfiniteFieldsPage from "@/(pages)/components/infinite-fields/page";
 import CollapsiblePage from "@/(pages)/components/collapsible/page";
 import AlertDialogPage from "@/(pages)/components/alert-dialog/page";
+import InfiniteFieldsPage from "@/(pages)/components/infinite-fields/page";
 import NavigationMenuPage from "@/(pages)/components/navigation-menu/page";
 import CompositeInputPage from "@/(pages)/components/composite-input/page";
+
+import { ScrollToTopButton } from "@/components/shared/ScrollToTopButton";
 
 export default function Index() {
   const [editorOpen, setEditorOpen] = useState(true);
@@ -216,6 +218,8 @@ export default function Index() {
           <VariableEditor />
         </SheetContent>
       </Sheet>
+
+      <ScrollToTopButton />
     </div>
   );
 }
