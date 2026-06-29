@@ -41,6 +41,7 @@ export interface SharedKanbanFile {
 
 const RE_EXPORT_LANGUAGE = {
   typescript: "ts" as const,
+  ts: "ts" as const,
   tsx: "tsx" as const,
   css: "css" as const,
 };

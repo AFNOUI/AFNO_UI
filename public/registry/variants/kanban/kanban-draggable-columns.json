@@ -1,0 +1,32 @@
+{
+  "name": "kanban/kanban-draggable-columns",
+  "category": "kanban",
+  "variant": "kanban-draggable-columns",
+  "files": [
+    {
+      "path": "kanban/kanban-draggable-columns/DraggableColumnsBoard.tsx",
+      "type": "registry:kanban-variant",
+      "content": "import { useState } from \"react\";\nimport { KanbanBoard } from \"../../components/kanban/KanbanBoard\";\nimport { boardConfig } from \"./config\";\nimport { initialCards } from \"./data\";\nimport { useDraggableColumnsBoardCardChange, useDraggableColumnsBoardLoadMore } from \"./useCardChange\";\nimport type { KanbanCardData, KanbanColumnConfig } from \"./types\";\n\n/**\n * Workflow — drag columns to reorder\n * Grab a column header to reorder it; cards remain draggable inside\n *\n * Drag-and-drop is powered by the project's custom Pointer DnD library\n * (no @dnd-kit dependency). Cards persist locally — wire `useCardChange`\n * to your backend to make moves stick across reloads.\n *\n * Column reordering is enabled: dragging a column header rearranges the\n * board. Local `columns` state mirrors the order so the change persists\n * across re-renders. Replace with a server PATCH for production.\n */\nexport default function DraggableColumnsBoard() {\n  const [cards, setCards] = useState<KanbanCardData[]>(initialCards);\n  const [columns, setColumns] = useState<KanbanColumnConfig[]>(boardConfig.columns);\n  const handleCardChange = useDraggableColumnsBoardCardChange();\n  const handleLoadMore = useDraggableColumnsBoardLoadMore();\n  return (\n    <div className=\"space-y-4\">\n      <div>\n        <h2 className=\"text-xl font-bold\">{boardConfig.title}</h2>\n        {boardConfig.subtitle && (\n          <p className=\"text-sm text-muted-foreground\">{boardConfig.subtitle}</p>\n        )}\n      </div>\n      <KanbanBoard\n        config={{ ...boardConfig, columns }}\n        cards={cards}\n        onCardsChange={setCards}\n        onColumnsChange={setColumns}\n        onCardChange={handleCardChange}\n        onLoadMore={handleLoadMore}\n      />\n    </div>\n  );\n}\n"
+    },
+    {
+      "path": "kanban/kanban-draggable-columns/config.ts",
+      "type": "registry:kanban-variant",
+      "content": "import type { KanbanBuilderConfig } from \"./types\";\n\n/** Static configuration. All fields are typed and validated. */\nexport const boardConfig: KanbanBuilderConfig = {\n  \"title\": \"Workflow — drag columns to reorder\",\n  \"subtitle\": \"Grab a column header to reorder it; cards remain draggable inside\",\n  \"layout\": \"board\",\n  \"columns\": [\n    {\n      \"id\": \"intake\",\n      \"title\": \"Intake\",\n      \"color\": \"muted\"\n    },\n    {\n      \"id\": \"design\",\n      \"title\": \"Design\",\n      \"color\": \"amber\"\n    },\n    {\n      \"id\": \"build\",\n      \"title\": \"Build\",\n      \"color\": \"blue\"\n    },\n    {\n      \"id\": \"review\",\n      \"title\": \"Review\",\n      \"color\": \"purple\"\n    },\n    {\n      \"id\": \"ship\",\n      \"title\": \"Ship\",\n      \"color\": \"emerald\"\n    }\n  ],\n  \"visibleFields\": [\n    \"priority\",\n    \"assignee\",\n    \"tags\"\n  ],\n  \"enableDnd\": true,\n  \"enableColumnDnd\": true,\n  \"enableAddCard\": true,\n  \"enableWipLimits\": false,\n  \"showColumnTotals\": true,\n  \"compactCards\": false\n};\n"
+    },
+    {
+      "path": "kanban/kanban-draggable-columns/data.ts",
+      "type": "registry:kanban-variant",
+      "content": "import type { KanbanCardData } from \"./types\";\n\n/** Initial card data. Swap with your own backend fetch when wiring up production. */\nexport const initialCards: KanbanCardData[] = [\n  {\n    \"id\": \"dc1\",\n    \"columnId\": \"intake\",\n    \"title\": \"Customer feedback — onboarding flow\",\n    \"priority\": \"high\",\n    \"assignee\": \"JD\",\n    \"tags\": [\n      \"ux\"\n    ]\n  },\n  {\n    \"id\": \"dc2\",\n    \"columnId\": \"intake\",\n    \"title\": \"Triage stale issues\",\n    \"priority\": \"low\",\n    \"assignee\": \"MR\"\n  },\n  {\n    \"id\": \"dc3\",\n    \"columnId\": \"design\",\n    \"title\": \"Pricing page v3 mocks\",\n    \"priority\": \"high\",\n    \"assignee\": \"AK\",\n    \"tags\": [\n      \"design\"\n    ]\n  },\n  {\n    \"id\": \"dc4\",\n    \"columnId\": \"build\",\n    \"title\": \"Realtime presence indicator\",\n    \"priority\": \"urgent\",\n    \"assignee\": \"TK\",\n    \"tags\": [\n      \"realtime\"\n    ]\n  },\n  {\n    \"id\": \"dc5\",\n    \"columnId\": \"review\",\n    \"title\": \"Stripe portal integration\",\n    \"priority\": \"medium\",\n    \"assignee\": \"MR\",\n    \"tags\": [\n      \"billing\"\n    ]\n  },\n  {\n    \"id\": \"dc6\",\n    \"columnId\": \"ship\",\n    \"title\": \"Vite 7 migration\",\n    \"priority\": \"medium\",\n    \"assignee\": \"AK\",\n    \"tags\": [\n      \"build\"\n    ]\n  }\n];\n"
+    },
+    {
+      "path": "kanban/kanban-draggable-columns/useCardChange.ts",
+      "type": "registry:kanban-variant",
+      "content": "import { useCallback } from \"react\";\nimport type { KanbanCardData } from \"./types\";\n\n/**\n * Called whenever a card is dropped into a new position via DnD.\n * Replace the body with your real backend call (e.g. fetch PATCH).\n */\nexport function useDraggableColumnsBoardCardChange() {\n  return useCallback((event: {\n    card: KanbanCardData;\n    fromColumnId: string;\n    toColumnId: string;\n    fromIndex: number;\n    toIndex: number;\n    cards: KanbanCardData[];\n  }) => {\n    console.log(\"[kanban] card moved:\", event);\n  }, []);\n}\n\nexport function useDraggableColumnsBoardLoadMore() {\n  return useCallback(async (event: { columnId: string; cursor?: string }) => {\n    console.log(\"[kanban] load more:\", event);\n  }, []);\n}\n"
+    },
+    {
+      "path": "kanban/kanban-draggable-columns/types.ts",
+      "type": "registry:kanban-variant",
+      "content": "/**\n * Re-export of the kanban engine types — imported by the generated component\n * so callers don't need to dig into the engine internals.\n */\nexport type {\n  KanbanBuilderConfig,\n  KanbanCardData,\n  KanbanColumnConfig,\n  KanbanCardField,\n} from \"../../components/kanban/types\";\n"
+    }
+  ]
+}

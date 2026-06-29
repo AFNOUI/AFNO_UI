@@ -1,36 +1,27 @@
 /**
- * Kanban Builder — templates + builder-only metadata.
+ * Kanban Builder — config-driven data model + templates.
  *
- * The runtime types (KanbanBuilderConfig, KanbanCardData, KanbanColumnConfig, …)
- * have moved to `app/kanban/types.ts` so they ship with the installed engine.
- * This file re-exports them for back-compat and adds the editor-only
- * `KanbanTemplate` shape + the `kanbanTemplates` catalog.
+ * Mirrors the shape used by table/form builders: a single `KanbanBuilderConfig`
+ * drives both the live preview and the generated code. Templates ship realistic
+ * sample data so each variant is meaningful out of the box.
  */
 
 export type {
-  KanbanComplexity,
-  KanbanCardField,
-  KanbanColumnConfig,
   KanbanCardData,
+  KanbanCardField,
+  KanbanComplexity,
+  KanbanColumnConfig,
   KanbanBuilderConfig,
-  KanbanCardChangeEvent,
   KanbanLoadMoreEvent,
+  KanbanCardChangeEvent,
 } from "@/kanban/types";
 
 import type {
-  KanbanComplexity,
-  KanbanCardField,
+  KanbanTemplate,
   KanbanCardData,
+  KanbanCardField,
   KanbanBuilderConfig,
 } from "@/kanban/types";
-
-export interface KanbanTemplate {
-  title: string;
-  description: string;
-  complexity: KanbanComplexity;
-  config: KanbanBuilderConfig;
-  cards: KanbanCardData[];
-}
 
 // ─── Templates ───────────────────────────────────────────────────────────────
 
@@ -545,6 +536,39 @@ const crmPipeline: KanbanTemplate = {
   })(),
 };
 
+const draggableColumns: KanbanTemplate = {
+  title: "Draggable Columns",
+  description: "Reorder columns by dragging their headers. Cards still drag as usual.",
+  complexity: "intermediate",
+  config: {
+    title: "Workflow — drag columns to reorder",
+    subtitle: "Grab a column header to reorder it; cards remain draggable inside",
+    layout: "board",
+    columns: [
+      { id: "intake", title: "Intake", color: "muted" },
+      { id: "design", title: "Design", color: "amber" },
+      { id: "build", title: "Build", color: "blue" },
+      { id: "review", title: "Review", color: "purple" },
+      { id: "ship", title: "Ship", color: "emerald" },
+    ],
+    visibleFields: ["priority", "assignee", "tags"],
+    enableDnd: true,
+    enableColumnDnd: true,
+    enableAddCard: true,
+    enableWipLimits: false,
+    showColumnTotals: true,
+    compactCards: false,
+  },
+  cards: [
+    { id: "dc1", columnId: "intake", title: "Customer feedback — onboarding flow", priority: "high", assignee: "JD", tags: ["ux"] },
+    { id: "dc2", columnId: "intake", title: "Triage stale issues", priority: "low", assignee: "MR" },
+    { id: "dc3", columnId: "design", title: "Pricing page v3 mocks", priority: "high", assignee: "AK", tags: ["design"] },
+    { id: "dc4", columnId: "build", title: "Realtime presence indicator", priority: "urgent", assignee: "TK", tags: ["realtime"] },
+    { id: "dc5", columnId: "review", title: "Stripe portal integration", priority: "medium", assignee: "MR", tags: ["billing"] },
+    { id: "dc6", columnId: "ship", title: "Vite 7 migration", priority: "medium", assignee: "AK", tags: ["build"] },
+  ],
+};
+
 export const kanbanTemplates: Record<string, KanbanTemplate> = {
   personalTasks,
   bugTracker,
@@ -558,7 +582,18 @@ export const kanbanTemplates: Record<string, KanbanTemplate> = {
   infiniteScrollDemo,
   hiringPipeline,
   crmPipeline,
+  draggableColumns,
 };
+
+// Renderer-system demo templates (lives in a .tsx file because the renderers
+// return JSX). Merged at the bottom so kanbanCardRendererTemplates.tsx can
+// import KanbanTemplate / CardRenderer from this module without a cycle.
+import { reusableCardRenderer, perCardRenderer, jsxCardDialog } from "./kanbanCardRendererTemplates";
+Object.assign(kanbanTemplates, {
+  reusableCardRenderer,
+  perCardRenderer,
+  jsxCardDialog,
+});
 
 export const defaultKanbanConfig: KanbanBuilderConfig = personalTasks.config;
 export const defaultKanbanCards: KanbanCardData[] = personalTasks.cards;

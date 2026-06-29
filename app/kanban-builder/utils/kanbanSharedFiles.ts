@@ -11,10 +11,10 @@
  */
 
 import {
-  SHARED_KANBAN_FILES as REGISTRY_SHARED_KANBAN_FILES,
-  getSharedKanbanFiles,
   kanbanInstall,
+  getSharedKanbanFiles,
   type SharedKanbanFile,
+  SHARED_KANBAN_FILES as REGISTRY_SHARED_KANBAN_FILES,
 } from "@/registry/kanbanRegistry";
 
 export type { SharedKanbanFile as SharedFile };

@@ -20,6 +20,8 @@ const TARGET_TO_SOURCE = {
   "components/kanban/KanbanCardDialog.tsx": "app/kanban/KanbanCardDialog.tsx",
   "components/kanban/KanbanAddCardDialog.tsx": "app/kanban/KanbanAddCardDialog.tsx",
   "components/kanban/types.ts": "app/kanban/types.ts",
+  "components/kanban/defaultCardRenderer.tsx": "app/kanban/defaultCardRenderer.tsx",
+  "components/kanban/attachRenderers.ts": "app/kanban/attachRenderers.ts",
   // Sandbox helpers ship to a sibling `utils/` folder (NOT under `components/tables/`).
   "utils/cellJsRunner.ts": "app/utils/cellJsRunner.ts",
   "utils/rowDialogTemplate.ts": "app/utils/rowDialogTemplate.ts",
@@ -39,6 +41,8 @@ function rewriteSharedFileImports(source) {
     .replace(/from\s+(["'])@\/kanban\/KanbanCard\1/g, "from $1./KanbanCard$1")
     .replace(/from\s+(["'])@\/kanban\/KanbanCardDialog\1/g, "from $1./KanbanCardDialog$1")
     .replace(/from\s+(["'])@\/kanban\/KanbanAddCardDialog\1/g, "from $1./KanbanAddCardDialog$1")
+    .replace(/from\s+(["'])@\/kanban\/defaultCardRenderer\1/g, "from $1./defaultCardRenderer$1")
+    .replace(/from\s+(["'])@\/kanban\/attachRenderers\1/g, "from $1./attachRenderers$1")
     .replace(/from\s+(["'])@\/kanban\/dnd\1/g, "from $1@/components/dnd$1")
     .replace(/from\s+(["'])@\/utils\/cellJsRunner\1/g, "from $1../../utils/cellJsRunner$1")
     .replace(/from\s+(["'])@\/utils\/rowDialogTemplate\1/g, "from $1../../utils/rowDialogTemplate$1");
