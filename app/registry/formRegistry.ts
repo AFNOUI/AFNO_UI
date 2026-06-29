@@ -4,10 +4,10 @@
  */
 
 import {
+  formStackInstall,
   generatedFieldFiles,
   generatedFixedFiles,
   formRegistryGeneratedAt,
-  formStackInstall,
   generatedActionFieldFiles,
   generatedActionFixedFiles,
   generatedTanstackFieldFiles,

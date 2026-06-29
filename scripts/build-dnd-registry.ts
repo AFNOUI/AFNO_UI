@@ -6,12 +6,13 @@
  *
  * Why this exists:
  *   The DnD lab variants (`/dnd/sortable-list`, `/dnd/trash`, …) install via
- *   `afnoui add dnd/<slug>` to `components/dnd-examples/<slug>/<Pascal>Demo.tsx`.
- *   Each snippet imports `../../../lib/dnd` (the primitives package) and
- *   `../../../lib/utils` (the `cn` helper). Without this registry, the snippet
+ *   `afnoui add dnd/<slug>` to the top-level `dnd/<slug>/<Pascal>Demo.tsx`
+ *   (Wave-7 — sibling of `components/`, mirroring forms/tables/kanban/charts).
+ *   Each snippet imports `../../components/dnd` (the primitives package) and
+ *   `../../lib/utils` (the `cn` helper). Without this registry, the snippet
  *   lands in the consumer's project pointing at files that don't exist.
  *
- *   The kanban registry already ships `lib/dnd/*` because the kanban board uses
+ *   The kanban registry already ships `components/dnd/*` because the kanban board uses
  *   the same primitives — but a user adopting `afnoui add dnd/<slug>` should
  *   NOT have to run `afnoui add kanban/<variant>` first. This registry makes
  *   the DnD subsystem its own first-class install target, with the same shape
@@ -24,7 +25,7 @@
  *     a second source of truth.
  *
  * The pipeline reads the same canonical files the kanban registry reads —
- * if both are regenerated in one build, the `lib/dnd/*` content is identical
+ * if both are regenerated in one build, the `components/dnd/*` content is identical
  * in both JSON files and the CLI writes the same bytes regardless of which
  * registry installed them first.
  */

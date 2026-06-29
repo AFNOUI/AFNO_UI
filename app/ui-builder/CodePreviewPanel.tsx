@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import { Copy, Check } from "lucide-react";
-import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
+import { useMemo, useState, type ComponentType } from "react";
+import { Light as SyntaxHighlighterRaw } from "react-syntax-highlighter";
 import { atomOneDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import tsx from "react-syntax-highlighter/dist/esm/languages/hljs/typescript";
 
@@ -13,6 +13,15 @@ import { generateCleanCode } from "@/ui-builder/utils/uiBuilderCodeGen";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+// react-syntax-highlighter ships React 18 typings; cast to a permissive
+// component type to stay compatible with the project's React 19 types.
+const SyntaxHighlighter = SyntaxHighlighterRaw as unknown as ComponentType<{
+  style?: unknown;
+  language?: string;
+  wrapLongLines?: boolean;
+  children?: React.ReactNode;
+  customStyle?: React.CSSProperties;
+}> & { registerLanguage: (name: string, lang: unknown) => void };
 SyntaxHighlighter.registerLanguage("tsx", tsx);
 
 interface CodePreviewPanelProps {

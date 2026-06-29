@@ -6,19 +6,19 @@ import { Check, ChevronDown, ChevronUp, Copy, FileJson } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export type VariantJsonConfigBlock = {
+  value: unknown;
   /** Uppercase section title (table: "Table config", "Sample data"). Omit for single-block form/kanban layout. */
   label?: string;
-  value: unknown;
   /** Tailwind max-height class on ScrollArea (default: sectioned `max-h-[320px]`, single `max-h-[400px]`). */
   maxHeightClass?: string;
   /** Toast description after copy (defaults by label / generic). */
@@ -26,13 +26,13 @@ export type VariantJsonConfigBlock = {
 };
 
 export type VariantJsonConfigPanelProps = {
-  blocks: VariantJsonConfigBlock[];
+  /** Controlled open state (optional). */
+  open?: boolean;
   /** Subtitle in header, e.g. `6 columns · 5 rows` */
   titleMeta?: string;
   className?: string;
-  /** Controlled open state (optional). */
-  open?: boolean;
   defaultOpen?: boolean;
+  blocks: VariantJsonConfigBlock[];
   onOpenChange?: (open: boolean) => void;
 };
 
@@ -67,8 +67,7 @@ export function VariantJsonConfigPanel({
   );
 
   const sectioned =
-    blocks.length > 1 ||
-    blocks.some((b) => (b.label?.trim() ?? "").length > 0);
+    blocks.length > 1 || blocks.some((b) => (b.label?.trim() ?? "").length > 0);
 
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   useEffect(() => {
@@ -140,66 +139,64 @@ export function VariantJsonConfigPanel({
         </CollapsibleTrigger>
         <CollapsibleContent id={`${contentId}-content`}>
           <CardContent className="space-y-3 px-4 pb-4 pt-0">
-            {sectioned ? (
-              blocks.map((block, i) => {
-                const key = `${i}-${block.label ?? "block"}`;
-                const maxH = block.maxHeightClass ?? "max-h-[320px]";
-                return (
-                  <div key={key}>
-                    <div className="mb-1.5 flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        {block.label?.trim() || `Section ${i + 1}`}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 gap-1 text-[10px]"
-                        onClick={() => void copyBlock(block, key)}
-                      >
-                        {copiedKey === key ? (
-                          <Check className="h-3 w-3 text-primary" />
-                        ) : (
-                          <Copy className="h-3 w-3" />
-                        )}
-                        {copiedKey === key ? "Copied" : "Copy"}
-                      </Button>
+            {sectioned
+              ? blocks.map((block, i) => {
+                  const key = `${i}-${block.label ?? "block"}`;
+                  const maxH = block.maxHeightClass ?? "max-h-[320px]";
+                  return (
+                    <div key={key}>
+                      <div className="mb-1.5 flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          {block.label?.trim() || `Section ${i + 1}`}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 gap-1 text-[10px]"
+                          onClick={() => void copyBlock(block, key)}
+                        >
+                          {copiedKey === key ? (
+                            <Check className="h-3 w-3 text-primary" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
+                          {copiedKey === key ? "Copied" : "Copy"}
+                        </Button>
+                      </div>
+                      <ScrollArea className={maxH}>
+                        <pre className="overflow-x-auto rounded-lg border border-border bg-muted/50 p-3 font-mono text-[11px] leading-relaxed">
+                          {stringifyJson(block.value)}
+                        </pre>
+                      </ScrollArea>
                     </div>
-                    <ScrollArea className={maxH}>
-                      <pre className="overflow-x-auto rounded-lg border border-border bg-muted/50 p-3 font-mono text-[11px] leading-relaxed">
-                        {stringifyJson(block.value)}
+                  );
+                })
+              : blocks[0] && (
+                  <div className="relative overflow-hidden rounded-lg border border-border bg-muted/50">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      className="absolute end-2 top-2 z-10 h-7 gap-1.5 px-2 text-xs shadow-sm"
+                      onClick={() => void copyBlock(blocks[0], "single")}
+                    >
+                      {copiedKey === "single" ? (
+                        <Check className="h-3.5 w-3.5 text-primary" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5" />
+                      )}
+                      {copiedKey === "single" ? "Copied" : "Copy"}
+                    </Button>
+                    <ScrollArea
+                      className={blocks[0].maxHeightClass ?? "max-h-[400px]"}
+                    >
+                      <pre className="min-w-max p-3 pe-24 pb-3 font-mono text-xs leading-relaxed whitespace-pre">
+                        {stringifyJson(blocks[0].value)}
                       </pre>
                     </ScrollArea>
                   </div>
-                );
-              })
-            ) : (
-              blocks[0] && (
-                <div className="relative overflow-hidden rounded-lg border border-border bg-muted/50">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    className="absolute end-2 top-2 z-10 h-7 gap-1.5 px-2 text-xs shadow-sm"
-                    onClick={() => void copyBlock(blocks[0], "single")}
-                  >
-                    {copiedKey === "single" ? (
-                      <Check className="h-3.5 w-3.5 text-primary" />
-                    ) : (
-                      <Copy className="h-3.5 w-3.5" />
-                    )}
-                    {copiedKey === "single" ? "Copied" : "Copy"}
-                  </Button>
-                  <ScrollArea
-                    className={blocks[0].maxHeightClass ?? "max-h-[400px]"}
-                  >
-                    <pre className="min-w-max p-3 pe-24 pb-3 font-mono text-xs leading-relaxed whitespace-pre">
-                      {stringifyJson(blocks[0].value)}
-                    </pre>
-                  </ScrollArea>
-                </div>
-              )
-            )}
+                )}
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
