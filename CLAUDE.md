@@ -30,6 +30,9 @@ shipped to consumer projects via `afnoui add`.
 
 ## Deep references
 
+- `.ai-brain/ARCHITECTURE_OVERVIEW.md` — source-verified walkthrough of the
+  source→registry→CLI→consumer pipeline (the three layers, injection passes,
+  topology mirror, file:symbol anchors). Read this to get oriented fast.
 - `.ai-brain/AI_AGENT_RULES.md` — every rule, numbered (R-00 — R-52, F-01 — F-16).
 - `.ai-brain/CLI_REFERENCE.md` — exhaustive CLI docs.
 - `.ai-brain/STRUCTURAL_MAP.md` — the directory map.

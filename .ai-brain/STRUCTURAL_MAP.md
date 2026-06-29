@@ -19,6 +19,7 @@ uilab/
 │   ├── CORE_IDENTITY.md         ← Who we are, what we ship.
 │   ├── STRUCTURAL_MAP.md        ← This file.
 │   ├── DATA_AND_LOGIC_FLOW.md   ← Source → registry → CLI → consumer pipeline.
+│   ├── ARCHITECTURE_OVERVIEW.md ← Synthesis: the 3 layers + injection passes, with file:symbol anchors.
 │   ├── THE_DECISION_LOG.md      ← Decisions + forbidden changes + past mistakes.
 │   ├── CURRENT_SPRINT.md        ← Wave status, roadmap, quality gates.
 │   ├── AI_AGENT_RULES.md        ← Numbered rules (R-00…R-52, F-01…F-16). Cite by number.
@@ -49,6 +50,33 @@ editing `AI_AGENT_RULES.md` ONLY. See `THE_DECISION_LOG.md § 1.16`.
 ## 2. `app/` — the website + builders
 
 Every directory listed has a single responsibility; nothing else may move into it without an entry being added here.
+
+### 2.0 Directory-role conventions (SHIPPED vs BUILDER)
+
+The single most important rule for `app/`: **a file's directory decides whether the
+CLI ships it to consumers.** When adding a file, put it where its role dictates.
+
+| Role | Lives in | Ships to consumer? | Notes |
+|---|---|---|---|
+| **Installable engine** (runtime the user gets) | `app/tables/**`, `app/kanban/**`, `app/forms/{rhf,tanstack,action}/**`, `app/components/ui/**`, `app/components/ui/dnd/**` | ✅ via a registry generator | Engine renderers/hooks/services colocate here (e.g. `app/tables/defaultCellRenderer.tsx`, `app/tables/useRowApiActions.hook.ts`, `app/kanban/defaultCardRenderer.tsx`). |
+| **Sandbox utilities** (shipped, neutral) | `app/utils/*` | ✅ to consumer `utils/<file>` | `cellJsRunner.ts`, `rowDialogTemplate.ts`, etc. (DECISION 1.11). |
+| **Builder UI + codegen** (website only) | `app/{table,kanban,form,ui}-builder/**` | ❌ never shipped | The visual builders + pure `(config) => string` emitters. |
+| **Sample data / templates** | `app/<domain>-builder/data/*.ts(x)` | ❌ | e.g. `tableBuilderTemplates.ts`, `kanbanCardRendererTemplates.tsx` (builder-only demo renderers — NOT in `app/kanban/`). |
+| **Hooks** | `app/hooks/*` (shared) or colocated `useX.ts` / `*.hook.ts` next to the engine that owns them | engine hooks ship; builder hooks don't | `app/table-builder/hooks/useTablePreview.ts` is the one engine hook still read out of a builder dir (historical). |
+| **Lab demos** | `app/components/lab/**` | ❌ | Per-primitive demo + install snippet (website only). |
+| **Registry facades/generated** | `app/registry/*` | indirectly | `*Generated.ts` is AUTO-GENERATED; the bare-name facade adapts its shape. Never hand-edit a `*Generated.ts`. |
+
+**Historical exception (tables):** the table *engine entry* `TablePreview.tsx` + its
+`hooks/useTablePreview.ts` still live under `app/table-builder/` and are read by
+`scripts/build-tables-registry.ts`; the rest of the table engine (renderers,
+services, row-action hook, types) lives in `app/tables/`. Kanban is fully
+consolidated under `app/kanban/`. New table engine files go in `app/tables/`.
+
+**Anti-drift rules:** never use Vite `?raw` imports (`@/x?raw`) — Next.js has no
+loader for them; the build scripts read source via Node `fs` and embed it. Never
+hand-edit `app/registry/*Generated.ts`. When you add a shipped engine file, add it
+to the matching `scripts/build-*-registry.ts` source list **and** the paired
+`verify-*-registry-sync.mjs` `TARGET_TO_SOURCE` map (§4), then regenerate.
 
 ### 2.1 Routing layer (Next App Router)
 ```
@@ -349,7 +377,7 @@ Schema invariants (validated in `afnoui-cli/src/lib/helpers/registryShape.ts`):
 | Variant `files[].path` | logical relative path inside the variant alias root (e.g. `kanban/<slug>/Board.tsx`) | every variant JSON |
 | Variant `files[].content` | full TSX/TS source with imports **already rewritten to relative** (CLI skips its alias-rewriter for charts/tables/kanban variants — see THE_DECISION_LOG 1.12) | charts + tables + kanban variants |
 
-The CLI never imports these JSONs from disk in the consumer’s project — it always fetches them from `getRegistryUrl()` (default `http://localhost:3000/registry` in dev; production CDN URL is commented out in `afnoui-cli/src/lib/constants.ts`).
+The CLI never imports these JSONs from disk in the consumer’s project — it always fetches them from `getRegistryUrl()` (`afnoui-cli/src/lib/constants.ts`): `AFNOUI_REGISTRY_URL` override wins, else `http://localhost:3000/registry` when `NODE_ENV=development`, else the production CDN `https://afnoui.aniketrouniyar.com.np/registry`.
 
 ---
 
