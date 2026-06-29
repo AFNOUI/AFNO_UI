@@ -11,7 +11,7 @@
  * `public/registry/tables.json` and are installed separately by the CLI.
  */
 
-import type { TableBuilderConfig } from "@/tables/types/types";
+import type { TableBuilderConfig } from "@/tables/types";
 
 import { generateAllFiles, type DataMode } from "./tableCodeGenerator";
 

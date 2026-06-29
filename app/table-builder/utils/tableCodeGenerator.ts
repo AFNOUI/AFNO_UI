@@ -10,12 +10,43 @@
  * • The hook also exposes feature-aware mutators (updateCell, deleteRows,
  *   reorderRows) — only emitted when the matching feature is enabled.
  * • Fixed shared engine files (TablePreview / types / useTablePreview /
- *   ui/table / components/dnd) are listed once. `@tanstack/react-virtual` ships when
- *   the engine is installed (TablePreview imports it whenever virtualization is used).
+ *   ui/table) are listed once. Optional engine deps (@dnd-kit/*,
+ *   @tanstack/react-virtual) are only listed when the user actually needs
+ *   them.
  */
 
-import type { TableBuilderConfig, TableColumnConfig } from "@/tables/types/types";
-import { tableInstall } from "@/registry/tableRegistry";
+import type { TableBuilderConfig, TableColumnConfig } from "@/tables/types";
+
+/**
+ * Source strings used to emit a real `renderers.tsx` file alongside
+ * `tableConfig.ts`. Functions can't be JSON-serialised so the generator
+ * reads these strings to reproduce them verbatim.
+ */
+export interface TableRendererSources {
+  /** Import lines emitted at the top of the generated renderers.tsx file. */
+  imports?: string;
+  /** Body of the single reusable renderer — a CellRenderer<Row> expression. */
+  reusable?: string;
+  /** Map of columnId → CellRenderer<Row> expression (per-column overrides). */
+  perColumn?: Record<string, string>;
+  /**
+   * Body of `rowClickAction.renderDialog` — a `RowDialogRenderer<Row>`
+   * expression. When present, `tableConfig.ts` wires it onto
+   * `rowClickAction.renderDialog`. Falls back to `dialogTemplate` / default
+   * field-grid when omitted.
+   */
+  dialog?: string;
+  /**
+   * Body of `renderExpandedRow` — an `ExpandedRowRenderer<Row>` expression.
+   * Falls back to `expandableLayout` switch when omitted.
+   */
+  expandedRow?: string;
+  /**
+   * Body of `renderPagination` — a `PaginationRenderer` expression.
+   * Falls back to <DefaultPaginationBar /> (paginationLayout switch).
+   */
+  pagination?: string;
+}
 
 export type DataMode = "static" | "api";
 
@@ -64,51 +95,24 @@ function pickRowType(cols: TableColumnConfig[]): string {
     })
     .join("\n");
 
+  // `extends TableRow` gives Row the `Record<string, unknown>` index signature, so
+  // `Row[]` stays assignable to TablePreview's `data: Record<string, unknown>[]` prop
+  // in the consumer project (a bare interface has no index signature — TS2322).
   return `export interface Row extends TableRow {
+  id: string;
 ${fieldLines}${cols.some(c => c.type === "avatar-image") ? "\n  avatarUrl?: string;" : ""}
 }
 `;
 }
 
-/**
- * Required (non-optional) `enable*` boolean keys on `TableBuilderConfig`. They
- * MUST always appear in the generated `tableConfig` — even when `false` —
- * otherwise `satisfies TableBuilderConfig` fails on the consumer side with
- * "Property 'enableX' is missing in type ...".
- *
- * Keep this list in sync with `app/tables/types/types.ts`.
- */
-const REQUIRED_ENABLE_KEYS = [
-  "enableSearch",
-  "enablePagination",
-  "enableRowSelection",
-  "enableDnD",
-  "enableColumnVisibility",
-  "enableExport",
-  "enableStriped",
-  "enableHover",
-  "enableBordered",
-  "enableStickyHeader",
-  "enableExpandableRows",
-  "enableInlineEdit",
-  "enableBulkActions",
-  "enableColumnResize",
-  "enableMultiSort",
-  "enableColumnFilters",
-  "enableRowGrouping",
-  "enableAggregation",
-  "enableFooter",
-] as const satisfies ReadonlyArray<keyof TableBuilderConfig>;
-
-/** Optional boolean keys — only emitted when `true` to keep configs minimal. */
-const OPTIONAL_ENABLE_KEYS = [
-  "enableNestedHeaders",
-  "enablePinnedColumns",
-  "enableVirtualization",
-] as const satisfies ReadonlyArray<keyof TableBuilderConfig>;
-
 function cleanedConfig(config: TableBuilderConfig): Partial<TableBuilderConfig> {
   const cols = config.columns.filter(c => c.visible);
+  // Emit EVERY boolean `enable*` flag (both true AND false). They are all REQUIRED
+  // on TableBuilderConfig, so the generated `… satisfies TableBuilderConfig` literal
+  // must carry them — omitting the false ones makes the installed `tableConfig.ts`
+  // fail to type-check in the consumer project.
+  const enableKeys = (Object.keys(config) as (keyof TableBuilderConfig)[])
+    .filter((k) => k.startsWith("enable") && typeof config[k] === "boolean");
 
   const out: Record<string, unknown> = {
     title: config.title,
@@ -133,11 +137,13 @@ function cleanedConfig(config: TableBuilderConfig): Partial<TableBuilderConfig> 
   if (config.showFirstLastButtons === false) out.showFirstLastButtons = false;
   if (config.virtualRowHeight) out.virtualRowHeight = config.virtualRowHeight;
   if (config.virtualMaxHeight) out.virtualMaxHeight = config.virtualMaxHeight;
-  // Always emit every required boolean — see REQUIRED_ENABLE_KEYS above.
-  for (const k of REQUIRED_ENABLE_KEYS) out[k] = config[k] === true;
-  for (const k of OPTIONAL_ENABLE_KEYS) if (config[k]) out[k] = true;
+  for (const k of enableKeys) out[k] = config[k];
   out.columns = cols;
   if (config.columnGroups?.length) out.columnGroups = config.columnGroups;
+  if (config.rowClickAction && config.rowClickAction.type !== "none") {
+    out.rowClickAction = config.rowClickAction;
+  }
+  if (config.stickyMaxHeight) out.stickyMaxHeight = config.stickyMaxHeight;
   return out as Partial<TableBuilderConfig>;
 }
 
@@ -635,21 +641,13 @@ ${handlerDocs}
  *
  * The hook also exposes a single \`onCellInteract(row, key, oldValue, newValue)\`
  * dispatcher you can pass straight to <TablePreview onCellInteract={...} />
- * — its signature matches the engine prop exactly and routes each cell
- * change to the matching typed handler above.
+ * — it routes each cell change to the matching typed handler above.
  */
 export interface UseRowInteractions<TRow extends { id: string }> {
 ${cols.map(c => `  ${handlerName(c)}: (row: TRow, oldValue: ${valueTsType(c)}, newValue: ${valueTsType(c)}) => Promise<void>;`).join("\n")}
-  /**
-   * Engine-compatible dispatcher. Signature matches \`TablePreviewProps['onCellInteract']\`
-   * positional argument order: (row, key, oldValue, newValue).
-   */
-  onCellInteract: (
-    row: Record<string, unknown>,
-    key: string,
-    oldValue: unknown,
-    newValue: unknown,
-  ) => Promise<void> | void;
+  // Wide signature so the dispatcher passes straight to <TablePreview onCellInteract={...}>
+  // (the engine invokes it with generic rows). Per-column handlers above stay typed.
+  onCellInteract: (row: Record<string, unknown>, key: string, oldValue: unknown, newValue: unknown) => Promise<void> | void;
 }
 
 export function useRowInteractions<TRow extends { id: string } = Row>(): UseRowInteractions<TRow> {
@@ -686,7 +684,163 @@ ${dispatchCases}
 
 // ───────────────────────────── Public API ─────────────────────────────
 
-export function generateAllFiles(config: TableBuilderConfig, dataMode: DataMode): GeneratedFile[] {
+function emitRenderersFile(sources: TableRendererSources): string {
+  const importsBlock = sources.imports
+    ? sources.imports + "\n"
+    : `import type { CellRenderer } from "@/components/tables/types";\nimport type { Row } from "./tableConfig";\n`;
+
+  const parts: string[] = [importsBlock];
+
+  if (sources.reusable) {
+    parts.push(`/**
+ * Case 1 — single reusable cell renderer.
+ * Every cell renders through this body unless its column defines its
+ * own \`renderCell\`.
+ */
+export const renderCell: CellRenderer<Row> = ${sources.reusable};
+`);
+  }
+
+  if (sources.perColumn && Object.keys(sources.perColumn).length > 0) {
+    const entries = Object.entries(sources.perColumn)
+      .map(([id, body]) => `  ${JSON.stringify(id)}: ${body},`)
+      .join("\n");
+    parts.push(`/**
+ * Case 2 — per-column cell renderers keyed by column id.
+ * \`tableConfig.ts\` attaches these onto each column's \`renderCell\` field
+ * during load — fully type-safe, no runtime cast needed.
+ */
+export const cellRenderers: Record<string, CellRenderer<Row>> = {
+${entries}
+};
+`);
+  }
+
+  if (sources.dialog) {
+    parts.push(`/**
+ * Typed JSX renderer for the row-detail dialog. Wired onto
+ * \`tableConfig.rowClickAction.renderDialog\`.
+ *
+ * Resolution order at render time:
+ *   rowClickAction.renderDialog → rowClickAction.dialogTemplate → default field-grid
+ */
+import type { RowDialogRenderer } from "@/components/tables/types";
+export const renderRowDialog: RowDialogRenderer<Row> = ${sources.dialog};
+`);
+  }
+
+  if (sources.expandedRow) {
+    parts.push(`/**
+ * Typed JSX renderer for the expandable row body. Wired onto
+ * \`tableConfig.renderExpandedRow\`.
+ *
+ * Resolution order at render time:
+ *   config.renderExpandedRow → expandableLayout switch → "details" layout
+ */
+import type { ExpandedRowRenderer } from "@/components/tables/types";
+export const renderExpandedRow: ExpandedRowRenderer<Row> = ${sources.expandedRow};
+`);
+  }
+
+  if (sources.pagination) {
+    parts.push(`/**
+ * Typed JSX renderer for the pagination bar. Wired onto
+ * \`tableConfig.renderPagination\`.
+ *
+ * Resolution order at render time:
+ *   config.renderPagination → <DefaultPaginationBar /> (paginationLayout switch)
+ */
+import type { PaginationRenderer } from "@/components/tables/types";
+export const renderPagination: PaginationRenderer = ${sources.pagination};
+`);
+  }
+
+  return parts.join("\n");
+}
+
+function emitTableConfigFile(
+  cleaned: Partial<TableBuilderConfig>,
+  rowType: string,
+  rendererSources?: TableRendererSources,
+): string {
+  const hasReusable = !!rendererSources?.reusable;
+  const hasPerColumn = !!rendererSources?.perColumn && Object.keys(rendererSources.perColumn).length > 0;
+  const hasDialog = !!rendererSources?.dialog;
+  const hasExpanded = !!rendererSources?.expandedRow;
+  const hasPagination = !!rendererSources?.pagination;
+  const anyRenderer = hasReusable || hasPerColumn || hasDialog || hasExpanded || hasPagination;
+
+  if (!anyRenderer) {
+    return `import type { TableBuilderConfig, TableRow } from "./types";
+
+${rowType}
+
+export const tableConfig: TableBuilderConfig = ${json(cleaned)} as const satisfies TableBuilderConfig;
+`;
+  }
+
+  const importNames = [
+    hasReusable && "renderCell",
+    hasPerColumn && "cellRenderers",
+    hasDialog && "renderRowDialog",
+    hasExpanded && "renderExpandedRow",
+    hasPagination && "renderPagination",
+  ].filter(Boolean).join(", ");
+  const importLine = `import { ${importNames} } from "./renderers";`;
+
+  const injections: string[] = [];
+  if (hasReusable) injections.push("  renderCell,");
+  if (hasExpanded) injections.push("  renderExpandedRow,");
+  if (hasPagination) injections.push("  renderPagination,");
+  const literalBase = json(cleaned);
+  const literal = injections.length
+    ? literalBase.replace(/\n}$/, ",\n" + injections.join("\n") + "\n}")
+    : literalBase;
+
+  const dialogAttach = hasDialog ? `
+
+/**
+ * Attach the typed JSX dialog renderer onto rowClickAction.
+ *
+ * Resolution order at render time (built into the engine):
+ *   rowClickAction.renderDialog → rowClickAction.dialogTemplate → default field-grid
+ */
+tableConfig.rowClickAction = {
+  ...(tableConfig.rowClickAction ?? { type: "dialog" }),
+  renderDialog: renderRowDialog,
+};` : "";
+
+  const attachBlock = hasPerColumn
+    ? `
+
+/**
+ * Attach per-column cell renderers from ./renderers.tsx via a single helper
+ * call. Resolution order applied by the engine:
+ *   column.renderCell  ->  config.renderCell  ->  built-in default
+ */
+tableConfig.columns = attachCellRenderers(tableConfig.columns, cellRenderers);`
+    : "";
+
+  const helperImport = hasPerColumn
+    ? `\nimport { attachCellRenderers } from "@/components/tables/attachRenderers";`
+    : "";
+  return `import type { TableBuilderConfig, TableRow } from "./types";
+${importLine}${helperImport}
+
+${rowType}
+
+/**
+ * Strongly-typed table config.${hasReusable ? " The single reusable `renderCell` lives in ./renderers.tsx." : ""}
+ */
+export const tableConfig: TableBuilderConfig = ${literal};${attachBlock}${dialogAttach}
+`;
+}
+
+export function generateAllFiles(
+  config: TableBuilderConfig,
+  dataMode: DataMode,
+  rendererSources?: TableRendererSources,
+): GeneratedFile[] {
   const cleaned = cleanedConfig(config);
   const rowType = pickRowType(config.columns);
 
@@ -695,20 +849,34 @@ export function generateAllFiles(config: TableBuilderConfig, dataMode: DataMode)
   files.push({
     name: "tableConfig.ts",
     path: "src/components/tables/tableConfig.ts",
-    description: "Strongly-typed config object + Row interface for this table.",
+    description: rendererSources
+      ? "Strongly-typed config — wires in renderers from ./renderers.tsx."
+      : "Strongly-typed config object + Row interface for this table.",
     isFixed: false,
     language: "ts",
-    code: `import type { TableBuilderConfig, TableRow } from "./types";
-
-${rowType}
-
-export const tableConfig: TableBuilderConfig = ${json(cleaned)} as const satisfies TableBuilderConfig;
-`,
+    code: emitTableConfigFile(cleaned, rowType, rendererSources),
   });
+
+  if (
+    rendererSources &&
+    (rendererSources.reusable
+      || (rendererSources.perColumn && Object.keys(rendererSources.perColumn).length > 0)
+      || rendererSources.dialog
+      || rendererSources.expandedRow
+      || rendererSources.pagination)
+  ) {
+    files.push({
+      name: "renderers.tsx",
+      path: "src/components/tables/renderers.tsx",
+      description: "Typed JSX renderers (cell / dialog / expanded row) wired into tableConfig.ts.",
+      isFixed: false,
+      language: "tsx",
+      code: emitRenderersFile(rendererSources),
+    });
+  }
 
   files.push(generateDataTablePage(config, dataMode));
 
-  // Only emit the API hook when at least one feature is set to "api".
   const anyApi = (
     (resolveSource(config, "search") === "api" && config.enableSearch) ||
     (resolveSource(config, "filter") === "api" && config.enableColumnFilters) ||
@@ -719,14 +887,12 @@ export const tableConfig: TableBuilderConfig = ${json(cleaned)} as const satisfi
     files.push(generateHook(config));
   }
 
-  // Always emit a row-interactions hook when interactive columns exist.
-  // Independent of API/static mode — even client-only tables need a place
-  // to react to dropdown/switch/radio/checkbox/rating value changes.
   const interactionsHook = generateRowInteractionsHook(config);
   if (interactionsHook) files.push(interactionsHook);
 
   return files;
 }
+
 
 export interface DependencyReport {
   npmInstall: string;
@@ -734,60 +900,34 @@ export interface DependencyReport {
   notes: string[];
 }
 
-/**
- * Transitive Radix peer-deps required by the shadcn UI components that the
- * table engine uses. Listed as informational `npm install` hints in the export
- * tab — the CLI itself installs them indirectly via `installComponent` for each
- * UI primitive in `tableInstall.uiComponents`.
- */
-const TABLE_RADIX_PEERS = [
-  "@radix-ui/react-checkbox",
-  "@radix-ui/react-switch",
-  "@radix-ui/react-dropdown-menu",
-  "@radix-ui/react-progress",
-  "@radix-ui/react-radio-group",
-  "@radix-ui/react-select",
-  "@radix-ui/react-tabs",
-  "@radix-ui/react-tooltip",
-  "@radix-ui/react-avatar",
-  "@radix-ui/react-scroll-area",
-  "@radix-ui/react-collapsible",
-  "@radix-ui/react-dialog",
-] as const;
-
 export function getDependencyReport(config: TableBuilderConfig): DependencyReport {
-  // Single source of truth: read engine deps from the generated registry
-  // (`tableInstall` is produced by `scripts/build-tables-registry.ts` and is
-  // also what the CLI consumes on `afnoui add tables/<variant>`). This means
-  // adding a new engine dep in one place propagates to:
-  //   1) the CLI install
-  //   2) this in-app export panel command
-  //   3) the registry JSON shipped to consumers.
-  const deps = new Set<string>(tableInstall.npmDependencies);
-  for (const peer of TABLE_RADIX_PEERS) deps.add(peer);
-
-  const dev = new Set<string>(tableInstall.npmDevDependencies);
-  // Always include the universal dev deps. Kept here (not in the registry)
-  // because they're a property of every TS+React project, not the table engine.
-  dev.add("typescript");
-  dev.add("@types/react");
-
+  const deps = new Set<string>([
+    "react",
+    "lucide-react",
+    "clsx",
+    "tailwind-merge",
+    // The shared TablePreview engine imports `useVirtualizer` unconditionally, so
+    // the virtualization peer is always required — not gated on enableVirtualization.
+    "@tanstack/react-virtual",
+  ]);
+  const dev = new Set<string>(["typescript", "@types/react"]);
   const notes: string[] = [];
+
   if (config.enableDnD) {
-    notes.push(
-      "Row drag-and-drop uses the bundled custom Pointer DnD library (components/dnd) — zero external deps.",
-    );
+    notes.push("Row drag-and-drop uses the bundled custom Pointer DnD library (components/dnd) — zero external deps.");
   }
   if (config.enableVirtualization) {
-    notes.push("Virtualization uses @tanstack/react-virtual.");
+    notes.push("Virtualization uses @tanstack/react-virtual (already a required engine peer).");
   }
-  // Surface any optional peers from the registry so the export tab always
-  // matches what the CLI would install.
-  const optionalPeers = [
-    ...(tableInstall.optionalPeers?.enableDnD ?? []),
-    ...(tableInstall.optionalPeers?.enableVirtualization ?? []),
-  ];
-  for (const peer of optionalPeers) deps.add(peer);
+  // afnoui/radix primitives the engine touches
+  [
+    "@radix-ui/react-checkbox", "@radix-ui/react-switch",
+    "@radix-ui/react-dropdown-menu", "@radix-ui/react-progress",
+    "@radix-ui/react-radio-group", "@radix-ui/react-select",
+    "@radix-ui/react-tabs", "@radix-ui/react-tooltip",
+    "@radix-ui/react-avatar", "@radix-ui/react-scroll-area",
+    "class-variance-authority",
+  ].forEach(d => deps.add(d));
 
   return {
     npmInstall: `npm install ${Array.from(deps).sort().join(" ")}`,

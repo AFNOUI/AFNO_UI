@@ -7,7 +7,6 @@ import {
   Sparkles,
   Settings2,
   ListOrdered,
-  PanelTopOpen,
   MousePointerClick,
 } from "lucide-react";
 
@@ -37,12 +36,9 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import {
-  ExpandableLayout,
   PaginationLayout,
   TableBuilderConfig,
   TableRowClickConfig,
-  ExpandableIconStyle,
-  ExpandableIconPosition,
 } from "@/table-builder/data/tableBuilderTemplates";
 import { ApiConfigPanel } from "@/table-builder/ApiConfigPanel";
 import { ColumnGroupsEditor } from "@/table-builder/ColumnGroupsEditor";
@@ -354,127 +350,7 @@ export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
             </AccordionItem>
           )}
 
-          {config.enableExpandableRows && (
-            <AccordionItem value="expandable" className="border-border">
-              <AccordionTrigger className="py-2 text-xs font-semibold hover:no-underline">
-                <span className="flex items-center gap-1.5">
-                  <PanelTopOpen className="h-3 w-3" /> Expandable Row UI
-                </span>
-              </AccordionTrigger>
-              <AccordionContent className="pb-2 space-y-2">
-                <div className="space-y-1.5">
-                  <Label className="text-[11px] text-muted-foreground">
-                    Layout
-                  </Label>
-                  <Select
-                    value={config.expandableLayout || "details"}
-                    onValueChange={(v) =>
-                      onChange({
-                        ...config,
-                        expandableLayout: v as ExpandableLayout,
-                      })
-                    }
-                  >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="details" className="text-xs">
-                        Details (key/value list)
-                      </SelectItem>
-                      <SelectItem value="card" className="text-xs">
-                        Card
-                      </SelectItem>
-                      <SelectItem value="grid" className="text-xs">
-                        Grid (KPI tiles)
-                      </SelectItem>
-                      <SelectItem value="tabs" className="text-xs">
-                        Tabs (Details + JSON)
-                      </SelectItem>
-                      <SelectItem value="timeline" className="text-xs">
-                        Timeline (milestones)
-                      </SelectItem>
-                      <SelectItem value="gallery" className="text-xs">
-                        Gallery (assets)
-                      </SelectItem>
-                      <SelectItem value="stats" className="text-xs">
-                        Stats (KPI cards)
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px] text-muted-foreground">
-                      Icon
-                    </Label>
-                    <Select
-                      value={config.expandableIconStyle || "chevron"}
-                      onValueChange={(v) =>
-                        onChange({
-                          ...config,
-                          expandableIconStyle: v as ExpandableIconStyle,
-                        })
-                      }
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="chevron" className="text-xs">
-                          Chevron ›
-                        </SelectItem>
-                        <SelectItem value="caret" className="text-xs">
-                          Caret ›
-                        </SelectItem>
-                        <SelectItem value="plus" className="text-xs">
-                          Plus / Minus
-                        </SelectItem>
-                        <SelectItem value="arrow" className="text-xs">
-                          Arrow →
-                        </SelectItem>
-                        <SelectItem value="eye" className="text-xs">
-                          Eye
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px] text-muted-foreground">
-                      Position
-                    </Label>
-                    <Select
-                      value={config.expandableIconPosition || "first"}
-                      onValueChange={(v) =>
-                        onChange({
-                          ...config,
-                          expandableIconPosition: v as ExpandableIconPosition,
-                        })
-                      }
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="first" className="text-xs">
-                          First
-                        </SelectItem>
-                        <SelectItem value="before-checkbox" className="text-xs">
-                          Before checkbox
-                        </SelectItem>
-                        <SelectItem value="after-checkbox" className="text-xs">
-                          After checkbox
-                        </SelectItem>
-                        <SelectItem value="last" className="text-xs">
-                          Last
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          )}
+          {/* Expandable Row UI is configured per-variant via JSON (config.expandableLayout, expandableIconStyle, expandableIconPosition) — no hardcoded preset UI here. Engine falls back to "details" + "chevron" + "first" when a variant omits them. */}
 
           {config.enablePagination && (
             <AccordionItem value="pagination" className="border-border">
@@ -606,16 +482,18 @@ export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
                   Action
                 </Label>
                 <Select
-                  value={
-                    config.rowClickAction?.type === "dialog"
-                      ? "none"
-                      : (config.rowClickAction?.type ?? "none")
-                  }
+                  value={config.rowClickAction?.type ?? "none"}
                   onValueChange={(v) => {
                     const next: TableRowClickConfig = {
-                      code: config.rowClickAction?.code,
                       type: v as TableRowClickConfig["type"],
                       urlTemplate: config.rowClickAction?.urlTemplate,
+                      code: config.rowClickAction?.code,
+                      dialogTemplate: config.rowClickAction?.dialogTemplate,
+                      dialogJs: config.rowClickAction?.dialogJs,
+                      dialogTitle: config.rowClickAction?.dialogTitle,
+                      dialogDescription:
+                        config.rowClickAction?.dialogDescription,
+                      dialogWidthClass: config.rowClickAction?.dialogWidthClass,
                     };
                     onChange({ ...config, rowClickAction: next });
                   }}
@@ -626,6 +504,9 @@ export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
                   <SelectContent>
                     <SelectItem value="none" className="text-xs">
                       None
+                    </SelectItem>
+                    <SelectItem value="dialog" className="text-xs">
+                      Dialog (row details)
                     </SelectItem>
                     <SelectItem value="route-same" className="text-xs">
                       Route — same tab
@@ -651,6 +532,7 @@ export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
                       onChange({
                         ...config,
                         rowClickAction: {
+                          ...config.rowClickAction!,
                           type: config.rowClickAction!.type,
                           urlTemplate: e.target.value,
                         },
@@ -665,7 +547,18 @@ export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
                   </p>
                 </div>
               )}
-              {false && config.rowClickAction?.type === "dialog" && null}
+              {config.rowClickAction?.type === "dialog" && (
+                <p className="text-[10px] text-muted-foreground/80 leading-snug rounded-md border border-border/60 p-2 bg-muted/20">
+                  Dialog content (title, description, width, HTML template,
+                  post-render JS) is configured per-variant via JSON on{" "}
+                  <code>
+                    rowClickAction.dialogTitle / dialogDescription /
+                    dialogWidthClass / dialogTemplate / dialogJs
+                  </code>
+                  . When omitted, the engine renders a default field-grid dialog
+                  with row values.
+                </p>
+              )}
               {config.rowClickAction?.type === "js" && (
                 <div className="space-y-1.5">
                   <Label className="text-[11px] text-muted-foreground">
@@ -677,6 +570,7 @@ export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
                       onChange({
                         ...config,
                         rowClickAction: {
+                          ...config.rowClickAction!,
                           type: "js",
                           code: e.target.value,
                           urlTemplate: config.rowClickAction?.urlTemplate,

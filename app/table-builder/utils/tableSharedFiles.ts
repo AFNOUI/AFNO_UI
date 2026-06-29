@@ -19,5 +19,6 @@
 export {
   SHARED_TABLE_FILES,
   getSharedTableFiles,
+  getOptionalEngineFiles
 } from "@/registry/tableRegistry";
 export type { SharedTableFile as SharedFile } from "@/registry/tableRegistry";

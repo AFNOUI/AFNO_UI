@@ -114,11 +114,11 @@ const TABLE_SHARED_SOURCES: TableSharedSource[] = [
       "All client-side state + derivations (search/sort/filter/group/select/expand/resize).",
   },
   {
-    sourcePath: "app/tables/types/types.ts",
+    sourcePath: "app/tables/types.ts",
     targetPath: "components/tables/types.ts",
     name: "types.ts",
     language: "typescript",
-    description: "TableBuilderConfig + TableColumnConfig + AggregationType.",
+    description: "TableBuilderConfig + TableColumnConfig + AggregationType + renderer/API contracts.",
   },
   {
     sourcePath: "app/utils/cellJsRunner.ts",
@@ -150,6 +150,63 @@ const TABLE_SHARED_SOURCES: TableSharedSource[] = [
     language: "tsx",
     description:
       "Collapsible JSON config viewer rendered next to TablePreview (shared with form/kanban builder previews).",
+  },
+  // ─── Engine renderers (TablePreview imports these unconditionally) ──────────
+  {
+    sourcePath: "app/tables/defaultCellRenderer.tsx",
+    targetPath: "components/tables/defaultCellRenderer.tsx",
+    name: "defaultCellRenderer.tsx",
+    language: "tsx",
+    description:
+      "Built-in rich cell renderer (badge/progress/avatar/select/switch/actions) — fallback when no column.renderCell or config.renderCell is set.",
+  },
+  {
+    sourcePath: "app/tables/defaultExpandedRowRenderer.tsx",
+    targetPath: "components/tables/defaultExpandedRowRenderer.tsx",
+    name: "defaultExpandedRowRenderer.tsx",
+    language: "tsx",
+    description:
+      "Default expandable-row body (switches between layouts) — fallback when config.renderExpandedRow is not provided.",
+  },
+  {
+    sourcePath: "app/tables/defaultPaginationBar.tsx",
+    targetPath: "components/tables/defaultPaginationBar.tsx",
+    name: "defaultPaginationBar.tsx",
+    language: "tsx",
+    description:
+      "Default pagination bar (every paginationLayout) — fallback when config.renderPagination is not provided.",
+  },
+  {
+    sourcePath: "app/tables/defaultRowDialog.tsx",
+    targetPath: "components/tables/defaultRowDialog.tsx",
+    name: "defaultRowDialog.tsx",
+    language: "tsx",
+    description:
+      "Default row-detail dialog body — fallback when rowClickAction.renderDialog / dialogTemplate are not provided.",
+  },
+  {
+    sourcePath: "app/tables/tableServices.ts",
+    targetPath: "components/tables/tableServices.ts",
+    name: "tableServices.ts",
+    language: "typescript",
+    description:
+      "Network layer for row-action API calls — token interpolation + fetch + result envelope. No React.",
+  },
+  {
+    sourcePath: "app/tables/useRowApiActions.hook.ts",
+    targetPath: "components/tables/useRowApiActions.hook.ts",
+    name: "useRowApiActions.hook.ts",
+    language: "typescript",
+    description:
+      "Hook gluing tableServices to React state — optimistic cell update, rollback, toast, button row-actions.",
+  },
+  {
+    sourcePath: "app/tables/attachRenderers.ts",
+    targetPath: "components/tables/attachRenderers.ts",
+    name: "attachRenderers.ts",
+    language: "typescript",
+    description:
+      "O(n) helper that wires per-column cell renderers onto a TableBuilderConfig.columns array.",
   },
   // ─── Custom DnD (TablePreview imports from here — NOT @dnd-kit) ─────────────
   {
@@ -218,10 +275,18 @@ function rewriteSharedFileImports(source: string): string {
         "from $1./useTablePreview$1",
       )
       // Types are re-exported through `tableBuilderTemplates` in-app, but the installed
-      // equivalent is just `./types` (copy of `app/tables/types/types.ts`).
+      // equivalent is just `./types` (copy of `app/tables/types.ts`).
       .replace(
         /from\s+(["'])@\/table-builder\/data\/tableBuilderTemplates\1/g,
         "from $1./types$1",
+      )
+      // Engine renderers / services / hook live in `app/tables/*` and ship as flat
+      // siblings inside `components/tables/`. `@/tables/<x>` → `./<x>` (covers
+      // defaultCellRenderer, defaultRowDialog, defaultPaginationBar,
+      // defaultExpandedRowRenderer, useRowApiActions.hook, tableServices, types).
+      .replace(
+        /from\s+(["'])@\/tables\/([^"']+)\1/g,
+        "from $1./$2$1",
       )
       // cellJsRunner / rowDialogTemplate live in `app/utils/` in this monorepo
       // and ship to a sibling `utils/` folder in the consumer project (NOT under

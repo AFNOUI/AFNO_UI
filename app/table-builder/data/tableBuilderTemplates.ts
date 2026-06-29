@@ -1,3 +1,5 @@
+// Re-export the canonical engine types from the shared module so the rest of
+// the codebase keeps working unchanged. Do NOT redefine these here.
 export type {
   TableRow,
   SortDescriptor,
@@ -15,59 +17,65 @@ export type {
   TableRowClickConfig,
   TableRowActionConfig,
   ExpandableIconPosition,
-} from "../../tables/types/types";
+} from "../../tables/types";
 
-import type { TableBuilderConfig, TableColumnOption } from "@/tables/types/types";
+import type { TableBuilderConfig, TableColumnOption } from "@/tables/types";
+
+import { interactionRendererTemplates } from "../tableInteractionRendererTemplates";
+import type { TableRendererSources } from "@/table-builder/utils/tableCodeGenerator";
+import { cellRendererTemplates } from "@/table-builder/data/tableCellRendererTemplates";
 
 export interface TableTemplate {
   key: string;
   title: string;
   description: string;
-  complexity: "basic" | "intermediate" | "advanced" | "expert";
   config: TableBuilderConfig;
   sampleData: Record<string, unknown>[];
+  rendererSources?: TableRendererSources;
+  complexity: "basic" | "intermediate" | "advanced" | "expert";
 }
 
+
 const defaultBase: Omit<TableBuilderConfig, "title" | "description" | "columns"> = {
-  enableSearch: true,
-  enablePagination: true,
-  enableRowSelection: false,
-  enableDnD: false,
-  enableColumnVisibility: false,
-  enableExport: false,
-  enableStriped: false,
-  enableHover: true,
-  enableBordered: false,
-  enableStickyHeader: false,
-  enableExpandableRows: false,
-  enableInlineEdit: false,
-  enableBulkActions: false,
-  enableColumnResize: false,
-  enableMultiSort: false,
-  enableColumnFilters: false,
-  enableRowGrouping: false,
-  enableAggregation: false,
-  enableFooter: false,
-  enableNestedHeaders: false,
-  enablePinnedColumns: false,
-  enableVirtualization: false,
-  virtualRowHeight: 44,
-  virtualMaxHeight: 520,
   pageSize: 8,
-  sortMode: "client",
-  paginationMode: "client",
   apiEndpoint: "",
   direction: "ltr",
+  enableDnD: false,
+  enableHover: true,
+  sortMode: "client",
+  showPageInfo: true,
+  enableSearch: true,
+  enableExport: false,
+  enableFooter: false,
+  enableStriped: false,
+  stickyMaxHeight: 600,
+  virtualRowHeight: 44,
+  virtualMaxHeight: 520,
+  enableBordered: false,
+  enableMultiSort: false,
+  enablePagination: true,
   density: "comfortable",
+  enableInlineEdit: false,
+  enableRowGrouping: false,
+  enableBulkActions: false,
+  paginationMode: "client",
+  enableAggregation: false,
+  paginationLayout: "full",
+  enableRowSelection: false,
+  enableStickyHeader: false,
+  enableColumnResize: false,
+  enableColumnFilters: false,
+  enableNestedHeaders: false,
+  showFirstLastButtons: true,
+  enablePinnedColumns: false,
+  enableVirtualization: false,
   expandableLayout: "details",
+  showPageSizeSelector: false,
+  enableExpandableRows: false,
+  enableColumnVisibility: false,
   expandableIconStyle: "chevron",
   expandableIconPosition: "first",
-  paginationLayout: "full",
-  showPageSizeSelector: false,
   pageSizeOptions: [5, 10, 20, 50, 100],
-  showPageInfo: true,
-  showFirstLastButtons: true,
-  stickyMaxHeight: 600,
 };
 
 const STATUS_OPTS: TableColumnOption[] = [
@@ -1004,13 +1012,13 @@ export const tableTemplates: Record<string, TableTemplate> = {
     key: "sandboxJsDemo",
     title: "Sandbox JS Demo (Custom Cell Handlers)",
     description:
-      "Click any cell to see safely-sandboxed JS run per column — toast, copy to clipboard, open URL. Row click opens a dialog; cell JS handlers stop propagation.",
+      "⚠️ Code runs sandboxed — no access to window, document, fetch, localStorage or other external state. Click any cell to see per-column JS run safely (toast, copy, open URL). Cell handlers stop propagation, so the row dialog never fires from a cell click.",
     complexity: "advanced",
     config: {
       ...defaultBase,
       title: "Sandbox JS Demo",
       description:
-        "Each column runs its own sandboxed JS snippet on click. Inspect a column to see / edit its `clickAction.code`. The row itself opens a detail dialog — cell handlers do NOT trigger it.",
+        "⚠️ Sandboxed: snippets only see `row`, `value`, and `helpers` (toast / copy / open). They cannot reach window, document, fetch, localStorage, or any external state. Click a cell to run its handler; click an empty area of a row to open the row dialog.",
       enableHover: true,
       rowClickAction: { type: "dialog" },
       columns: [
@@ -1069,7 +1077,12 @@ export const tableTemplates: Record<string, TableTemplate> = {
       { id: "5", name: "Eva Martinez",  email: "eva@umbrella.org", website: "https://umbrella.org", balance: 1500.00, status: "Active" },
     ],
   },
+
+  // Renderer demos — TanStack-style typed cell renderers, no external library.
+  ...cellRendererTemplates,
+  ...interactionRendererTemplates,
 };
+
 
 // Default to the Sandbox JS Demo so first-time users immediately see what
 // "Run custom JS (sandboxed)" means, the per-cell handler behaviour, and the
