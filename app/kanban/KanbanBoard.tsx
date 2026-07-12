@@ -8,12 +8,13 @@
  * per-card flicker on pointermove.
  */
 import { Plus, AlertTriangle, GripVertical } from "lucide-react";
-import { JSX, useCallback, useMemo, useRef, useState } from "react";
+import { JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
-  useDropZone,
   DndProvider,
+  useDropZone,
   useDraggable,
+  useDndContext,
   DropIndicator,
   type DropResult,
 } from "@/kanban/dnd";
@@ -72,6 +73,10 @@ interface CardDragData extends Record<string, unknown> {
   cardId: string;
   fromColumnId: string;
   fromLane?: string;
+}
+
+function isColumnDragData(data: Record<string, unknown> | undefined): data is ColumnDragData {
+  return data?.kind === "column" && typeof data.columnId === "string";
 }
 
 interface ZoneData extends Record<string, unknown> {
@@ -529,6 +534,18 @@ function BoardInner({ config, cardsByColumn, cardsByZone, lanes, onDrop, onCardC
               column={column}
               index={columnIndex}
               enabled={columnDndEnabled}
+              preview={
+                <ColumnDragPreview
+                  column={column}
+                  cards={cols}
+                  compact={config.compactCards}
+                  visibleFields={config.visibleFields}
+                  renderCard={config.renderCard}
+                  overWip={!!overWip}
+                  showWip={config.enableWipLimits}
+                  showTotal={config.showColumnTotals}
+                />
+              }
               header={
                 <ColumnHeader
                   col={column}
@@ -626,6 +643,7 @@ function Zone({
   const { zoneProps, hoverIndex, isOver, slotSize, animationsEnabled } = useDropZone<ZoneData, CardDragData>({
     id: zoneId,
     data: zoneData,
+    accepts: (drag) => !isColumnDragData(drag.data) && typeof drag.data.cardId === "string",
     onDrop,
     disabled: !enableDnd,
     axis,
@@ -773,39 +791,48 @@ function DraggableCardItem({
   onClick,
   renderCard,
 }: DraggableCardItemProps) {
+  const sourceRef = useRef<HTMLDivElement | null>(null);
   const { dragProps, isDragging } = useDraggable<CardDragData>({
     id: card.id,
     data: useMemo(() => ({ cardId: card.id, fromColumnId: columnId, fromLane: lane }), [card.id, columnId, lane]),
     disabled: !enabled,
-    preview: () => (
-      <div className="w-[260px]">
-        <ResolvedCard card={card} visibleFields={visibleFields} compact={compact} isDragging renderCard={renderCard} />
-      </div>
-    ),
+    sourceRef,
+    preview: () => {
+      // Capture the source card's real rendered width so the drag overlay
+      // matches the card exactly (not a hardcoded 260px). This mirrors the
+      // Multi-list transfer variant's behavior: the ghost you see under the
+      // cursor is a 1:1 replica of the source card.
+      const rect = sourceRef.current?.getBoundingClientRect();
+      const width = rect?.width ? Math.round(rect.width) : undefined;
+      return (
+        <div
+          style={{ width, transform: "rotate(1.5deg)" }}
+          className="pointer-events-none"
+        >
+          <ResolvedCard card={card} visibleFields={visibleFields} compact={compact} isDragging renderCard={renderCard} />
+        </div>
+      );
+    },
   });
 
   return (
     <div
       {...dragProps}
+      ref={sourceRef}
       style={{
         ...dragProps.style,
         ...(isDragging
           ? {
-              height: 0,
-              minHeight: 0,
-              marginTop: 0,
-              marginBottom: 0,
-              paddingTop: 0,
-              paddingBottom: 0,
-              opacity: 0,
-              overflow: "hidden",
-              pointerEvents: "none" as const,
+              // Fully remove from layout so surrounding cards close up cleanly
+              // and the DropIndicator opens a real-sized gap at the target
+              // position — same pattern as the Multi-list transfer variant.
+              display: "none" as const,
             }
           : null),
       }}
       onClick={() => onClick?.(card)}
       className={cn(
-        "select-none transition-opacity duration-100",
+        "select-none",
         enabled && "cursor-grab active:cursor-grabbing",
         onClick && "cursor-pointer",
       )}
@@ -897,34 +924,49 @@ function ColumnsRow({
   const { zoneProps, hoverIndex, isOver, slotSize, animationsEnabled } = useDropZone<Record<string, unknown>, ColumnDragData>({
     id: "kanban-column-row",
     data: useMemo(() => ({}), []),
+    accepts: (drag) => isColumnDragData(drag.data),
     onDrop: handleDrop,
     disabled: !enabled,
     axis: "x",
     getItemIndex: (drag) => columns.findIndex((c) => c.id === drag.data.columnId),
   });
+  const { active } = useDndContext();
+
+  // Follow the horizontal-pill pattern: compute the "visual" target index in
+  // the original array, hide the source when target != source, and render a
+  // single inline drop shadow at the target position. Result: smooth, matches
+  // exactly what the user sees, no flex-1 wobble, no double-slot.
+  const activeIndex = active && isColumnDragData(active.data)
+    ? columns.findIndex((c) => c.id === active.data.columnId)
+    : -1;
+  const targetIndex = hoverIndex === null || activeIndex === -1
+    ? null
+    : hoverIndex > activeIndex
+      ? hoverIndex + 1
+      : hoverIndex;
+  const showTarget = isOver && targetIndex !== null && targetIndex !== activeIndex;
 
   const arr = Array.isArray(children) ? (children as React.ReactNode[]) : [children];
   const items: React.ReactNode[] = [];
-  const showAt = isOver && hoverIndex != null ? hoverIndex : -1;
   arr.forEach((child, idx) => {
-    if (showAt === idx) {
+    if (showTarget && targetIndex === idx) {
       items.push(
-        <DropIndicator
-          key={`col-ind-${idx}`}
-          axis="x"
-          size={slotSize}
+        <ColumnDropSlot
+          key={`col-slot-${idx}`}
+          width={slotSize.width}
+          height={slotSize.height}
           animated={animationsEnabled && !reduceMotion}
         />,
       );
     }
     items.push(child);
   });
-  if (showAt === arr.length) {
+  if (showTarget && targetIndex === arr.length) {
     items.push(
-      <DropIndicator
-        key="col-ind-end"
-        axis="x"
-        size={slotSize}
+      <ColumnDropSlot
+        key="col-slot-end"
+        width={slotSize.width}
+        height={slotSize.height}
         animated={animationsEnabled && !reduceMotion}
       />,
     );
@@ -933,6 +975,7 @@ function ColumnsRow({
   return (
     <div
       {...(enabled ? zoneProps : {})}
+      data-column-collapse={showTarget ? "true" : "false"}
       className="flex min-w-[900px] items-start gap-4 pb-4"
       style={dirStyle}
     >
@@ -945,15 +988,18 @@ function DraggableColumn({
   column,
   index,
   enabled,
+  preview,
   header,
   children,
 }: {
   column: KanbanColumnConfig;
   index: number;
   enabled: boolean;
+  preview: React.ReactNode;
   header: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const columnRef = useRef<HTMLDivElement | null>(null);
   const { dragProps, isDragging } = useDraggable<ColumnDragData>({
     id: `column-${column.id}`,
     data: useMemo(
@@ -961,23 +1007,141 @@ function DraggableColumn({
       [column.id, index],
     ),
     disabled: !enabled,
-    preview: () => (
-      <div className="w-[260px] rounded-lg border bg-card p-2 shadow-lg">
-        <div className="text-sm font-semibold">{column.title}</div>
-      </div>
-    ),
+    sourceRef: columnRef,
+    preview: () => preview,
   });
+
+  // Only hide the source when the row is actively showing a target slot at a
+  // different index (parent sets data-column-collapse). Otherwise (drag over
+  // source's own slot, or not-yet-hovering a real target) leave the source
+  // visible in place — that's what the user sees in the pill variant.
+  const [collapse, setCollapse] = useState(false);
+  const rowRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!isDragging) { setCollapse(false); return; }
+    const el = columnRef.current;
+    if (!el) return;
+    rowRef.current = el.parentElement;
+    let raf = 0;
+    const tick = () => {
+      const parent = rowRef.current;
+      const flag = parent?.getAttribute("data-column-collapse") === "true";
+      setCollapse((prev) => (prev === flag ? prev : flag));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [isDragging]);
 
   return (
     <div
-      className="max-w-[300px] min-w-[240px] flex-1"
-      style={isDragging ? { opacity: 0.35 } : undefined}
+      ref={columnRef}
+      data-dnd-item={enabled ? "true" : undefined}
+      data-dragging={isDragging ? "true" : "false"}
+      className={cn(
+        "max-w-[300px] min-w-[240px] flex-1 transition-opacity duration-150",
+        collapse && "hidden",
+        isDragging && !collapse && "opacity-40",
+      )}
     >
-      <div {...(enabled ? dragProps : {})} className={cn(enabled && "cursor-grab active:cursor-grabbing")}>
+      <div
+        {...(enabled ? {
+          onPointerDown: dragProps.onPointerDown,
+          draggable: dragProps.draggable,
+          style: dragProps.style,
+        } : {})}
+        className={cn(enabled && "cursor-grab active:cursor-grabbing")}
+      >
         {header}
       </div>
       {children}
     </div>
+  );
+}
+
+function ColumnDragPreview({
+  column,
+  cards,
+  compact,
+  visibleFields,
+  renderCard,
+  overWip,
+  showWip,
+  showTotal,
+}: {
+  column: KanbanColumnConfig;
+  cards: KanbanCardData[];
+  compact: boolean;
+  visibleFields: KanbanCardField[];
+  renderCard?: CardRenderer;
+  overWip: boolean;
+  showWip: boolean;
+  showTotal: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "relative w-[280px] rounded-lg border bg-card p-2 shadow-2xl ring-1 ring-primary/40",
+        COLUMN_ACCENT[column.color ?? "muted"],
+        overWip && "border-destructive/60 bg-destructive/5",
+      )}
+      style={{ maxHeight: 420, overflow: "hidden" }}
+    >
+      <ColumnHeader
+        col={column}
+        count={cards.length}
+        overWip={overWip}
+        showWip={showWip}
+        showTotal={showTotal}
+      />
+      <div className="space-y-2">
+        {cards.slice(0, 4).map((card) => (
+          <ResolvedCard
+            key={card.id}
+            card={card}
+            visibleFields={visibleFields}
+            compact={compact}
+            isDragging
+            renderCard={renderCard}
+          />
+        ))}
+        {cards.length === 0 && (
+          <div className="min-h-[60px] rounded-md border border-dashed border-border" />
+        )}
+        {cards.length > 4 && (
+          <div className="px-1 py-1 text-[10px] font-medium text-muted-foreground">
+            +{cards.length - 4} more
+          </div>
+        )}
+      </div>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-card to-transparent"
+      />
+    </div>
+  );
+}
+
+function ColumnDropSlot({
+  width,
+  height,
+  animated,
+}: {
+  width: number;
+  height: number;
+  animated: boolean;
+}) {
+  const w = width > 0 ? width : 260;
+  const h = height > 0 ? Math.min(height, 420) : 200;
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "shrink-0 rounded-lg border-2 border-dashed border-primary/60 bg-primary/10 ring-1 ring-primary/20",
+        animated && "animate-in fade-in zoom-in-95 duration-150",
+      )}
+      style={{ width: w, height: h, minWidth: w, maxWidth: w }}
+    />
   );
 }
 

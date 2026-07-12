@@ -11,7 +11,7 @@ export interface DndRegistryFile {
   description: string;
 }
 
-export const dndRegistryGeneratedAt = "2026-06-29T04:43:08.842Z";
+export const dndRegistryGeneratedAt = "2026-07-12T18:29:28.179Z";
 
 export const dndInstall = {
   "npmDependencies": [
@@ -61,9 +61,7 @@ export type {
   DndContextValue,
 } from "./types";
 `;
-const components_dnd_DndContextRaw = `"use client";
-
-/**
+const components_dnd_DndContextRaw = `/**
  * Custom Pointer DnD — Context Provider (shared library).
  *
  * Promoted from \`src/components/kanban/dnd\` so it can power any builder
@@ -156,6 +154,13 @@ function isPointInsideSourceBounds(x: number, y: number, snap: DragSnapshot) {
     && y <= snap.sourceBottom;
 }
 
+function getZoneItems(zoneEl: HTMLElement): HTMLElement[] {
+  return Array.from(zoneEl.querySelectorAll<HTMLElement>('[data-dnd-item="true"]')).filter((el) => {
+    const nearestZone = el.closest<HTMLElement>("[data-dnd-zone]");
+    return nearestZone === zoneEl;
+  });
+}
+
 /**
  * Returns the index of a sibling item (excluding the dragged one) whose
  * bounding rect contains the given point, or null if the point is in a
@@ -166,7 +171,7 @@ function findSiblingIndexAt(
   x: number,
   y: number,
 ): { visibleIndex: number; rect: DOMRect } | null {
-  const items = zoneEl.querySelectorAll<HTMLElement>('[data-dnd-item="true"]');
+  const items = getZoneItems(zoneEl);
   let visibleIndex = 0;
   for (let i = 0; i < items.length; i += 1) {
     const el = items[i];
@@ -193,7 +198,7 @@ function resolveDropIndex(
   clientY: number,
   axis: "x" | "y" | "grid",
 ): number {
-  const items = zoneEl.querySelectorAll<HTMLElement>('[data-dnd-item="true"]');
+  const items = getZoneItems(zoneEl);
   const isRtl = (axis === "x" || axis === "grid") && window.getComputedStyle(zoneEl).direction === "rtl";
   let count = 0;
 
@@ -386,14 +391,14 @@ export function DndProvider({ children, onDragStart, onDragEnd, reduceMotion = f
     const snap: DragSnapshot = {
       id: payload.id,
       data: payload.data,
+      clientX: pointerEvent.clientX,
+      clientY: pointerEvent.clientY,
       width: payload.width,
       height: payload.height,
       offsetX: payload.offsetX,
       offsetY: payload.offsetY,
-      sourceTop: payload.sourceTop,
-      clientX: pointerEvent.clientX,
-      clientY: pointerEvent.clientY,
       sourceLeft: payload.sourceLeft,
+      sourceTop: payload.sourceTop,
       sourceRight: payload.sourceRight,
       sourceBottom: payload.sourceBottom,
       previewNode: payload.preview ? payload.preview() : null,
@@ -449,11 +454,17 @@ export function DndProvider({ children, onDragStart, onDragEnd, reduceMotion = f
           const coord = horizontal ? center.x : center.y;
           const after = coord > mid;
           index = sibling.visibleIndex + (after ? 1 : 0);
-        } else if (sameZoneHover) {
-          // Stay put in gaps — prevents flicker back to source position.
-          index = sameZoneHover.index;
         } else {
-          index = sourceIndex;
+          // Not over any sibling — could be a gap OR past the edges. Use
+          // midpoint resolver to compute an edge-correct index, then only
+          // apply gap-stickiness when the resolver returns the same as the
+          // previous hover (i.e., truly a gap, not an edge).
+          const resolved = resolveDropIndex(found.zone.element, center.x, center.y, axis);
+          if (sameZoneHover && resolved === sameZoneHover.index) {
+            index = sameZoneHover.index;
+          } else {
+            index = resolved;
+          }
         }
       } else {
         index = resolveDropIndex(found.zone.element, center.x, center.y, axis);
@@ -549,9 +560,12 @@ export function DndProvider({ children, onDragStart, onDragEnd, reduceMotion = f
           const vh = typeof window !== "undefined" ? window.innerHeight : 0;
           const rawLeft = overlay.x - offX;
           const rawTop = overlay.y - offY;
-          // Clamp so the preview always stays on screen.
-          const left = Math.max(4, Math.min(rawLeft, vw - Math.max(w, 40) - 4));
-          const top = Math.max(4, Math.min(rawTop, vh - Math.max(h, 24) - 4));
+          // Clamp so a small sliver of the preview always stays visible,
+          // but never restrict pointer travel — otherwise wide cards can't
+          // be dragged near the viewport's right/bottom edges.
+          const MIN_VISIBLE = 40;
+          const left = Math.max(MIN_VISIBLE - w, Math.min(rawLeft, vw - MIN_VISIBLE));
+          const top = Math.max(MIN_VISIBLE - h, Math.min(rawTop, vh - MIN_VISIBLE));
           return (
             <div
               style={{

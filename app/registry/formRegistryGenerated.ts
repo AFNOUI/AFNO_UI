@@ -13,7 +13,7 @@ export interface RegistryFile {
   category: 'core' | 'hook' | 'util' | 'field';
 }
 
-export const formRegistryGeneratedAt = '2026-06-29T04:43:08.216Z';
+export const formRegistryGeneratedAt = '2026-07-12T18:29:27.338Z';
 
 /**
  * Single source of truth for per-stack install metadata.
