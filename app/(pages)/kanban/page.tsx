@@ -25,17 +25,18 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
-import { VariantJsonConfigPanel } from "@/components/shared/VariantJsonConfigPanel";
 import { CodeBlock, InstallCommand } from "@/components/shared/CodeBlock";
+import { VariantJsonConfigPanel } from "@/components/shared/VariantJsonConfigPanel";
+
 import { ComponentInstall } from "@/components/lab/ComponentInstall";
-import { TooltipProvider } from "@/components/ui/tooltip";
 
 import {
-  getSharedKanbanFiles,
   KANBAN_DEPENDENCIES,
+  getSharedKanbanFiles,
 } from "@/kanban-builder/utils/kanbanSharedFiles";
 import { generateKanbanCode, generateKanbanFiles } from "@/kanban-builder/utils/kanbanCodeGenerator";
 
@@ -74,11 +75,12 @@ function kanbanTemplateKeyToRegistryVariant(templateKey: string): string {
 interface FilesPanelProps {
   cards: KanbanCardData[];
   config: KanbanBuilderConfig;
+  rendererSources?: import("@/kanban/types").KanbanRendererSources;
 }
 
-function FilesPanel({ config, cards }: FilesPanelProps) {
+function FilesPanel({ config, cards, rendererSources }: FilesPanelProps) {
   const allFiles = useMemo(() => {
-    const generated = generateKanbanFiles(config, cards);
+    const generated = generateKanbanFiles(config, cards, rendererSources);
     // `getSharedKanbanFiles(config)` returns only the engine helpers this
     // variant actually reaches — `cellJsRunner.ts` / `rowDialogTemplate.ts`
     // are dropped (and the engine source rewritten with inline no-op stubs)
@@ -92,7 +94,7 @@ function FilesPanel({ config, cards }: FilesPanelProps) {
       isFixed: true,
     }));
     return [...generated, ...shared];
-  }, [config, cards]);
+  }, [config, cards, rendererSources]);
 
   const [activeFile, setActiveFile] = useState<string>(allFiles[0]?.name ?? "");
   const current = allFiles.find((f) => f.name === activeFile) ?? allFiles[0];
@@ -206,13 +208,14 @@ interface LivePreviewProps {
 
 function LivePreview({ config, initialCards }: LivePreviewProps) {
   const [cards, setCards] = useState<KanbanCardData[]>(initialCards);
-  // Reset cards whenever the active variant changes (initialCards changes ref).
-  // Using useEffect instead of useMemo — setting state from useMemo can trigger
-  // an infinite render loop (its callback re-runs on every render where deps look
-  // unchanged after the state update).
+  const [columns, setColumns] = useState(config.columns);
+  // Reset state whenever the active variant changes (initialCards changes ref).
   useEffect(() => {
     setCards(initialCards);
   }, [initialCards]);
+  useEffect(() => {
+    setColumns(config.columns);
+  }, [config.columns]);
 
   // Infinite scroll handler — append synthetic next page when needed.
   const handleLoadMore = useCallback(
@@ -238,14 +241,17 @@ function LivePreview({ config, initialCards }: LivePreviewProps) {
     // The board now opens a dialog and appends new cards via onCardsChange.
   }, []);
 
+  const effective = useMemo(() => ({ ...config, columns }), [config, columns]);
+
   return (
     <div className="space-y-4">
       <KanbanBoard
-        config={config}
         cards={cards}
+        config={effective}
         onCardsChange={setCards}
-        onLoadMore={handleLoadMore}
         onAddCard={handleAddCard}
+        onLoadMore={handleLoadMore}
+        onColumnsChange={setColumns}
       />
       <VariantJsonConfigPanel
         titleMeta={`${config.columns.length} columns · ${cards.length} cards`}
@@ -438,7 +444,7 @@ export default function KanbanVariants() {
             </span>
             <div className="h-px flex-1 bg-border" />
           </div>
-          <FilesPanel config={effectiveConfig} cards={active.cards} />
+          <FilesPanel config={effectiveConfig} cards={active.cards} rendererSources={active.rendererSources} />
         </div>
       </div>
     </div>

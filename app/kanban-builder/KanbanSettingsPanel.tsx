@@ -182,8 +182,15 @@ export function KanbanSettingsPanel({ config, onChange }: Props) {
           <AccordionTrigger className="text-sm">Features</AccordionTrigger>
           <AccordionContent className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label className="text-xs">Drag &amp; drop</Label>
+              <Label className="text-xs">Drag &amp; drop (cards)</Label>
               <Switch checked={config.enableDnd} onCheckedChange={(v) => update("enableDnd", v)} />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col">
+                <Label className="text-xs">Drag column headers</Label>
+                <span className="text-[10px] text-muted-foreground">Reorder columns by grabbing their header (board layout)</span>
+              </div>
+              <Switch checked={!!config.enableColumnDnd} onCheckedChange={(v) => update("enableColumnDnd", v)} />
             </div>
             <div className="flex items-center justify-between">
               <Label className="text-xs">Add card buttons</Label>

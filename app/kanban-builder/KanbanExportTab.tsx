@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * Multi-file export tab — same shape as TableExportTab. Surfaces:
  *   • The generated per-board files (component, config, data, onChange hook, types)
@@ -7,30 +5,30 @@
  *   • Install instructions
  */
 import { useMemo, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { CodeBlock, InstallCommand } from "@/components/shared/CodeBlock";
 import { Code2, Download, FileCode, Package, ArrowRight } from "lucide-react";
-import type { KanbanBuilderConfig, KanbanCardData } from "@/kanban/types";
-import { generateKanbanFiles } from "@/kanban-builder/utils/kanbanCodeGenerator";
-import { getSharedKanbanFiles, KANBAN_DEPENDENCIES } from "@/kanban-builder/utils/kanbanSharedFiles";
+
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { CodeBlock, InstallCommand } from "@/components/shared/CodeBlock";
+
+import { generateKanbanFiles } from "@/kanban-builder/utils/kanbanCodeGenerator"; 
+import type { KanbanBuilderConfig, KanbanCardData, KanbanRendererSources } from "@/kanban/types"; 
+import { KANBAN_DEPENDENCIES, SHARED_KANBAN_FILES } from "@/kanban-builder/utils/kanbanSharedFiles";
 
 interface Props {
-  config: KanbanBuilderConfig;
   cards: KanbanCardData[];
+  config: KanbanBuilderConfig;
+  rendererSources?: KanbanRendererSources;
 }
 
-export function KanbanExportTab({ config, cards }: Props) {
-  const generated = useMemo(() => generateKanbanFiles(config, cards), [config, cards]);
-  // `getSharedKanbanFiles(config)` prunes engine helpers (cellJsRunner /
-  // rowDialogTemplate) the active board doesn't reach, and rewrites the
-  // engine imports into inline no-op stubs so the displayed source still
-  // compiles end-to-end.
+export function KanbanExportTab({ config, cards, rendererSources }: Props) {
+  const generated = useMemo(() => generateKanbanFiles(config, cards, rendererSources), [config, cards, rendererSources]);
   const sharedNeeded = useMemo(
-    () => getSharedKanbanFiles(config).map(f => ({ ...f, isFixed: true })),
-    [config],
+    () => SHARED_KANBAN_FILES.map(f => ({ ...f, isFixed: true })),
+    [],
   );
   const allFiles = useMemo(() => [...generated, ...sharedNeeded], [generated, sharedNeeded]);
   const [activeFile, setActiveFile] = useState<string>(allFiles[0]?.name ?? "");
@@ -102,7 +100,7 @@ export function KanbanExportTab({ config, cards }: Props) {
                     <span className={`h-1.5 w-1.5 rounded-full ${file.isFixed ? "bg-muted-foreground" : "bg-primary"}`} />
                     {file.isFixed ? <Package className="h-3 w-3" /> : <FileCode className="h-3 w-3" />}
                     {file.name}
-                    {file.isFixed && <Badge variant="outline" className="text-[8px] h-3.5 px-1 ms-0.5">shared</Badge>}
+                    {file.isFixed && <Badge variant="outline" className="text-[8px] h-3.5 px-1 ml-0.5">shared</Badge>}
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -114,11 +112,11 @@ export function KanbanExportTab({ config, cards }: Props) {
                   <div className="flex items-start gap-2">
                     {file.isFixed ? (
                       <Badge variant="secondary" className="text-[10px] shrink-0">
-                        <Package className="h-3 w-3 me-1" /> Shared engine
+                        <Package className="h-3 w-3 mr-1" /> Shared engine
                       </Badge>
                     ) : (
                       <Badge className="text-[10px] shrink-0 bg-primary/10 text-primary border-0">
-                        <FileCode className="h-3 w-3 me-1" /> Generated per board
+                        <FileCode className="h-3 w-3 mr-1" /> Generated per board
                       </Badge>
                     )}
                     <p className="text-xs text-muted-foreground">{file.description}</p>

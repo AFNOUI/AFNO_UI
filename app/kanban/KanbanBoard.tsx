@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * Config-driven kanban board powered by our custom Pointer DnD library
  * (`src/components/kanban/dnd`). Three layouts: "board" | "compact" | "swimlane".
@@ -9,25 +7,27 @@
  * pushes hover state down so a single <DropIndicator> renders per zone — no
  * per-card flicker on pointermove.
  */
-import { Plus, AlertTriangle } from "lucide-react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { Plus, AlertTriangle, GripVertical } from "lucide-react";
+import { JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
-  useDropZone,
   DndProvider,
+  useDropZone,
   useDraggable,
+  useDndContext,
   DropIndicator,
   type DropResult,
 } from "@/kanban/dnd";
 import { cn } from "@/lib/utils";
 import { runCellJs } from "@/utils/cellJsRunner";
 import type {
+  CardRenderer,
   KanbanCardData,
   KanbanCardField,
   KanbanColumnConfig,
   KanbanBuilderConfig,
-  KanbanCardChangeEvent,
   KanbanLoadMoreEvent,
+  KanbanCardChangeEvent,
 } from "@/kanban/types";
 
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +38,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { KanbanCard } from "@/kanban/KanbanCard";
 import { KanbanCardDialog } from "@/kanban/KanbanCardDialog";
 import { KanbanAddCardDialog } from "@/kanban/KanbanAddCardDialog";
-
+import { defaultRichCardRenderer } from "@/kanban/defaultCardRenderer";
 
 interface Props {
   config: KanbanBuilderConfig;
@@ -53,15 +53,13 @@ interface Props {
    * to persist the change. Receives the moved card plus the from/to positions.
    */
   onCardChange?: (event: KanbanCardChangeEvent) => void;
+  /**
+   * Optional callback fired whenever columns are reordered via column-header DnD.
+   * Receives the reordered column array — the host should persist it and pass
+   * the new order back in via `config.columns`.
+   */
+  onColumnsChange?: (next: KanbanColumnConfig[]) => void;
 }
-
-/**
- * The board emits two event shapes — both moved to `@/kanban/types` so the
- * generated code can import them without dragging in the engine module. We
- * re-export here so existing `import { KanbanCardChangeEvent } from "@/kanban/KanbanBoard"`
- * call-sites keep resolving.
- */
-export type { KanbanCardChangeEvent, KanbanLoadMoreEvent } from "@/kanban/types";
 
 const COLUMN_ACCENT: Record<string, string> = {
   muted: "border-muted-foreground/20",
@@ -77,6 +75,10 @@ interface CardDragData extends Record<string, unknown> {
   fromLane?: string;
 }
 
+function isColumnDragData(data: Record<string, unknown> | undefined): data is ColumnDragData {
+  return data?.kind === "column" && typeof data.columnId === "string";
+}
+
 interface ZoneData extends Record<string, unknown> {
   columnId: string;
   lane?: string;
@@ -86,7 +88,7 @@ function getZoneId(columnId: string, lane?: string) {
   return lane ? `${columnId}::${lane}` : columnId;
 }
 
-export function KanbanBoard({ config, cards, onCardsChange, onCardChange, onLoadMore, onAddCard }: Props) {
+export function KanbanBoard({ config, cards, onCardsChange, onCardChange, onColumnsChange, onLoadMore, onAddCard }: Props) {
   const swimlaneKey = config.swimlaneKey ?? "assignee";
   const [selectedCard, setSelectedCard] = useState<KanbanCardData | null>(null);
   const [addTarget, setAddTarget] = useState<{ columnId: string; lane?: string } | null>(null);
@@ -95,6 +97,25 @@ export function KanbanBoard({ config, cards, onCardsChange, onCardChange, onLoad
     setAddTarget(event);
     onAddCard?.(event);
   }, [onAddCard]);
+
+  const handleColumnReorder = useCallback((fromIndex: number, toIndex: number) => {
+    if (!onColumnsChange || fromIndex === toIndex) return;
+    const next = [...config.columns];
+    const [moved] = next.splice(fromIndex, 1);
+    const clamped = Math.max(0, Math.min(toIndex, next.length));
+    next.splice(clamped, 0, moved);
+    onColumnsChange(next);
+    if (config.onColumnsChangeJs?.trim()) {
+      try {
+        runCellJs(config.onColumnsChangeJs, {
+          row: { columns: next, fromIndex, toIndex: clamped } as unknown as Record<string, unknown>,
+          value: undefined,
+        });
+      } catch (err) {
+        console.error("[kanban] onColumnsChangeJs threw:", err);
+      }
+    }
+  }, [config.columns, config.onColumnsChangeJs, onColumnsChange]);
 
   const sampleForAdd = useMemo(() => {
     if (!addTarget) return undefined;
@@ -230,6 +251,7 @@ export function KanbanBoard({ config, cards, onCardsChange, onCardChange, onLoad
       onCardClick={setSelectedCard}
       onLoadMore={onLoadMore}
       onAddCard={handleAddClick}
+      onColumnReorder={handleColumnReorder}
     />
   );
 
@@ -272,9 +294,15 @@ interface InnerProps {
   onCardClick: (card: KanbanCardData) => void;
   onLoadMore?: (event: KanbanLoadMoreEvent) => void | Promise<void>;
   onAddCard?: (event: { columnId: string; lane?: string }) => void;
+  onColumnReorder?: (fromIndex: number, toIndex: number) => void;
 }
 
-function BoardInner({ config, cardsByColumn, cardsByZone, lanes, onDrop, onCardClick, onLoadMore, onAddCard }: InnerProps) {
+function BoardInner({ config, cardsByColumn, cardsByZone, lanes, onDrop, onCardClick, onLoadMore, onAddCard, onColumnReorder }: InnerProps) {
+  const cardById = useMemo(() => {
+    const map = new Map<string, KanbanCardData>();
+    for (const group of cardsByColumn.values()) for (const card of group) map.set(card.id, card);
+    return map;
+  }, [cardsByColumn]);
   const dir = config.direction ?? "ltr";
   const dirStyle: React.CSSProperties = { direction: dir };
   if (config.layout === "timeline") {
@@ -321,6 +349,8 @@ function BoardInner({ config, cardsByColumn, cardsByZone, lanes, onDrop, onCardC
                     reduceMotion={config.reduceMotion}
                     onLoadMore={onLoadMore}
                     infiniteScroll={config.infiniteScroll}
+                    cardById={cardById}
+                    renderCard={config.renderCard}
                     axis="y"
                     scrollable={config.scrollableColumns}
                     maxHeightPx={config.columnMaxHeightPx}
@@ -358,6 +388,8 @@ function BoardInner({ config, cardsByColumn, cardsByZone, lanes, onDrop, onCardC
                 reduceMotion={config.reduceMotion}
                     onLoadMore={onLoadMore}
                     infiniteScroll={config.infiniteScroll}
+                    cardById={cardById}
+                    renderCard={config.renderCard}
                     scrollable={config.scrollableColumns}
                     maxHeightPx={config.columnMaxHeightPx}
               />
@@ -406,6 +438,8 @@ function BoardInner({ config, cardsByColumn, cardsByZone, lanes, onDrop, onCardC
               reduceMotion={config.reduceMotion}
                     onLoadMore={onLoadMore}
                     infiniteScroll={config.infiniteScroll}
+                    cardById={cardById}
+                    renderCard={config.renderCard}
                     scrollable={config.scrollableColumns}
                     maxHeightPx={config.columnMaxHeightPx}
             />
@@ -464,6 +498,8 @@ function BoardInner({ config, cardsByColumn, cardsByZone, lanes, onDrop, onCardC
                     reduceMotion={config.reduceMotion}
                     onLoadMore={onLoadMore}
                     infiniteScroll={config.infiniteScroll}
+                    cardById={cardById}
+                    renderCard={config.renderCard}
                   />
                 );
               })}
@@ -476,24 +512,51 @@ function BoardInner({ config, cardsByColumn, cardsByZone, lanes, onDrop, onCardC
   }
 
   // Default: "board"
+  const columnDndEnabled = !!config.enableColumnDnd && !!onColumnReorder;
   return (
     <ScrollArea className="w-full">
-      <div className="flex min-w-[900px] items-start gap-4 pb-4" style={dirStyle}>
-        {config.columns.map((column) => {
+      <ColumnsRow
+        enabled={columnDndEnabled}
+        columns={config.columns}
+        onReorder={onColumnReorder}
+        reduceMotion={config.reduceMotion}
+        dirStyle={dirStyle}
+      >
+        {config.columns.map((column, columnIndex) => {
           const cols = cardsByColumn.get(column.id) ?? [];
           const overWip =
             config.enableWipLimits &&
             column.wipLimit !== undefined &&
             cols.length > column.wipLimit;
           return (
-            <div key={column.id} className="max-w-[300px] min-w-[240px] flex-1">
-              <ColumnHeader
-                col={column}
-                count={cols.length}
-                overWip={!!overWip}
-                showWip={config.enableWipLimits}
-                showTotal={config.showColumnTotals}
-              />
+            <DraggableColumn
+              key={column.id}
+              column={column}
+              index={columnIndex}
+              enabled={columnDndEnabled}
+              preview={
+                <ColumnDragPreview
+                  column={column}
+                  cards={cols}
+                  compact={config.compactCards}
+                  visibleFields={config.visibleFields}
+                  renderCard={config.renderCard}
+                  overWip={!!overWip}
+                  showWip={config.enableWipLimits}
+                  showTotal={config.showColumnTotals}
+                />
+              }
+              header={
+                <ColumnHeader
+                  col={column}
+                  count={cols.length}
+                  overWip={!!overWip}
+                  showWip={config.enableWipLimits}
+                  showTotal={config.showColumnTotals}
+                  draggable={columnDndEnabled}
+                />
+              }
+            >
               <Zone
                 columnId={column.id}
                 cards={cols}
@@ -511,13 +574,15 @@ function BoardInner({ config, cardsByColumn, cardsByZone, lanes, onDrop, onCardC
                 reduceMotion={config.reduceMotion}
                     onLoadMore={onLoadMore}
                     infiniteScroll={config.infiniteScroll}
+                    cardById={cardById}
+                    renderCard={config.renderCard}
                     scrollable={config.scrollableColumns}
                     maxHeightPx={config.columnMaxHeightPx}
               />
-            </div>
+            </DraggableColumn>
           );
         })}
-      </div>
+      </ColumnsRow>
       <ScrollBar orientation="horizontal" />
     </ScrollArea>
   );
@@ -542,10 +607,13 @@ interface ZoneProps {
   onCardClick?: (card: KanbanCardData) => void;
   onLoadMore?: (event: KanbanLoadMoreEvent) => void | Promise<void>;
   infiniteScroll?: KanbanBuilderConfig["infiniteScroll"];
+  cardById?: Map<string, KanbanCardData>;
   /** Constrain this zone to a fixed max-height with overflow-auto. */
   scrollable?: boolean;
   /** Max-height in px when scrollable. Defaults to 520. */
   maxHeightPx?: number;
+  /** Board-wide reusable card renderer, threaded from config.renderCard. */
+  renderCard?: CardRenderer;
 }
 
 function Zone({
@@ -564,8 +632,10 @@ function Zone({
   onCardClick,
   onLoadMore,
   infiniteScroll,
+  cardById,
   scrollable,
   maxHeightPx,
+  renderCard,
 }: ZoneProps) {
   const zoneId = getZoneId(columnId, lane);
   const zoneData = useMemo<ZoneData>(() => ({ columnId, lane }), [columnId, lane]);
@@ -573,6 +643,7 @@ function Zone({
   const { zoneProps, hoverIndex, isOver, slotSize, animationsEnabled } = useDropZone<ZoneData, CardDragData>({
     id: zoneId,
     data: zoneData,
+    accepts: (drag) => !isColumnDragData(drag.data) && typeof drag.data.cardId === "string",
     onDrop,
     disabled: !enableDnd,
     axis,
@@ -596,7 +667,7 @@ function Zone({
   // surrounding cards close up naturally and the indicator opens a clean,
   // real-sized gap exactly where the card will land — no overlapping/faded
   // duplicate, no two-cards-in-the-same-row artifact.
-  const items: React.ReactElement[] = [];
+  const items: JSX.Element[] = [];
   const showIndicatorAt = isOver && hoverIndex != null ? hoverIndex : -1;
   cards.forEach((card, idx) => {
     if (showIndicatorAt === idx) {
@@ -619,6 +690,7 @@ function Zone({
         visibleFields={visibleFields}
         enabled={enableDnd}
         onClick={onCardClick}
+        renderCard={renderCard}
       />,
     );
   });
@@ -675,6 +747,38 @@ interface DraggableCardItemProps {
   visibleFields: KanbanCardField[];
   enabled: boolean;
   onClick?: (card: KanbanCardData) => void;
+  renderCard?: CardRenderer;
+}
+
+/**
+ * Resolve the card body using the same 3-level priority as tables/tree:
+ *   1. card.render        (per-card override)
+ *   2. config.renderCard  (board-wide reusable renderer)
+ *   3. built-in <KanbanCard />
+ *
+ * Each level may return `undefined`/`null` to fall through to the next.
+ */
+function ResolvedCard({
+  card,
+  visibleFields,
+  compact,
+  isDragging,
+  renderCard,
+}: {
+  card: KanbanCardData;
+  visibleFields: KanbanCardField[];
+  compact: boolean;
+  isDragging: boolean;
+  renderCard?: CardRenderer;
+}) {
+  const ctx = { card, visibleFields, compact, isDragging };
+  const perCard = card.render?.(ctx);
+  if (perCard != null) return <>{perCard}</>;
+  const reusable = renderCard?.(ctx);
+  if (reusable != null) return <>{reusable}</>;
+  const rich = defaultRichCardRenderer(ctx);
+  if (rich != null) return <>{rich}</>;
+  return <KanbanCard card={card} visibleFields={visibleFields} compact={compact} />;
 }
 
 function DraggableCardItem({
@@ -685,49 +789,55 @@ function DraggableCardItem({
   visibleFields,
   enabled,
   onClick,
+  renderCard,
 }: DraggableCardItemProps) {
+  const sourceRef = useRef<HTMLDivElement | null>(null);
   const { dragProps, isDragging } = useDraggable<CardDragData>({
     id: card.id,
     data: useMemo(() => ({ cardId: card.id, fromColumnId: columnId, fromLane: lane }), [card.id, columnId, lane]),
     disabled: !enabled,
-    preview: () => (
-      <div className="w-[260px]">
-        <KanbanCard card={card} visibleFields={visibleFields} compact={compact} />
-      </div>
-    ),
+    sourceRef,
+    preview: () => {
+      // Capture the source card's real rendered width so the drag overlay
+      // matches the card exactly (not a hardcoded 260px). This mirrors the
+      // Multi-list transfer variant's behavior: the ghost you see under the
+      // cursor is a 1:1 replica of the source card.
+      const rect = sourceRef.current?.getBoundingClientRect();
+      const width = rect?.width ? Math.round(rect.width) : undefined;
+      return (
+        <div
+          style={{ width, transform: "rotate(1.5deg)" }}
+          className="pointer-events-none"
+        >
+          <ResolvedCard card={card} visibleFields={visibleFields} compact={compact} isDragging renderCard={renderCard} />
+        </div>
+      );
+    },
   });
 
   return (
     <div
       {...dragProps}
+      ref={sourceRef}
       style={{
         ...dragProps.style,
-        // While this card is the active drag source, collapse it out of the
-        // layout so the floating preview/ghost is the ONLY visible instance.
-        // This matches the behaviour in the reference video — no faded
-        // duplicate left behind, no overlapping text.
         ...(isDragging
           ? {
-              height: 0,
-              minHeight: 0,
-              marginTop: 0,
-              marginBottom: 0,
-              paddingTop: 0,
-              paddingBottom: 0,
-              opacity: 0,
-              overflow: "hidden",
-              pointerEvents: "none" as const,
+              // Fully remove from layout so surrounding cards close up cleanly
+              // and the DropIndicator opens a real-sized gap at the target
+              // position — same pattern as the Multi-list transfer variant.
+              display: "none" as const,
             }
           : null),
       }}
       onClick={() => onClick?.(card)}
       className={cn(
-        "select-none transition-opacity duration-100",
+        "select-none",
         enabled && "cursor-grab active:cursor-grabbing",
         onClick && "cursor-pointer",
       )}
     >
-      <KanbanCard card={card} visibleFields={visibleFields} compact={compact} />
+      <ResolvedCard card={card} visibleFields={visibleFields} compact={compact} isDragging={isDragging} renderCard={renderCard} />
     </div>
   );
 }
@@ -738,16 +848,27 @@ function ColumnHeader({
   overWip,
   showWip,
   showTotal,
+  draggable,
 }: {
   col: KanbanColumnConfig;
   count: number;
   overWip: boolean;
   showWip: boolean;
   showTotal: boolean;
+  draggable?: boolean;
 }) {
   return (
     <div className="mb-2 flex items-center justify-between px-1">
       <div className="flex items-center gap-2">
+        {draggable && (
+          <span
+            data-column-drag-handle
+            className="inline-flex h-5 w-5 cursor-grab items-center justify-center rounded text-muted-foreground hover:bg-muted active:cursor-grabbing"
+            aria-label="Reorder column"
+          >
+            <GripVertical className="h-3.5 w-3.5" />
+          </span>
+        )}
         <span className="text-sm font-semibold">{col.title}</span>
         {showTotal && (
           <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
@@ -769,6 +890,258 @@ function ColumnHeader({
       </div>
       {overWip && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
     </div>
+  );
+}
+
+/* ─── Column-reorder DnD ────────────────────────────────────────────────── */
+
+interface ColumnDragData extends Record<string, unknown> {
+  kind: "column";
+  columnId: string;
+  fromIndex: number;
+}
+
+function ColumnsRow({
+  enabled,
+  columns,
+  onReorder,
+  reduceMotion,
+  dirStyle,
+  children,
+}: {
+  enabled: boolean;
+  columns: KanbanColumnConfig[];
+  onReorder?: (fromIndex: number, toIndex: number) => void;
+  reduceMotion?: boolean;
+  dirStyle: React.CSSProperties;
+  children: React.ReactNode;
+}) {
+  const handleDrop = useCallback((result: DropResult<ColumnDragData, Record<string, unknown>>) => {
+    if (!enabled || !onReorder) return;
+    onReorder(result.item.data.fromIndex, result.index);
+  }, [enabled, onReorder]);
+
+  const { zoneProps, hoverIndex, isOver, slotSize, animationsEnabled } = useDropZone<Record<string, unknown>, ColumnDragData>({
+    id: "kanban-column-row",
+    data: useMemo(() => ({}), []),
+    accepts: (drag) => isColumnDragData(drag.data),
+    onDrop: handleDrop,
+    disabled: !enabled,
+    axis: "x",
+    getItemIndex: (drag) => columns.findIndex((c) => c.id === drag.data.columnId),
+  });
+  const { active } = useDndContext();
+
+  // Follow the horizontal-pill pattern: compute the "visual" target index in
+  // the original array, hide the source when target != source, and render a
+  // single inline drop shadow at the target position. Result: smooth, matches
+  // exactly what the user sees, no flex-1 wobble, no double-slot.
+  const activeIndex = active && isColumnDragData(active.data)
+    ? columns.findIndex((c) => c.id === active.data.columnId)
+    : -1;
+  const targetIndex = hoverIndex === null || activeIndex === -1
+    ? null
+    : hoverIndex > activeIndex
+      ? hoverIndex + 1
+      : hoverIndex;
+  const showTarget = isOver && targetIndex !== null && targetIndex !== activeIndex;
+
+  const arr = Array.isArray(children) ? (children as React.ReactNode[]) : [children];
+  const items: React.ReactNode[] = [];
+  arr.forEach((child, idx) => {
+    if (showTarget && targetIndex === idx) {
+      items.push(
+        <ColumnDropSlot
+          key={`col-slot-${idx}`}
+          width={slotSize.width}
+          height={slotSize.height}
+          animated={animationsEnabled && !reduceMotion}
+        />,
+      );
+    }
+    items.push(child);
+  });
+  if (showTarget && targetIndex === arr.length) {
+    items.push(
+      <ColumnDropSlot
+        key="col-slot-end"
+        width={slotSize.width}
+        height={slotSize.height}
+        animated={animationsEnabled && !reduceMotion}
+      />,
+    );
+  }
+
+  return (
+    <div
+      {...(enabled ? zoneProps : {})}
+      data-column-collapse={showTarget ? "true" : "false"}
+      className="flex min-w-[900px] items-start gap-4 pb-4"
+      style={dirStyle}
+    >
+      {items}
+    </div>
+  );
+}
+
+function DraggableColumn({
+  column,
+  index,
+  enabled,
+  preview,
+  header,
+  children,
+}: {
+  column: KanbanColumnConfig;
+  index: number;
+  enabled: boolean;
+  preview: React.ReactNode;
+  header: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const columnRef = useRef<HTMLDivElement | null>(null);
+  const { dragProps, isDragging } = useDraggable<ColumnDragData>({
+    id: `column-${column.id}`,
+    data: useMemo(
+      () => ({ kind: "column" as const, columnId: column.id, fromIndex: index }),
+      [column.id, index],
+    ),
+    disabled: !enabled,
+    sourceRef: columnRef,
+    preview: () => preview,
+  });
+
+  // Only hide the source when the row is actively showing a target slot at a
+  // different index (parent sets data-column-collapse). Otherwise (drag over
+  // source's own slot, or not-yet-hovering a real target) leave the source
+  // visible in place — that's what the user sees in the pill variant.
+  const [collapse, setCollapse] = useState(false);
+  const rowRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!isDragging) { setCollapse(false); return; }
+    const el = columnRef.current;
+    if (!el) return;
+    rowRef.current = el.parentElement;
+    let raf = 0;
+    const tick = () => {
+      const parent = rowRef.current;
+      const flag = parent?.getAttribute("data-column-collapse") === "true";
+      setCollapse((prev) => (prev === flag ? prev : flag));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [isDragging]);
+
+  return (
+    <div
+      ref={columnRef}
+      data-dnd-item={enabled ? "true" : undefined}
+      data-dragging={isDragging ? "true" : "false"}
+      className={cn(
+        "max-w-[300px] min-w-[240px] flex-1 transition-opacity duration-150",
+        collapse && "hidden",
+        isDragging && !collapse && "opacity-40",
+      )}
+    >
+      <div
+        {...(enabled ? {
+          onPointerDown: dragProps.onPointerDown,
+          draggable: dragProps.draggable,
+          style: dragProps.style,
+        } : {})}
+        className={cn(enabled && "cursor-grab active:cursor-grabbing")}
+      >
+        {header}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function ColumnDragPreview({
+  column,
+  cards,
+  compact,
+  visibleFields,
+  renderCard,
+  overWip,
+  showWip,
+  showTotal,
+}: {
+  column: KanbanColumnConfig;
+  cards: KanbanCardData[];
+  compact: boolean;
+  visibleFields: KanbanCardField[];
+  renderCard?: CardRenderer;
+  overWip: boolean;
+  showWip: boolean;
+  showTotal: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "relative w-[280px] rounded-lg border bg-card p-2 shadow-2xl ring-1 ring-primary/40",
+        COLUMN_ACCENT[column.color ?? "muted"],
+        overWip && "border-destructive/60 bg-destructive/5",
+      )}
+      style={{ maxHeight: 420, overflow: "hidden" }}
+    >
+      <ColumnHeader
+        col={column}
+        count={cards.length}
+        overWip={overWip}
+        showWip={showWip}
+        showTotal={showTotal}
+      />
+      <div className="space-y-2">
+        {cards.slice(0, 4).map((card) => (
+          <ResolvedCard
+            key={card.id}
+            card={card}
+            visibleFields={visibleFields}
+            compact={compact}
+            isDragging
+            renderCard={renderCard}
+          />
+        ))}
+        {cards.length === 0 && (
+          <div className="min-h-[60px] rounded-md border border-dashed border-border" />
+        )}
+        {cards.length > 4 && (
+          <div className="px-1 py-1 text-[10px] font-medium text-muted-foreground">
+            +{cards.length - 4} more
+          </div>
+        )}
+      </div>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-card to-transparent"
+      />
+    </div>
+  );
+}
+
+function ColumnDropSlot({
+  width,
+  height,
+  animated,
+}: {
+  width: number;
+  height: number;
+  animated: boolean;
+}) {
+  const w = width > 0 ? width : 260;
+  const h = height > 0 ? Math.min(height, 420) : 200;
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "shrink-0 rounded-lg border-2 border-dashed border-primary/60 bg-primary/10 ring-1 ring-primary/20",
+        animated && "animate-in fade-in zoom-in-95 duration-150",
+      )}
+      style={{ width: w, height: h, minWidth: w, maxWidth: w }}
+    />
   );
 }
 

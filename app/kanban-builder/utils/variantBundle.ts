@@ -21,7 +21,7 @@
 
 import type { KanbanBuilderConfig, KanbanCardData } from "@/kanban/types";
 
-import { generateKanbanFiles, type GeneratedFile } from "./kanbanCodeGenerator";
+import { generateKanbanFiles, type GeneratedFile, type KanbanRendererSources } from "./kanbanCodeGenerator";
 
 export interface KanbanVariantFile {
   /** Destination path inside the consumer project. */
@@ -73,11 +73,13 @@ export function buildKanbanVariantFiles(
   config: KanbanBuilderConfig,
   cards: KanbanCardData[],
   variantSlug: string,
+  rendererSources?: KanbanRendererSources,
 ): KanbanVariantFile[] {
   const componentName = variantPageComponentName(variantSlug);
   const generated: GeneratedFile[] = generateKanbanFiles(
     config,
     cards,
+    rendererSources,
     componentName,
   );
 

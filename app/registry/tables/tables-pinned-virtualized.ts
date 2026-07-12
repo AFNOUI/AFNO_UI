@@ -5,7 +5,7 @@
  */
 
 import { tableTemplates } from "@/table-builder/data/tableBuilderTemplates";
-import type { TableBuilderConfig } from "@/tables/types/types";
+import type { TableBuilderConfig } from "@/tables/types";
 
 import type { DataMode } from "@/table-builder/utils/tableCodeGenerator";
 

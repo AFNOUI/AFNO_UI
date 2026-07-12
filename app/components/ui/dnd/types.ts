@@ -35,6 +35,8 @@ export interface DragSnapshot<T extends DragData = DragData> {
   sourceTop?: number;
   sourceRight?: number;
   sourceBottom?: number;
+  /** Rendered drag preview, also reusable by consumers as a matching drop shadow. */
+  previewNode?: React.ReactNode;
 }
 
 /** What a drop zone receives on a successful drop. */
@@ -118,6 +120,8 @@ export interface UseDraggableOptions<T extends DragData = DragData> {
   disabled?: boolean;
   /** Optional custom React preview rendered inside the overlay. */
   preview?: () => React.ReactNode;
+  /** Optional full source element to measure when the pointer handle is not the visual item. */
+  sourceRef?: { current: HTMLElement | null };
 }
 
 /** Options for useDropZone. */

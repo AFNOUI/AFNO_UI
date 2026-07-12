@@ -50,67 +50,44 @@ import { TableBuilderGuide } from "@/table-builder/TableBuilderGuide";
 import { TableJsonImportDialog } from "@/table-builder/TableJsonImportDialog";
 
 const complexityColors: Record<string, string> = {
-  intermediate:
-  "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-  expert:
-  "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-  advanced:
-  "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
-  basic:
-    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+  basic: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+  intermediate: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+  advanced: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+  expert: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
 };
 
 export default function DataTableBuilder() {
-  const {
-    undo,
-    redo,
-    canUndo,
-    canRedo,
-    state: config,
-    set: setConfig,
-    reset: resetHistory,
-  } = useBuilderHistory<TableBuilderConfig>(defaultTableConfig);
-
-  const [sampleData, setSampleData] =
-    useState<Record<string, unknown>[]>(defaultSampleData);
-  const [activeTab, setActiveTab] = useState<
-    "builder" | "preview" | "code" | "guide"
-  >("builder");
+  const { state: config, set: setConfig, undo, redo, reset: resetHistory, canUndo, canRedo } = useBuilderHistory<TableBuilderConfig>(defaultTableConfig);
+  const [sampleData, setSampleData] = useState<Record<string, unknown>[]>(defaultSampleData);
+  const [activeTab, setActiveTab] = useState<"builder" | "preview" | "code" | "guide">("builder");
   const [isLoading, setIsLoading] = useState(false);
+  const [rendererSources, setRendererSources] = useState<
+    import("@/table-builder/data/tableBuilderTemplates").TableTemplate["rendererSources"]
+  >(undefined);
 
-  const loadTemplate = useCallback(
-    (templateKey: string) => {
-      const template = tableTemplates[templateKey];
-      if (template) {
-        resetHistory(template.config);
-        setSampleData(template.sampleData);
-        if (
-          template.config.sortMode === "api" ||
-          template.config.paginationMode === "api"
-        ) {
-          setIsLoading(true);
-          setTimeout(() => setIsLoading(false), 1500);
-        }
-        toast({ title: "Template loaded", description: template.title });
+  const loadTemplate = useCallback((templateKey: string) => {
+    const template = tableTemplates[templateKey];
+    if (template) {
+      resetHistory(template.config);
+      setSampleData(template.sampleData);
+      setRendererSources(template.rendererSources);
+      if (template.config.sortMode === "api" || template.config.paginationMode === "api") {
+        setIsLoading(true);
+        setTimeout(() => setIsLoading(false), 1500);
       }
-    },
-    [resetHistory],
-  );
+      toast({ title: "Template loaded", description: template.title });
+    }
+  }, [resetHistory]);
 
-  const handleConfigChange = useCallback(
-    (newConfig: TableBuilderConfig) => {
-      setConfig(newConfig);
-    },
-    [setConfig],
-  );
+  const handleConfigChange = useCallback((newConfig: TableBuilderConfig) => {
+    setConfig(newConfig);
+  }, [setConfig]);
 
-  const handleJsonImport = useCallback(
-    (newConfig: TableBuilderConfig, newSample?: Record<string, unknown>[]) => {
-      resetHistory(newConfig);
-      if (newSample && Array.isArray(newSample)) setSampleData(newSample);
-    },
-    [resetHistory],
-  );
+  const handleJsonImport = useCallback((newConfig: TableBuilderConfig, newSample?: Record<string, unknown>[]) => {
+    resetHistory(newConfig);
+    setRendererSources(undefined);
+    if (newSample && Array.isArray(newSample)) setSampleData(newSample);
+  }, [resetHistory]);
 
   const handleSimulateLoading = useCallback(() => {
     setIsLoading(true);
@@ -118,52 +95,39 @@ export default function DataTableBuilder() {
   }, []);
 
   const handleGenerateStressData = useCallback(() => {
-    const cols = config.columns.filter(
-      (c) => c.visible && c.type !== "actions",
-    );
-    const rows: Record<string, unknown>[] = Array.from({ length: 1000 }).map(
-      (_, i) => {
-        const row: Record<string, unknown> = { id: `stress-${i + 1}` };
-        for (const col of cols) {
-          switch (col.type) {
-            case "number":
-            case "currency":
-            case "progress":
-            case "rating":
-              row[col.key] = Math.round(Math.random() * 1000);
-              break;
-            case "boolean":
-            case "switch":
-              row[col.key] = i % 2 === 0;
-              break;
-            case "date":
-              row[col.key] =
-                `2024-${String((i % 12) + 1).padStart(2, "0")}-${String((i % 28) + 1).padStart(2, "0")}`;
-              break;
-            case "email":
-              row[col.key] = `user${i + 1}@example.com`;
-              break;
-            case "badge":
-            case "dropdown":
-            case "status-dot": {
-              const opts = col.options?.length
-                ? col.options.map((o) => o.value)
-                : Object.keys(
-                    col.badgeVariants ?? { Active: 1, Pending: 1, Inactive: 1 },
-                  );
-              row[col.key] = opts[i % opts.length];
-              break;
-            }
-            case "tags":
-              row[col.key] = ["alpha", "beta", "gamma"].slice(0, (i % 3) + 1);
-              break;
-            default:
-              row[col.key] = `${col.label || col.key} ${i + 1}`;
+    const cols = config.columns.filter(c => c.visible && c.type !== "actions");
+    const rows: Record<string, unknown>[] = Array.from({ length: 1000 }).map((_, i) => {
+      const row: Record<string, unknown> = { id: `stress-${i + 1}` };
+      for (const col of cols) {
+        switch (col.type) {
+          case "number":
+          case "currency":
+          case "progress":
+          case "rating":
+            row[col.key] = Math.round(Math.random() * 1000); break;
+          case "boolean":
+          case "switch":
+            row[col.key] = i % 2 === 0; break;
+          case "date":
+            row[col.key] = `2024-${String((i % 12) + 1).padStart(2, "0")}-${String((i % 28) + 1).padStart(2, "0")}`; break;
+          case "email":
+            row[col.key] = `user${i + 1}@example.com`; break;
+          case "badge":
+          case "dropdown":
+          case "status-dot": {
+            const opts = col.options?.length
+              ? col.options.map(o => o.value)
+              : Object.keys(col.badgeVariants ?? { Active: 1, Pending: 1, Inactive: 1 });
+            row[col.key] = opts[i % opts.length]; break;
           }
+          case "tags":
+            row[col.key] = ["alpha", "beta", "gamma"].slice(0, (i % 3) + 1); break;
+          default:
+            row[col.key] = `${col.label || col.key} ${i + 1}`;
         }
-        return row;
-      },
-    );
+      }
+      return row;
+    });
     setSampleData(rows);
 
     // Production-friendly behavior: respect the user's current data-shape choice.
@@ -171,22 +135,12 @@ export default function DataTableBuilder() {
     // - If pagination is off → enable virtualization so 1k rows don't lag the DOM.
     // - If both off and virtualization already on → no-op, just load the rows.
     if (config.enablePagination) {
-      toast({
-        title: "Stress data loaded",
-        description: "1,000 rows generated — paginated.",
-      });
+      toast({ title: "Stress data loaded", description: "1,000 rows generated — paginated." });
     } else if (!config.enableVirtualization) {
       setConfig({ ...config, enableVirtualization: true });
-      toast({
-        title: "Stress data loaded",
-        description:
-          "1,000 rows generated. Virtualization auto-enabled to keep rendering smooth.",
-      });
+      toast({ title: "Stress data loaded", description: "1,000 rows generated. Virtualization auto-enabled to keep rendering smooth." });
     } else {
-      toast({
-        title: "Stress data loaded",
-        description: "1,000 rows generated.",
-      });
+      toast({ title: "Stress data loaded", description: "1,000 rows generated." });
     }
   }, [config, setConfig]);
 
@@ -204,12 +158,8 @@ export default function DataTableBuilder() {
                   <Table2 className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-xl sm:text-2xl font-bold">
-                    Data Table Builder
-                  </h1>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    Build advanced, production-ready tables visually
-                  </p>
+                  <h1 className="text-xl sm:text-2xl font-bold">Data Table Builder</h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Build advanced, production-ready tables visually</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto">
@@ -222,13 +172,7 @@ export default function DataTableBuilder() {
                       <SelectItem key={key} value={key}>
                         <div className="flex items-center gap-2">
                           <span className="truncate">{template.title}</span>
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "text-[9px] h-4 px-1 capitalize border",
-                              complexityColors[template.complexity],
-                            )}
-                          >
+                          <Badge variant="outline" className={cn("text-[9px] h-4 px-1 capitalize border", complexityColors[template.complexity])}>
                             {template.complexity}
                           </Badge>
                         </div>
@@ -238,40 +182,19 @@ export default function DataTableBuilder() {
                 </Select>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-9 gap-1.5"
-                      onClick={handleGenerateStressData}
-                    >
+                    <Button variant="outline" size="sm" className="h-9 gap-1.5" onClick={handleGenerateStressData}>
                       <Database className="h-3.5 w-3.5" />
                       <span className="hidden sm:inline">Generate 1k rows</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    Stress-test virtualization with 1,000 generated rows
-                  </TooltipContent>
+                  <TooltipContent>Stress-test virtualization with 1,000 generated rows</TooltipContent>
                 </Tooltip>
-                {(config.sortMode === "api" ||
-                  config.paginationMode === "api") && (
+                {(config.sortMode === "api" || config.paginationMode === "api") && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 gap-1.5"
-                        onClick={handleSimulateLoading}
-                        disabled={isLoading}
-                      >
-                        <Loader2
-                          className={cn(
-                            "h-3.5 w-3.5",
-                            isLoading && "animate-spin",
-                          )}
-                        />
-                        <span className="hidden sm:inline">
-                          {isLoading ? "Loading…" : "Simulate API"}
-                        </span>
+                      <Button variant="outline" size="sm" className="h-9 gap-1.5" onClick={handleSimulateLoading} disabled={isLoading}>
+                        <Loader2 className={cn("h-3.5 w-3.5", isLoading && "animate-spin")} />
+                        <span className="hidden sm:inline">{isLoading ? "Loading…" : "Simulate API"}</span>
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Simulate API loading state</TooltipContent>
@@ -280,35 +203,17 @@ export default function DataTableBuilder() {
                 <TableJsonImportDialog
                   onImport={handleJsonImport}
                   currentConfig={config}
-                  currentSampleData={
-                    sampleData as { id: string; [k: string]: unknown }[]
-                  }
+                  currentSampleData={sampleData as { id: string; [k: string]: unknown }[]}
                 />
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-9 w-9"
-                      onClick={undo}
-                      disabled={!canUndo}
-                    >
-                      <Undo2 className="h-4 w-4" />
-                    </Button>
+                    <Button variant="outline" size="icon" className="h-9 w-9" onClick={undo} disabled={!canUndo}><Undo2 className="h-4 w-4" /></Button>
                   </TooltipTrigger>
                   <TooltipContent>Undo</TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-9 w-9"
-                      onClick={redo}
-                      disabled={!canRedo}
-                    >
-                      <Redo2 className="h-4 w-4" />
-                    </Button>
+                    <Button variant="outline" size="icon" className="h-9 w-9" onClick={redo} disabled={!canRedo}><Redo2 className="h-4 w-4" /></Button>
                   </TooltipTrigger>
                   <TooltipContent>Redo</TooltipContent>
                 </Tooltip>
@@ -316,30 +221,12 @@ export default function DataTableBuilder() {
             </div>
           </div>
 
-          <Tabs
-            value={activeTab}
-            onValueChange={(v) =>
-              setActiveTab(v as "builder" | "preview" | "code" | "guide")
-            }
-            className="space-y-4"
-          >
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "builder" | "preview" | "code" | "guide")} className="space-y-4">
             <TabsList className="h-10">
-              <TabsTrigger value="builder" className="gap-2 px-3 sm:px-4">
-                <TextCursorInput className="h-4 w-4" />
-                <span className="hidden sm:inline">Builder</span>
-              </TabsTrigger>
-              <TabsTrigger value="preview" className="gap-2 px-3 sm:px-4">
-                <Eye className="h-4 w-4" />
-                <span className="hidden sm:inline">Preview</span>
-              </TabsTrigger>
-              <TabsTrigger value="code" className="gap-2 px-3 sm:px-4">
-                <Code2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Export</span>
-              </TabsTrigger>
-              <TabsTrigger value="guide" className="gap-2 px-3 sm:px-4">
-                <BookOpen className="h-4 w-4" />
-                <span className="hidden sm:inline">Guide</span>
-              </TabsTrigger>
+              <TabsTrigger value="builder" className="gap-2 px-3 sm:px-4"><TextCursorInput className="h-4 w-4" /><span className="hidden sm:inline">Builder</span></TabsTrigger>
+              <TabsTrigger value="preview" className="gap-2 px-3 sm:px-4"><Eye className="h-4 w-4" /><span className="hidden sm:inline">Preview</span></TabsTrigger>
+              <TabsTrigger value="code" className="gap-2 px-3 sm:px-4"><Code2 className="h-4 w-4" /><span className="hidden sm:inline">Export</span></TabsTrigger>
+              <TabsTrigger value="guide" className="gap-2 px-3 sm:px-4"><BookOpen className="h-4 w-4" /><span className="hidden sm:inline">Guide</span></TabsTrigger>
             </TabsList>
 
             {/* BUILDER TAB — Settings sidebar (sticky) on left, Preview + Columns stacked on right */}
@@ -348,35 +235,24 @@ export default function DataTableBuilder() {
                 {/* Sticky Settings sidebar */}
                 <aside className="lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-90px)]">
                   <ScrollArea className="lg:h-[calc(100vh-90px)] pe-2">
-                    <SettingsPanel
-                      config={config}
-                      onChange={handleConfigChange}
-                    />
+                    <SettingsPanel config={config} onChange={handleConfigChange} />
                   </ScrollArea>
                 </aside>
 
                 {/* Right: Preview on top, Columns directly below */}
                 <div className="min-w-0 space-y-4">
-                  <TablePreview
-                    config={config}
-                    data={sampleData}
-                    isLoading={isLoading}
-                  />
+                  <TablePreview config={config} data={sampleData} isLoading={isLoading} />
                   <ColumnEditor config={config} onChange={handleConfigChange} />
                 </div>
               </div>
             </TabsContent>
 
             <TabsContent value="preview" className="mt-0">
-              <TablePreview
-                config={config}
-                data={sampleData}
-                isLoading={isLoading}
-              />
+              <TablePreview config={config} data={sampleData} isLoading={isLoading} />
             </TabsContent>
 
             <TabsContent value="code" className="mt-0">
-              <TableExportTab config={config} />
+              <TableExportTab config={config} rendererSources={rendererSources} />
             </TabsContent>
 
             <TabsContent value="guide" className="mt-0">

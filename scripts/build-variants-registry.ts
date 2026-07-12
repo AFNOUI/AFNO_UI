@@ -299,7 +299,7 @@ async function buildVariantsRegistry() {
   for (const [templateKey, template] of Object.entries(kanbanTemplates)) {
     const variantSlug = kanbanTemplateKeyToVariantSlug(templateKey);
     const variantName = `kanban/${variantSlug}`;
-    const files = buildKanbanVariantFiles(template.config, template.cards, variantSlug);
+    const files = buildKanbanVariantFiles(template.config, template.cards, variantSlug, template.rendererSources);
     const item: VariantRegistryItem = {
       name: variantName,
       category: "kanban",

@@ -1,47 +1,43 @@
+"use client";
+
+import React, {
+  useRef,
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import {
   X,
   Eye,
-  Star,
   Plus,
   Minus,
   Trash2,
-  Circle,
   Search,
   Loader2,
   Columns3,
   Download,
-  RefreshCw,
+  FileJson,
   ChevronUp,
   ArrowRight,
   ChevronDown,
-  ChevronLeft,
-  CheckCircle2,
-  ChevronsLeft,
   ChevronRight,
   GripVertical,
-  ChevronsRight,
+  ExternalLink,
   ChevronsUpDown,
-  MoreHorizontal,
 } from "lucide-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 
 import {
   DndProvider,
   useDropZone,
   useDraggable,
   type DropResult,
+  useDndContext,
 } from "@/components/ui/dnd";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
-import {
-  Select,
-  SelectItem,
-  SelectValue,
-  SelectContent,
-  SelectTrigger,
-} from "@/components/ui/select";
 import {
   Table,
   TableRow,
@@ -59,6 +55,11 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
   DropdownMenu,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -70,21 +71,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import {
+  renderRowDialogText,
+  renderRowDialogTemplate,
+} from "@/utils/rowDialogTemplate";
 import {
   useTablePreview,
   aggregate as aggregateValues,
 } from "@/table-builder/hooks/useTablePreview";
-import { VariantJsonConfigPanel } from "@/components/shared/VariantJsonConfigPanel";
 import {
   TableColumnConfig,
   TableBuilderConfig,
@@ -93,29 +92,44 @@ import {
   TableRow as TableRowType,
 } from "@/table-builder/data/tableBuilderTemplates";
 import { runCellJs } from "@/utils/cellJsRunner";
-import { renderRowDialogTemplate, renderRowDialogText } from "@/utils/rowDialogTemplate";
+
+// ───── cell renderer ─────
+// The rich default per-`col.type` renderer lives in
+// `src/components/tables/defaultCellRenderer.tsx` and is used as the engine
+// fallback. Per-column or per-table overrides via `column.renderCell` /
+// `config.renderCell` short-circuit it.
+import {
+  DefaultCellRenderer,
+  type DefaultCellRowAction as RowActionButton,
+} from "@/tables/defaultCellRenderer";
+
+// ───── Expandable row content ─────
+// Layout switch lives in `src/components/tables/defaultExpandedRowRenderer.tsx`
+// so user-supplied `renderExpandedRow` can compose with the built-in layouts.
+import { DefaultRowDialogBody } from "@/tables/defaultRowDialog";
+import { useRowApiActions } from "@/tables/useRowApiActions.hook";
+import { DefaultPaginationBar } from "@/tables/defaultPaginationBar";
+import { DefaultExpandedRow } from "@/tables/defaultExpandedRowRenderer";
 
 interface TablePreviewProps {
   isLoading?: boolean;
+  config: TableBuilderConfig;
+  data: Record<string, unknown>[];
+  /**
+   * Optional dispatcher invoked whenever an interactive cell (switch, dropdown,
+   * radio, rating) changes value. Receives the full row, the column key, the
+   * previous value, and the new value. Returning a rejected promise does NOT
+   * auto-rollback — use `config.apiConfig.rowActions` for optimistic rollback.
+   */
   onCellInteract?: (
     row: Record<string, unknown>,
     key: string,
     oldValue: unknown,
     newValue: unknown,
   ) => Promise<void> | void;
-  config: TableBuilderConfig;
-  data: Record<string, unknown>[];
 }
 
 // ───── helpers ─────
-function getInitials(name: string) {
-  return String(name)
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
 
 const aggregate = aggregateValues;
 
@@ -155,6 +169,21 @@ function resolveClickAction(
   };
 }
 
+/** Split visible columns by pin state, preserving original order within each bucket. */
+function splitPinned(cols: TableColumnConfig[], enabled: boolean) {
+  if (!enabled)
+    return { start: [], middle: cols, end: [] as TableColumnConfig[] };
+  const start: TableColumnConfig[] = [];
+  const middle: TableColumnConfig[] = [];
+  const end: TableColumnConfig[] = [];
+  for (const c of cols) {
+    if (c.pinned === "start") start.push(c);
+    else if (c.pinned === "end") end.push(c);
+    else middle.push(c);
+  }
+  return { start, middle, end };
+}
+
 /** Compute cumulative offset (px) for sticky pinned columns. */
 function computePinOffsets(
   pinned: TableColumnConfig[],
@@ -170,200 +199,35 @@ function computePinOffsets(
   return out;
 }
 
-/**
- * Compute sticky cell style for a pinned column.
- *
- * `zBase` lets the caller pick the painting layer:
- *   - body cells:   10 + stackBias  (must paint above unpinned static siblings)
- *   - filter row:   15 + stackBias
- *   - header row:   20 + stackBias  (always wins so column labels stay readable)
- *
- * Notably, this function **does not set `background`** — that's the caller's job
- * because:
- *   - body cells need to *match the row's visual state* (stripe / hover / selected)
- *     so they don't look like a different "patch" sitting on top of the row;
- *   - header / filter cells use a different muted overlay color than body cells.
- *
- * `isolation: isolate` creates an explicit stacking context on every pinned cell.
- * That guarantees no descendant element (a `transform`, `will-change`, `opacity<1`,
- * a Radix portal trigger, etc.) can accidentally hoist itself above the next pinned
- * cell during horizontal scroll.
- *
- * `overflow: hidden` clips cell-internal overflow (long labels, wide badges) to
- * the cell's box, so nothing painted *inside* a pinned cell can extend past its
- * sticky boundary into a sibling pinned column.
- *
- * The edge separator (boxShadow) layers a 1-px inset border with a soft drop
- * shadow on the *outer* side. The inset hairline can disappear when `--card`
- * matches the page background, so the drop shadow guarantees the divider is
- * visible in every theme.
- */
+/** Compute sticky cell style for a pinned column. */
 function pinStyle(
   pinned: "start" | "end" | null | undefined,
   offset: number | undefined,
   direction: "ltr" | "rtl",
   isLastStart = false,
   isFirstEnd = false,
-  zBase = 10,
 ): React.CSSProperties | undefined {
   if (!pinned || offset == null) return undefined;
   const startSide = direction === "rtl" ? "right" : "left";
   const endSide = direction === "rtl" ? "left" : "right";
   const style: React.CSSProperties = {
     position: "sticky",
-    zIndex: zBase,
-    overflow: "hidden",
-    isolation: "isolate",
+    zIndex: 2,
+    background: "hsl(var(--background))",
   };
-  // Soft drop shadow on the scroll-facing side so the boundary is *always*
-  // visible, even when `--border` blends into `--card` (common in dark themes).
-  const startShadow =
-    direction === "rtl"
-      ? "inset 1px 0 0 0 hsl(var(--border)), -6px 0 8px -6px rgb(0 0 0 / 0.18)"
-      : "inset -1px 0 0 0 hsl(var(--border)), 6px 0 8px -6px rgb(0 0 0 / 0.18)";
-  const endShadow =
-    direction === "rtl"
-      ? "inset -1px 0 0 0 hsl(var(--border)), 6px 0 8px -6px rgb(0 0 0 / 0.18)"
-      : "inset 1px 0 0 0 hsl(var(--border)), -6px 0 8px -6px rgb(0 0 0 / 0.18)";
   if (pinned === "start") {
     style[startSide as "left"] = offset;
-    if (isLastStart) style.boxShadow = startShadow;
+    if (isLastStart) {
+      style.boxShadow = "inset -1px 0 0 0 hsl(var(--border))";
+    }
   } else {
     style[endSide as "right"] = offset;
-    if (isFirstEnd) style.boxShadow = endShadow;
+    if (isFirstEnd) {
+      style.boxShadow = "inset 1px 0 0 0 hsl(var(--border))";
+    }
   }
   return style;
 }
-
-/**
- * Solid, fully opaque background that matches what an unpinned cell *visually*
- * shows for a given row state. Pinned cells must paint a solid background to
- * mask scrolling content beneath them, but they don't inherit the row's
- * stripe / hover / selected overlays — so they end up looking like a different
- * "patch" sitting on the row. `color-mix()` blends the table's `--card` token
- * with the row's overlay token in srgb space, producing a single solid color
- * that's pixel-identical to (card + overlay-at-X%) the unpinned cell shows.
- *
- * `color-mix(in srgb, ...)` is supported in every Chromium / WebKit / Firefox
- * release from 2023 onwards (Baseline 2024).
- */
-function pinnedRowBackground(state: {
-  selected: boolean;
-  striped: boolean;
-}): string {
-  if (state.selected) {
-    return "color-mix(in srgb, hsl(var(--card)), hsl(var(--primary)) 8%)";
-  }
-  if (state.striped) {
-    return "color-mix(in srgb, hsl(var(--card)), hsl(var(--muted)) 40%)";
-  }
-  return "hsl(var(--card))";
-}
-
-/** Per-column width + sticky styles for header and filter rows (keeps filter cells aligned with pinned headers). */
-function getPinnedColumnLayout(
-  col: TableColumnConfig,
-  visibleCols: TableColumnConfig[],
-  config: TableBuilderConfig,
-  columnWidths: Record<string, number>,
-): {
-  widthStyle: React.CSSProperties | undefined;
-  headSticky: React.CSSProperties | undefined;
-  filterSticky: React.CSSProperties | undefined;
-} {
-  const width = columnWidths[col.id] || col.width;
-  const widthStyle = width
-    ? { width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` }
-    : undefined;
-  if (!config.enablePinnedColumns) {
-    return { widthStyle, headSticky: undefined, filterSticky: undefined };
-  }
-  const startCols = visibleCols.filter((c) => c.pinned === "start");
-  const endCols = visibleCols.filter((c) => c.pinned === "end");
-  const startOffsets = computePinOffsets(startCols, columnWidths);
-  const endOffsets = computePinOffsets([...endCols].reverse(), columnWidths);
-  const pinIdx =
-    col.pinned === "start"
-      ? startCols.findIndex((c) => c.id === col.id)
-      : col.pinned === "end"
-        ? endCols.findIndex((c) => c.id === col.id)
-        : -1;
-  const pinOffset =
-    col.pinned === "start" && pinIdx >= 0
-      ? startOffsets[pinIdx]
-      : col.pinned === "end" && pinIdx >= 0
-        ? endOffsets[endCols.length - 1 - pinIdx]
-        : undefined;
-  /**
-   * Sticky siblings share the same base z-index by default, so when the user
-   * scrolls horizontally the *next* column (later in the DOM) paints on top of
-   * a left-pinned column and header/filter text visually merge ("Trade #" +
-   * "Symbol"). Bias z-index so edge-most pins win: for `start`, leftmost column
-   * gets the highest value; for `end`, rightmost column wins. Re-used by the
-   * body cell path in `SortableRow` via `computeStackBias` below.
-   */
-  const stackBias =
-    col.pinned === "start" && pinIdx >= 0
-      ? startCols.length - 1 - pinIdx
-      : col.pinned === "end" && pinIdx >= 0
-        ? pinIdx
-        : 0;
-  const headBase = pinStyle(
-    col.pinned ?? null,
-    pinOffset,
-    config.direction,
-    col.pinned === "start" && pinIdx === startCols.length - 1,
-    col.pinned === "end" && pinIdx === 0,
-    20 + stackBias,
-  );
-  const filterBase = pinStyle(
-    col.pinned ?? null,
-    pinOffset,
-    config.direction,
-    col.pinned === "start" && pinIdx === startCols.length - 1,
-    col.pinned === "end" && pinIdx === 0,
-    15 + stackBias,
-  );
-  if (!headBase || !filterBase) {
-    return { widthStyle, headSticky: undefined, filterSticky: undefined };
-  }
-  // Header + filter sit on top of the table chrome (also `--card`) and need
-  // *opaque* backgrounds so scrolling content can't smudge through them at
-  // scrollLeft > 0. We blend `--card` with the same muted token the unpinned
-  // header / filter rows use, so the pinned cell looks identical to its
-  // unpinned siblings while still fully masking what's behind it.
-  const headSticky: React.CSSProperties = {
-    ...headBase,
-    background: "color-mix(in srgb, hsl(var(--card)), hsl(var(--muted)) 40%)",
-  };
-  const filterSticky: React.CSSProperties = {
-    ...filterBase,
-    background: "color-mix(in srgb, hsl(var(--card)), hsl(var(--muted)) 25%)",
-  };
-  return { widthStyle, headSticky, filterSticky };
-}
-
-/**
- * Body cells need the same stack-bias logic as the header so multiple pinned
- * columns layer correctly during horizontal scroll. Extracted so `SortableRow`
- * doesn't duplicate the offsets/bias arithmetic.
- */
-function computeStackBias(
-  col: TableColumnConfig,
-  startCols: TableColumnConfig[],
-  endCols: TableColumnConfig[],
-): number {
-  if (col.pinned === "start") {
-    const idx = startCols.findIndex((c) => c.id === col.id);
-    return idx >= 0 ? startCols.length - 1 - idx : 0;
-  }
-  if (col.pinned === "end") {
-    const idx = endCols.findIndex((c) => c.id === col.id);
-    return idx >= 0 ? idx : 0;
-  }
-  return 0;
-}
-
 function ExpandIcon({
   style,
   expanded,
@@ -396,650 +260,109 @@ function ExpandIcon({
   }
 }
 
-// ───── cell renderer ─────
-interface RowActionButton {
-  id: string;
-  title: string;
-  onClick: () => void;
-}
-function CellRenderer({
-  col,
+function TableRowDragPreview({
   row,
-  val,
+  config,
+  visibleCols,
+  columnWidths,
   density,
-  inlineEdit,
-  onUpdate,
-  rowActionButtons,
-  onCellClick,
+  rowIdx,
+  selected,
+  expanded,
+  sourceWidth,
 }: {
-  col: TableColumnConfig;
   row: Record<string, unknown>;
-  val: unknown;
+  config: TableBuilderConfig;
+  visibleCols: TableColumnConfig[];
+  columnWidths: Record<string, number>;
   density: "comfortable" | "compact" | "spacious";
-  inlineEdit: boolean;
-  onUpdate: (rowId: string, key: string, value: unknown) => void;
-  rowActionButtons?: RowActionButton[];
-  onCellClick?: () => void;
+  rowIdx: number;
+  selected: boolean;
+  expanded: boolean;
+  sourceWidth?: number;
 }) {
-  const sizeClass =
-    density === "compact"
-      ? "text-[11px]"
-      : density === "spacious"
-        ? "text-sm"
-        : "text-xs";
-  // Solid underline using the current text colour — guarantees visibility on
-  // both light and dark themes regardless of the cell type.
-  const underlineClass = col.underline
-    ? "underline underline-offset-4 decoration-solid decoration-current"
-    : "";
-  const clickable = !!onCellClick;
-  const interactiveClass = clickable
-    ? "cursor-pointer hover:text-primary hover:decoration-primary transition-colors"
-    : "";
-  const stop = (e: React.MouseEvent) => {
-    if (clickable) e.stopPropagation();
-  };
-  const handleClick = (e: React.MouseEvent) => {
-    if (!clickable) return;
-    e.stopPropagation();
-    onCellClick?.();
-  };
-  void stop; // currently unused — kept for future per-control wiring
+  const heightClass =
+    density === "compact" ? "h-9" : density === "spacious" ? "h-14" : "h-11";
+  const leadingWidth =
+    36 *
+    ((config.enableDnD ? 1 : 0) +
+      (config.enableExpandableRows ? 1 : 0) +
+      (config.enableRowSelection ? 1 : 0));
+  const contentWidth = visibleCols.reduce(
+    (sum, col) => sum + (columnWidths[col.id] || col.width || 150),
+    0,
+  );
+  const width = Math.max(sourceWidth ?? 0, leadingWidth + contentWidth, 320);
 
-  switch (col.type) {
-    case "badge":
-      return (
-        <Badge
-          variant={
-            (col.badgeVariants?.[String(val)] || "secondary") as
-              | "default"
-              | "secondary"
-              | "outline"
-              | "destructive"
-          }
-          className={cn(sizeClass, underlineClass, interactiveClass)}
-          onClick={handleClick}
-        >
-          {String(val)}
-        </Badge>
-      );
-
-    case "progress":
-      return (
-        <div className="flex items-center gap-2 min-w-[80px]">
-          <Progress value={Number(val) || 0} className="h-1.5 flex-1" />
-          <span
-            className={cn(sizeClass, "text-muted-foreground w-9 tabular-nums")}
-          >
-            {Number(val) || 0}%
-          </span>
-        </div>
-      );
-
-    case "currency":
-      return (
-        <span
-          className={cn(
-            sizeClass,
-            "font-medium tabular-nums",
-            underlineClass,
-            interactiveClass,
-          )}
-          onClick={handleClick}
-        >
-          {col.format || "$"}
-          {Number(val).toLocaleString()}
-        </span>
-      );
-
-    case "date":
-      return (
-        <span
-          className={cn(
-            sizeClass,
-            "text-muted-foreground tabular-nums",
-            underlineClass,
-            interactiveClass,
-          )}
-          onClick={handleClick}
-        >
-          {String(val ?? "—")}
-        </span>
-      );
-
-    case "email":
-      return clickable ? (
-        <button
-          type="button"
-          onClick={handleClick}
-          className={cn(
-            sizeClass,
-            "text-primary hover:underline truncate block max-w-[180px] text-start",
-            underlineClass,
-          )}
-        >
-          {String(val ?? "—")}
-        </button>
-      ) : (
-        <a
-          href={`mailto:${val}`}
-          data-noclick="true"
-          onClick={(e) => e.stopPropagation()}
-          className={cn(
-            sizeClass,
-            "text-primary hover:underline truncate block max-w-[180px]",
-            underlineClass,
-          )}
-        >
-          {String(val ?? "—")}
-        </a>
-      );
-
-    case "link":
-      // When the column has a click action, render a button that routes
-      // through the cell-click handler (which already stopPropagation's so the
-      // row-click dialog never fires). Otherwise render a real anchor — but
-      // mark it `data-noclick` and stop propagation so opening a link never
-      // also triggers the row-click action.
-      return clickable ? (
-        <button
-          type="button"
-          data-noclick="true"
-          onClick={handleClick}
-          className={cn(
-            sizeClass,
-            "text-primary hover:underline truncate block max-w-[220px] text-start",
-            underlineClass,
-          )}
-        >
-          {String(val)}
-        </button>
-      ) : (
-        <a
-          href={String(val)}
-          target="_blank"
-          rel="noreferrer"
-          data-noclick="true"
-          onClick={(e) => e.stopPropagation()}
-          className={cn(
-            sizeClass,
-            "text-primary hover:underline",
-            underlineClass,
-          )}
-        >
-          {String(val)}
-        </a>
-      );
-
-    case "boolean":
-      return (
-        <Badge
-          variant={val ? "default" : "secondary"}
-          className={cn(sizeClass)}
-        >
-          {val ? "Yes" : "No"}
-        </Badge>
-      );
-
-    case "switch":
-      return (
-        <Switch
-          data-noclick="true"
-          checked={Boolean(val)}
-          onCheckedChange={(v) => onUpdate(row.id as string, col.key, v)}
-          onClick={(e) => e.stopPropagation()}
-          className="scale-90"
-          disabled={!inlineEdit}
-        />
-      );
-
-    case "radio":
-      return (
-        <RadioGroup
-          data-noclick="true"
-          value={String(val ?? "")}
-          onValueChange={(v) => onUpdate(row.id as string, col.key, v)}
-          className="flex gap-2"
-          onClick={(e) => e.stopPropagation()}
-          disabled={!inlineEdit}
-        >
-          {(col.options || []).map((opt) => (
-            <label
-              key={opt.value}
-              className="flex items-center gap-1 text-xs cursor-pointer"
-            >
-              <RadioGroupItem value={opt.value} className="h-3 w-3" />
-              <span>{opt.label}</span>
-            </label>
-          ))}
-        </RadioGroup>
-      );
-
-    case "dropdown":
-      if (!inlineEdit) {
-        return (
-          <Badge variant="outline" className={cn(sizeClass)}>
-            {String(val ?? "—")}
-          </Badge>
-        );
-      }
-      return (
-        <Select
-          value={String(val ?? "")}
-          onValueChange={(v) => onUpdate(row.id as string, col.key, v)}
-        >
-          <SelectTrigger
-            data-noclick="true"
-            className="h-7 text-xs w-32 border-border/40"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {(col.options || []).map((opt) => (
-              <SelectItem key={opt.value} value={opt.value} className="text-xs">
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      );
-
-    case "rating": {
-      const n = Number(val) || 0;
-      return (
-        <div className="flex items-center gap-0.5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Star
-              key={i}
+  return (
+    <div
+      className={cn(
+        "overflow-hidden rounded-md border border-primary/45 bg-background shadow-2xl ring-2 ring-primary/15",
+        config.enableStriped && rowIdx % 2 === 1 && "bg-muted/40",
+      )}
+      style={{ width }}
+    >
+      <div className={cn("flex items-center", heightClass)}>
+        {config.enableDnD && (
+          <div className="flex h-full w-9 shrink-0 items-center justify-center border-e border-border/60 text-primary">
+            <GripVertical className="h-3.5 w-3.5" />
+          </div>
+        )}
+        {config.enableExpandableRows && (
+          <div className="flex h-full w-9 shrink-0 items-center justify-center border-e border-border/60 text-muted-foreground">
+            <ExpandIcon
+              style={config.expandableIconStyle || "chevron"}
+              expanded={expanded}
+            />
+          </div>
+        )}
+        {config.enableRowSelection && (
+          <div className="flex h-full w-9 shrink-0 items-center justify-center border-e border-border/60">
+            <span
               className={cn(
-                "h-3.5 w-3.5",
-                i < n
-                  ? "fill-amber-400 text-amber-400"
-                  : "text-muted-foreground/30",
+                "h-4 w-4 rounded-sm border",
+                selected && "border-primary bg-primary",
               )}
             />
-          ))}
-        </div>
-      );
-    }
-
-    case "status-dot": {
-      const opt = col.options?.find((o) => o.value === val);
-      const color = opt?.color || "hsl(var(--muted-foreground))";
-      return (
-        <div className="flex items-center gap-2">
-          <span
-            className="h-2 w-2 rounded-full shrink-0"
-            style={{ backgroundColor: color }}
-          />
-          <span className={cn(sizeClass, "font-medium")}>
-            {opt?.label || String(val ?? "—")}
-          </span>
-        </div>
-      );
-    }
-
-    case "tags": {
-      const tags = Array.isArray(val) ? val : [];
-      return (
-        <div className="flex flex-wrap gap-1">
-          {tags.map((t, i) => (
-            <Badge key={i} variant="outline" className="text-[10px]">
-              {String(t)}
-            </Badge>
-          ))}
-        </div>
-      );
-    }
-
-    case "avatar":
-      return (
-        <div className="flex items-center gap-2">
-          <Avatar className="h-7 w-7">
-            <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
-              {getInitials(String(val))}
-            </AvatarFallback>
-          </Avatar>
-          <span className={cn(sizeClass, "font-medium truncate")}>
-            {String(val ?? "—")}
-          </span>
-        </div>
-      );
-
-    case "avatar-image":
-      return (
-        <div className="flex items-center gap-2">
-          <Avatar className="h-7 w-7">
-            <AvatarImage src={String(row.avatarUrl || "")} />
-            <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
-              {getInitials(String(val))}
-            </AvatarFallback>
-          </Avatar>
-          <span className={cn(sizeClass, "font-medium truncate")}>
-            {String(val ?? "—")}
-          </span>
-        </div>
-      );
-
-    case "actions":
-      return (
-        <div
-          data-noclick="true"
-          className="flex items-center justify-end gap-1"
-          onClick={(e) => e.stopPropagation()}
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          {rowActionButtons?.map((b) => (
-            <Button
-              key={b.id}
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              title={b.title}
-              onClick={(e) => {
-                e.stopPropagation();
-                b.onClick();
-              }}
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-            </Button>
-          ))}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MoreHorizontal className="h-3.5 w-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <DropdownMenuItem
-                className="text-xs"
-                onClick={(e) => e.stopPropagation()}
-              >
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-xs"
-                onClick={(e) => e.stopPropagation()}
-              >
-                Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-xs text-destructive"
-                onClick={(e) => e.stopPropagation()}
-              >
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      );
-
-    case "number":
-      return (
-        <span
-          className={cn(
-            sizeClass,
-            "tabular-nums",
-            underlineClass,
-            interactiveClass,
-          )}
-          onClick={handleClick}
-        >
-          {val == null ? "—" : Number(val).toLocaleString()}
-        </span>
-      );
-
-    default:
-      return (
-        <span
-          className={cn(
-            sizeClass,
-            "truncate block",
-            underlineClass,
-            interactiveClass,
-          )}
-          onClick={handleClick}
-        >
-          {String(val ?? "—")}
-        </span>
-      );
-  }
-}
-
-// ───── Expandable row content (multiple layouts) ─────
-function ExpandedContent({
-  row,
-  layout,
-}: {
-  row: Record<string, unknown>;
-  layout: TableBuilderConfig["expandableLayout"];
-}) {
-  const entries = Object.entries(row).filter(
-    ([k]) => k !== "id" && !["milestones", "assets"].includes(k),
-  );
-
-  switch (layout) {
-    case "card":
-      return (
-        <div className="px-4 py-4 bg-gradient-to-br from-muted/40 to-muted/20">
-          <Card className="border-border shadow-sm">
-            <CardHeader className="pb-2 pt-3 px-4">
-              <CardTitle className="text-sm">Full Details</CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {entries.map(([k, v]) => (
-                  <div
-                    key={k}
-                    className="space-y-0.5 p-2.5 rounded-md bg-muted/30 border border-border/40"
-                  >
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                      {k}
-                    </div>
-                    <div className="text-xs font-medium truncate">
-                      {String(v)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      );
-
-    case "grid":
-      return (
-        <div className="px-4 py-4 bg-muted/20">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-            {entries.map(([k, v]) => (
-              <div
-                key={k}
-                className="flex flex-col items-center justify-center text-center p-3 rounded-lg bg-background border border-border/60"
-              >
-                <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">
-                  {k}
-                </div>
-                <div className="text-sm font-bold tabular-nums truncate w-full">
-                  {String(v)}
-                </div>
-              </div>
-            ))}
           </div>
-        </div>
-      );
-
-    case "tabs":
-      return (
-        <div className="px-4 py-3 bg-muted/20">
-          <Tabs defaultValue="details" className="w-full">
-            <TabsList className="h-8">
-              <TabsTrigger value="details" className="text-xs h-6 px-3">
-                Details
-              </TabsTrigger>
-              <TabsTrigger value="raw" className="text-xs h-6 px-3">
-                Raw JSON
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="details" className="mt-2">
-              <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5 px-2">
-                {entries.map(([k, v]) => (
-                  <div key={k} className="flex justify-between text-xs">
-                    <span className="text-muted-foreground capitalize">
-                      {k}:
-                    </span>
-                    <span className="font-medium truncate ms-2">
-                      {String(v)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </TabsContent>
-            <TabsContent value="raw" className="mt-2">
-              <pre className="text-[10px] bg-background border border-border rounded p-2 overflow-x-auto">
-                {JSON.stringify(row, null, 2)}
-              </pre>
-            </TabsContent>
-          </Tabs>
-        </div>
-      );
-
-    case "timeline": {
-      const milestones =
-        (row.milestones as Array<{
-          date: string;
-          label: string;
-          done: boolean;
-        }>) || [];
-      return (
-        <div className="px-6 py-4 bg-muted/20">
-          <p className="text-xs font-semibold text-foreground mb-3">
-            Milestones
-          </p>
-          <div className="relative ms-2">
-            <div className="absolute start-1.5 top-1 bottom-1 w-px bg-border" />
-            <div className="space-y-3">
-              {milestones.length === 0 ? (
-                <p className="text-xs text-muted-foreground">
-                  No milestones available.
-                </p>
-              ) : (
-                milestones.map((m, i) => (
-                  <div key={i} className="relative flex items-start gap-3 ps-5">
-                    <div className="absolute start-0 top-0.5">
-                      {m.done ? (
-                        <CheckCircle2 className="h-3 w-3 text-primary" />
-                      ) : (
-                        <Circle className="h-3 w-3 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-medium">{m.label}</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {m.date}
-                      </div>
-                    </div>
-                    {m.done && (
-                      <Badge variant="secondary" className="text-[9px]">
-                        Done
-                      </Badge>
-                    )}
-                  </div>
-                ))
+        )}
+        {visibleCols.map((col) => {
+          const val = row[col.key];
+          const widthPx = columnWidths[col.id] || col.width || 150;
+          const custom = col.renderCell ?? config.renderCell;
+          const customOut = custom?.({
+            row: row as TableRowType,
+            value: val,
+            column: col,
+            rowIndex: rowIdx,
+            isSelected: selected,
+          });
+          return (
+            <div
+              key={col.id}
+              className={cn(
+                "flex h-full min-w-0 items-center overflow-hidden border-e border-border/50 px-4 py-2 text-sm last:border-e-0 [&_*]:pointer-events-none",
+                col.align === "center" && "justify-center text-center",
+                col.align === "right" && "justify-end text-end",
+              )}
+              style={{ width: widthPx, minWidth: widthPx }}
+            >
+              {customOut ?? (
+                <DefaultCellRenderer
+                  col={col}
+                  row={row}
+                  val={val}
+                  density={density}
+                  inlineEdit={false}
+                  onUpdate={() => undefined}
+                />
               )}
             </div>
-          </div>
-        </div>
-      );
-    }
-
-    case "gallery": {
-      const assets = (row.assets as string[]) || [];
-      return (
-        <div className="px-4 py-4 bg-muted/20">
-          <p className="text-xs font-semibold text-foreground mb-3">
-            Asset Preview ({assets.length})
-          </p>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-            {assets.map((cls, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "aspect-square rounded-lg flex items-center justify-center text-white text-xs font-bold shadow-sm",
-                  cls,
-                )}
-              >
-                {i + 1}
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    case "stats": {
-      // pull a few KPI fields if present
-      const kpiKeys = ["calls", "demos", "win", "deals", "revenue", "quota"];
-      const kpis = kpiKeys
-        .filter((k) => row[k] !== undefined)
-        .map((k) => ({ key: k, value: row[k] }));
-      return (
-        <div className="px-4 py-4 bg-muted/20">
-          <p className="text-xs font-semibold text-foreground mb-3">
-            Performance Breakdown
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-            {kpis.length === 0 ? (
-              <p className="text-xs text-muted-foreground col-span-full">
-                No KPI fields available.
-              </p>
-            ) : (
-              kpis.map(({ key, value }) => (
-                <div
-                  key={key}
-                  className="p-3 rounded-lg bg-background border border-border/60"
-                >
-                  <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">
-                    {key}
-                  </div>
-                  <div className="text-lg font-bold tabular-nums mt-0.5">
-                    {String(value)}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    case "details":
-    default:
-      return (
-        <div className="px-4 py-3">
-          <p className="text-xs font-semibold text-foreground mb-1">
-            Row Details
-          </p>
-          <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1">
-            {entries.map(([k, v]) => (
-              <div key={k} className="flex justify-between text-xs">
-                <span className="text-muted-foreground capitalize">{k}:</span>
-                <span className="font-medium truncate ms-2">{String(v)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-  }
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 // ───── sortable row ─────
@@ -1047,36 +370,37 @@ function SortableRow({
   row,
   rowIdx,
   config,
-  visibleCols,
-  selected,
-  onToggleSelect,
   density,
-  onCellUpdate,
   expanded,
-  onToggleExpand,
+  selected,
+  visibleCols,
   columnWidths,
-  getRowActionButtons,
   onRowClick,
+  onCellUpdate,
+  onToggleSelect,
+  onToggleExpand,
   onOpenRowDialog,
+  getRowActionButtons,
 }: {
-  row: Record<string, unknown>;
   rowIdx: number;
-  config: TableBuilderConfig;
-  visibleCols: TableColumnConfig[];
   selected: string[];
-  onToggleSelect: (id: string) => void;
-  density: "comfortable" | "compact" | "spacious";
-  onCellUpdate: (rowId: string, key: string, value: unknown) => void;
   expanded: string[];
-  onToggleExpand: (id: string) => void;
+  config: TableBuilderConfig;
+  row: Record<string, unknown>;
+  visibleCols: TableColumnConfig[];
   columnWidths: Record<string, number>;
+  onToggleSelect: (id: string) => void;
+  onToggleExpand: (id: string) => void;
+  density: "comfortable" | "compact" | "spacious";
+  onRowClick?: (row: Record<string, unknown>) => void;
+  onOpenRowDialog: (row: Record<string, unknown>) => void;
+  onCellUpdate: (rowId: string, key: string, value: unknown) => void;
   getRowActionButtons?: (
     row: Record<string, unknown>,
     col: TableColumnConfig,
   ) => RowActionButton[];
-  onRowClick?: (row: Record<string, unknown>) => void;
-  onOpenRowDialog: (row: Record<string, unknown>) => void;
 }) {
+  const rowRef = useRef<HTMLTableRowElement | null>(null);
   // Drag handle wired to the custom Pointer DnD library. The row itself is
   // still the visual drag source, but only the GripVertical button is the
   // pointer trigger — clicking elsewhere on the row keeps row-click intact.
@@ -1084,10 +408,19 @@ function SortableRow({
     id: row.id as string,
     data: useMemo(() => ({ rowId: row.id as string }), [row.id]),
     disabled: !config.enableDnD,
+    sourceRef: rowRef,
     preview: () => (
-      <div className="rounded border border-border bg-card px-3 py-1.5 text-xs font-medium shadow-lg">
-        Moving row…
-      </div>
+      <TableRowDragPreview
+        row={row}
+        config={config}
+        visibleCols={visibleCols}
+        columnWidths={columnWidths}
+        density={density}
+        rowIdx={rowIdx}
+        selected={selected.includes(row.id as string)}
+        expanded={expanded.includes(row.id as string)}
+        sourceWidth={rowRef.current?.getBoundingClientRect().width}
+      />
     ),
   });
 
@@ -1100,25 +433,38 @@ function SortableRow({
 
   // helper cells
   const dragCell = config.enableDnD && (
-    <TableCell key="dnd" className="w-9 px-1 align-middle">
+    <TableCell key="dnd" className="w-9 px-1 align-middle" data-noclick="true">
       <button
         type="button"
         {...dragProps}
-        className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground flex items-center justify-center h-7 w-7 rounded hover:bg-muted mx-auto"
+        data-dnd-item={undefined}
+        data-dragging={undefined}
+        className={cn(
+          "group/handle relative flex items-center justify-center h-7 w-7 rounded-md mx-auto",
+          "cursor-grab active:cursor-grabbing transition-all",
+          "text-muted-foreground/50 hover:text-primary hover:bg-primary/10",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+          isDragging && "text-primary bg-primary/15",
+        )}
         aria-label="Drag to reorder row"
+        title="Drag to reorder"
       >
-        <GripVertical className="h-3.5 w-3.5" />
+        <GripVertical className="h-3.5 w-3.5 transition-transform group-hover/handle:scale-110" />
       </button>
     </TableCell>
   );
 
   const expandCell = config.enableExpandableRows && (
-    <TableCell key="exp" className="w-9 px-1 align-middle">
+    <TableCell key="exp" className="w-9 px-1 align-middle" data-noclick="true">
       <Button
         variant="ghost"
         size="icon"
         className="h-7 w-7 mx-auto flex"
-        onClick={() => onToggleExpand(row.id as string)}
+        data-noclick="true"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleExpand(row.id as string);
+        }}
       >
         <ExpandIcon style={iconStyle} expanded={isExpanded} />
       </Button>
@@ -1168,6 +514,7 @@ function SortableRow({
   return (
     <>
       <TableRow
+        ref={rowRef}
         data-dnd-item="true"
         data-dragging={isDragging ? "true" : "false"}
         data-state={isSelected ? "selected" : undefined}
@@ -1200,8 +547,9 @@ function SortableRow({
           config.enableHover && "hover:bg-muted/60 transition-colors",
           !config.enableHover && "hover:bg-transparent",
           isSelected && "bg-primary/5 hover:bg-primary/10",
-          isDragging && "opacity-50",
+          isDragging && "opacity-30",
           onRowClick && "cursor-pointer",
+          config.enableDnD && "data-[dragging=true]:bg-primary/5",
         )}
       >
         {orderedLeading}
@@ -1220,31 +568,17 @@ function SortableRow({
               : col.pinned === "end" && pinIdx >= 0
                 ? endOffsets[endCols.length - 1 - pinIdx]
                 : undefined;
-          const stackBias = pinEnabled ? computeStackBias(col, startCols, endCols) : 0;
-          const isPinnedCell = pinEnabled && !!col.pinned;
-          const sticky = isPinnedCell
+          const sticky = pinEnabled
             ? pinStyle(
                 col.pinned ?? null,
                 pinOffset,
                 config.direction,
                 col.pinned === "start" && pinIdx === startCols.length - 1,
                 col.pinned === "end" && pinIdx === 0,
-                10 + stackBias,
               )
             : undefined;
           const widthStyle = width
-            ? { width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` }
-            : undefined;
-          // Pinned cells must paint a solid background to mask scrolling
-          // content beneath them — but they don't inherit the row's stripe /
-          // hover / selected overlays, so we synthesise a matching opaque
-          // colour via `color-mix` (see `pinnedRowBackground`). Unpinned
-          // cells stay transparent and inherit the row classes as before.
-          const pinnedBg = isPinnedCell
-            ? pinnedRowBackground({
-                selected: isSelected,
-                striped: !!config.enableStriped && rowIdx % 2 === 1,
-              })
+            ? { width: `${width}px`, minWidth: `${width}px` }
             : undefined;
           const cellAction = resolveClickAction(
             col.clickAction,
@@ -1255,32 +589,41 @@ function SortableRow({
           return (
             <TableCell
               key={col.id}
-              style={{
-                ...widthStyle,
-                ...sticky,
-                ...(pinnedBg ? { background: pinnedBg } : {}),
-              }}
+              style={{ ...widthStyle, ...sticky }}
               className={cn(
-                // `overflow-hidden` on every body cell (not just pinned) is the
-                // belt-and-braces fix for bleed-through: a wide / rounded child
-                // (badge, long text, anti-aliased pill edge) painted by an
-                // unpinned cell can no longer extend past its own column box
-                // into a sticky neighbour's territory.
-                "py-2 align-middle overflow-hidden",
+                "py-2 align-middle",
                 col.align === "center" && "text-center",
                 col.align === "right" && "text-end",
               )}
             >
-              <CellRenderer
-                col={col}
-                row={row}
-                val={val}
-                density={density}
-                inlineEdit={config.enableInlineEdit}
-                onUpdate={onCellUpdate}
-                rowActionButtons={getRowActionButtons?.(row, col)}
-                onCellClick={cellAction ?? undefined}
-              />
+              {(() => {
+                const custom = col.renderCell ?? config.renderCell;
+                if (custom) {
+                  const out = custom({
+                    row: row as TableRowType,
+                    value: val,
+                    column: col,
+                    rowIndex: rowIdx,
+                    isSelected,
+                  });
+                  // Returning `undefined` / `null` lets the cell fall through
+                  // to the built-in renderer — handy when a reusable renderer
+                  // only wants to customise *some* columns.
+                  if (out !== undefined && out !== null) return out;
+                }
+                return (
+                  <DefaultCellRenderer
+                    col={col}
+                    row={row}
+                    val={val}
+                    density={density}
+                    inlineEdit={config.enableInlineEdit}
+                    onUpdate={onCellUpdate}
+                    rowActionButtons={getRowActionButtons?.(row, col)}
+                    onCellClick={cellAction ?? undefined}
+                  />
+                );
+              })()}
             </TableCell>
           );
         })}
@@ -1296,10 +639,25 @@ function SortableRow({
             }
             className="p-0"
           >
-            <ExpandedContent
-              row={row}
-              layout={config.expandableLayout || "details"}
-            />
+            {(() => {
+              // Resolution order: config.renderExpandedRow → expandableLayout switch
+              if (config.renderExpandedRow) {
+                const out = config.renderExpandedRow({
+                  row: row as TableRowType,
+                  columns: visibleCols,
+                  rowIndex: rowIdx,
+                });
+                if (out !== undefined && out !== null) return out;
+              }
+              return (
+                <DefaultExpandedRow
+                  row={row as TableRowType}
+                  layout={config.expandableLayout || "details"}
+                  columns={visibleCols}
+                  rowIndex={rowIdx}
+                />
+              );
+            })()}
           </TableCell>
         </TableRow>
       )}
@@ -1339,257 +697,10 @@ function LoadingSkeleton({ cols, rows }: { cols: number; rows: number }) {
 }
 
 // ───── pagination renderer ─────
-function PaginationBar({
-  page,
-  setPage,
-  totalPages,
-  pageSize,
-  setPageSize,
-  sortedLength,
-  config,
-}: {
-  page: number;
-  setPage: (n: number | ((p: number) => number)) => void;
-  totalPages: number;
-  pageSize: number;
-  setPageSize: (n: number) => void;
-  sortedLength: number;
-  config: TableBuilderConfig;
-}) {
-  const layout = config.paginationLayout || "full";
-  const showInfo = config.showPageInfo !== false;
-  const showFirstLast = config.showFirstLastButtons !== false;
-  const showSizeSelector = config.showPageSizeSelector === true;
-  const sizeOptions =
-    config.pageSizeOptions && config.pageSizeOptions.length
-      ? config.pageSizeOptions
-      : [5, 10, 20, 50];
-
-  const renderInfo = showInfo && (
-    <p className="text-xs text-muted-foreground">
-      Showing {sortedLength > 0 ? page * pageSize + 1 : 0}–
-      {Math.min((page + 1) * pageSize, sortedLength)} of {sortedLength}
-    </p>
-  );
-
-  const renderSizeSelector = showSizeSelector && (
-    <div className="flex items-center gap-1.5">
-      <span className="text-xs text-muted-foreground hidden sm:inline">
-        Rows:
-      </span>
-      <Select
-        value={String(pageSize)}
-        onValueChange={(v) => {
-          setPageSize(Number(v));
-          setPage(0);
-        }}
-      >
-        <SelectTrigger className="h-7 text-xs w-[70px]">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {sizeOptions.map((n) => (
-            <SelectItem key={n} value={String(n)} className="text-xs">
-              {n}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-
-  if (layout === "infoOnly") {
-    return (
-      <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-border flex-wrap">
-        {renderInfo}
-        {renderSizeSelector}
-      </div>
-    );
-  }
-
-  if (layout === "minimal") {
-    return (
-      <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-border flex-wrap">
-        {renderInfo}
-        <div className="flex items-center gap-2">
-          {renderSizeSelector}
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs gap-1"
-            disabled={page === 0}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            <ChevronLeft className="h-3 w-3 rtl:rotate-180" /> Prev
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs gap-1"
-            disabled={page >= totalPages - 1}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next <ChevronRight className="h-3 w-3 rtl:rotate-180" />
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (layout === "numbered") {
-    // Show up to 5 page numbers with ellipsis
-    const pages: (number | "...")[] = [];
-    const maxBtns = 5;
-    if (totalPages <= maxBtns) {
-      for (let i = 0; i < totalPages; i++) pages.push(i);
-    } else {
-      pages.push(0);
-      const start = Math.max(1, page - 1);
-      const end = Math.min(totalPages - 2, page + 1);
-      if (start > 1) pages.push("...");
-      for (let i = start; i <= end; i++) pages.push(i);
-      if (end < totalPages - 2) pages.push("...");
-      pages.push(totalPages - 1);
-    }
-    return (
-      <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-border flex-wrap">
-        {renderInfo}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {renderSizeSelector}
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7"
-              disabled={page === 0}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              <ChevronLeft className="h-3.5 w-3.5 rtl:rotate-180" />
-            </Button>
-            {pages.map((p, i) =>
-              p === "..." ? (
-                <span
-                  key={`e-${i}`}
-                  className="px-1.5 text-xs text-muted-foreground"
-                >
-                  …
-                </span>
-              ) : (
-                <Button
-                  key={p}
-                  variant={p === page ? "default" : "outline"}
-                  size="icon"
-                  className="h-7 w-7 text-xs tabular-nums"
-                  onClick={() => setPage(p)}
-                >
-                  {p + 1}
-                </Button>
-              ),
-            )}
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7"
-              disabled={page >= totalPages - 1}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (layout === "compact") {
-    return (
-      <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-border flex-wrap">
-        {renderInfo}
-        <div className="flex items-center gap-2">
-          {renderSizeSelector}
-          <span className="text-xs tabular-nums">
-            {page + 1}/{totalPages}
-          </span>
-          <div className="flex">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7 rounded-e-none"
-              disabled={page === 0}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              <ChevronLeft className="h-3.5 w-3.5 rtl:rotate-180" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7 rounded-s-none -ms-px"
-              disabled={page >= totalPages - 1}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // FULL (default)
-  return (
-    <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-border flex-wrap">
-      <div className="flex items-center gap-3 flex-wrap">
-        {renderInfo}
-        {renderSizeSelector}
-      </div>
-      <div className="flex items-center gap-1">
-        {showFirstLast && (
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-7 w-7"
-            disabled={page === 0}
-            onClick={() => setPage(0)}
-          >
-            <ChevronsLeft className="h-3.5 w-3.5 rtl:rotate-180" />
-          </Button>
-        )}
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-7 w-7"
-          disabled={page === 0}
-          onClick={() => setPage((p) => p - 1)}
-        >
-          <ChevronLeft className="h-3.5 w-3.5 rtl:rotate-180" />
-        </Button>
-        <span className="text-xs px-2 tabular-nums">
-          {page + 1} / {totalPages}
-        </span>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-7 w-7"
-          disabled={page >= totalPages - 1}
-          onClick={() => setPage((p) => p + 1)}
-        >
-          <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
-        </Button>
-        {showFirstLast && (
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-7 w-7"
-            disabled={page >= totalPages - 1}
-            onClick={() => setPage(totalPages - 1)}
-          >
-            <ChevronsRight className="h-3.5 w-3.5 rtl:rotate-180" />
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
+// The default bar (with every paginationLayout — full/compact/numbered/
+// minimal/infoOnly) lives in `src/components/tables/defaultPaginationBar.tsx`
+// so user-supplied `config.renderPagination` can fully replace it.
+// Resolution order: config.renderPagination → <DefaultPaginationBar />
 
 // ───── grouped section helper ─────
 function GroupedSection({
@@ -1712,15 +823,53 @@ function GroupedSection({
  * insertion index. We attach the zone ref to the actual `<tbody>` so the
  * indexer (which scans `[data-dnd-item="true"]`) finds the rows directly.
  */
+/**
+ * DnD context — exposes the active hoverIndex + ghost slot size so each row
+ * (and the trailing slot) can render a same-sized placeholder at the exact
+ * insertion point. This is what gives users a clear "drop here" preview.
+ */
+const DndTableCtx = React.createContext<{
+  isDragging: boolean;
+  hoverIndex: number | null;
+  slotHeight: number;
+  previewNode: React.ReactNode;
+  draggedId: string | null;
+  colSpan: number;
+} | null>(null);
+
+function DndGhostRow({ index }: { index: number }) {
+  const ctx = React.useContext(DndTableCtx);
+  if (!ctx || !ctx.isDragging || ctx.hoverIndex !== index) return null;
+  const height = Math.max(ctx.slotHeight, 28);
+  return (
+    <TableRow aria-hidden="true" className="pointer-events-none border-0">
+      <TableCell colSpan={ctx.colSpan} className="p-0 border-0">
+        <div
+          className="mx-1 my-0.5 animate-in fade-in zoom-in-95 duration-150"
+          style={{ height: `${height}px` }}
+        >
+          {ctx.previewNode ? (
+            <div className="opacity-45 saturate-75">{ctx.previewNode}</div>
+          ) : (
+            <div className="h-full rounded-md border-2 border-dashed border-primary/60 bg-primary/10 ring-1 ring-primary/20" />
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 function DndTableBody({
   enabled,
   rowIds,
   onMove,
+  colSpan,
   children,
 }: {
   enabled: boolean;
   rowIds: string[];
   onMove: (rowId: string, toIndex: number) => void;
+  colSpan: number;
   children: React.ReactNode;
 }) {
   const handleDrop = useCallback(
@@ -1729,27 +878,42 @@ function DndTableBody({
     },
     [onMove],
   );
-  const { zoneProps } = useDropZone<Record<string, unknown>, { rowId: string }>(
-    {
-      id: "table-rows",
-      data: useMemo(() => ({ count: rowIds.length }), [rowIds.length]),
-      disabled: !enabled,
-      axis: "y",
-      onDrop: handleDrop,
-    },
+  const { zoneProps, isOver, hoverIndex, slotSize, isDragging } = useDropZone<
+    Record<string, unknown>,
+    { rowId: string }
+  >({
+    id: "table-rows",
+    data: useMemo(() => ({ count: rowIds.length }), [rowIds.length]),
+    disabled: !enabled,
+    axis: "y",
+    onDrop: handleDrop,
+  });
+  const { active } = useDndContext();
+  const ctxValue = useMemo(
+    () => ({
+      isDragging: !!isDragging && isOver,
+      hoverIndex: isOver ? hoverIndex : null,
+      slotHeight: slotSize?.height ?? 0,
+      previewNode: active?.previewNode ?? null,
+      draggedId: active?.id ?? null,
+      colSpan,
+    }),
+    [
+      active?.id,
+      active?.previewNode,
+      isDragging,
+      isOver,
+      hoverIndex,
+      slotSize?.height,
+      colSpan,
+    ],
   );
-  // Spread `zoneProps` so the callback ref + data attrs land on the underlying
-  // tbody DOM node. (Spread keeps React's ref-attachment in commit phase, which
-  // sidesteps the `react-hooks/refs` lint rule that flags property-by-property
-  // reads of zoneProps during render.)
   return (
-    <TableBody
-      {...(zoneProps as React.HTMLAttributes<HTMLTableSectionElement> & {
-        ref: React.Ref<HTMLTableSectionElement>;
-      })}
-    >
-      {children}
-    </TableBody>
+    <DndTableCtx.Provider value={ctxValue}>
+      <TableBody {...(zoneProps as React.ComponentProps<typeof TableBody>)}>
+        {children}
+      </TableBody>
+    </DndTableCtx.Provider>
   );
 }
 
@@ -1788,35 +952,35 @@ export function TablePreview({
   const rowClickActive =
     config.rowClickAction && config.rowClickAction.type !== "none";
   const {
-    rows,
-    page,
-    sorts,
-    paged,
-    sorted,
     search,
-    grouped,
-    expanded,
-    pageSize,
-    selected,
-    hiddenCols,
-    totalPages,
-    visibleCols,
-    columnWidths,
-    columnFilters,
-    setPage,
-    moveRow,
-    setSorts,
     setSearch,
-    toggleSort,
+    sorts,
+    setSorts,
+    columnFilters,
+    setColumnFilters,
+    page,
+    setPage,
+    pageSize,
     setPageSize,
+    selected,
     setSelected,
-    startResize,
+    expanded,
+    hiddenCols,
+    columnWidths,
+    rows,
+    visibleCols,
+    sorted,
+    grouped,
+    paged,
+    totalPages,
+    toggleSort,
     toggleSelect,
     toggleExpand,
     toggleSelectAll,
-    setColumnFilters,
-    handleCellUpdate,
     toggleColumnVisibility,
+    moveRow,
+    handleCellUpdate,
+    startResize,
   } = useTablePreview<TableRowType>({
     config,
     data: data as TableRowType[],
@@ -1827,167 +991,22 @@ export function TablePreview({
   const effectivePageSize = pageSize;
 
   // ─── Row-action API wiring ───
-  // When a column has a matching apiConfig.rowActions[*].columnKey, fire the
-  // configured fetch on cell update. The local state has already been
-  // optimistically updated by handleCellUpdate; on failure we rollback to the
-  // previous value and surface a toast.
-  const wrappedCellUpdate = useCallback(
-    (rowId: string, key: string, value: unknown) => {
-      const prev = rows.find((r) => r.id === rowId);
-      const prevValue = prev ? prev[key] : undefined;
-      handleCellUpdate(rowId, key, value);
-
-      // Fire user-supplied dispatcher (from useRowInteractions) — typed per-column
-      // handlers run here. Errors are surfaced via toast but do not rollback;
-      // rollback is owned by apiConfig.rowActions below.
-      if (onCellInteract && prev && prevValue !== value) {
-        try {
-          const result = onCellInteract(prev, key, prevValue, value);
-          if (result && typeof (result as Promise<void>).catch === "function") {
-            (result as Promise<void>).catch((e: unknown) => {
-              toast({
-                title: "Interaction handler failed",
-                description: e instanceof Error ? e.message : "Unknown error",
-                variant: "destructive",
-              });
-            });
-          }
-        } catch (e) {
-          toast({
-            title: "Interaction handler failed",
-            description: e instanceof Error ? e.message : "Unknown error",
-            variant: "destructive",
-          });
-        }
-      }
-
-      const action = config.apiConfig?.rowActions?.find(
-        (a) => a.columnKey === key,
-      );
-      const baseUrl = config.apiConfig?.baseUrl;
-      if (!action || !baseUrl) return;
-
-      const row = prev as Record<string, unknown> | undefined;
-      if (!row) return;
-
-      // Token-replace :id and :{field}
-      const interpolatedPath = action.path
-        .replace(/:id\b/g, String(rowId))
-        .replace(/:(\w+)/g, (_, k: string) => String(row[k] ?? ""));
-
-      const search =
-        action.query && Object.keys(action.query).length > 0
-          ? "?" + new URLSearchParams(action.query).toString()
-          : "";
-
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        ...(config.apiConfig?.headers ?? {}),
-      };
-
-      let body: string | undefined;
-      if (action.method !== "GET" && action.method !== "DELETE") {
-        if (action.body) {
-          body = action.body
-            .replace(/{{value}}/g, JSON.stringify(value))
-            .replace(/{{rowId}}/g, JSON.stringify(rowId))
-            .replace(/{{row\.(\w+)}}/g, (_, k: string) =>
-              JSON.stringify(row[k]),
-            );
-        } else {
-          body = JSON.stringify({ [key]: value });
-        }
-      }
-
-      void (async () => {
-        try {
-          const res = await fetch(`${baseUrl}${interpolatedPath}${search}`, {
-            method: action.method,
-            headers,
-            body,
-          });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        } catch (e) {
-          if (action.optimistic !== false) {
-            handleCellUpdate(rowId, key, prevValue); // rollback
-          }
-          toast({
-            title: "Update failed",
-            description: `${action.method} ${interpolatedPath} — ${e instanceof Error ? e.message : "network error"}`,
-            variant: "destructive",
-          });
-        }
-      })();
-    },
-    [config.apiConfig, handleCellUpdate, rows, onCellInteract],
-  );
-
-  // Build refresh-style buttons for any `trigger:"button"` row-actions whose
-  // columnKey targets the same `actions` column. Clicking fires the configured
-  // POST/PUT/PATCH with the body template — closing the loop on user-action
-  // columns beyond switch/dropdown/radio.
-  const getRowActionButtons = useCallback(
-    (
-      row: Record<string, unknown>,
-      col: TableColumnConfig,
-    ): RowActionButton[] => {
-      if (col.type !== "actions") return [];
-      const actions =
-        config.apiConfig?.rowActions?.filter(
-          (a) => a.trigger === "button" && a.columnKey === col.key,
-        ) ?? [];
-      const baseUrl = config.apiConfig?.baseUrl;
-      if (actions.length === 0 || !baseUrl) return [];
-      return actions.map((action) => ({
-        id: action.id,
-        title: `${action.method} ${action.path}`,
-        onClick: () => {
-          const path = action.path
-            .replace(/:id\b/g, String(row.id))
-            .replace(/:(\w+)/g, (_, k: string) => String(row[k] ?? ""));
-          const qs =
-            action.query && Object.keys(action.query).length > 0
-              ? "?" + new URLSearchParams(action.query).toString()
-              : "";
-          const headers: Record<string, string> = {
-            "Content-Type": "application/json",
-            ...(config.apiConfig?.headers ?? {}),
-          };
-          const body =
-            action.method === "GET" || action.method === "DELETE"
-              ? undefined
-              : action.body
-                ? action.body
-                    .replace(/{{rowId}}/g, JSON.stringify(row.id))
-                    .replace(/{{row\.(\w+)}}/g, (_, k: string) =>
-                      JSON.stringify(row[k]),
-                    )
-                : JSON.stringify({ id: row.id });
-          void (async () => {
-            try {
-              const res = await fetch(`${baseUrl}${path}${qs}`, {
-                method: action.method,
-                headers,
-                body,
-              });
-              if (!res.ok) throw new Error(`HTTP ${res.status}`);
-              toast({
-                title: "Action complete",
-                description: `${action.method} ${path}`,
-              });
-            } catch (e) {
-              toast({
-                title: "Action failed",
-                description: `${action.method} ${path} — ${e instanceof Error ? e.message : "network error"}`,
-                variant: "destructive",
-              });
-            }
-          })();
-        },
-      }));
-    },
-    [config.apiConfig],
-  );
+  // All the optimistic-update / fetch / rollback / toast logic lives in the
+  // `useRowApiActions` hook (so this component stays presentational) and the
+  // raw network calls live in `tableServices.ts`.
+  const { wrappedCellUpdate, getRowActionButtons } = useRowApiActions({
+    config,
+    rows,
+    applyLocalUpdate: handleCellUpdate,
+    onCellInteract: onCellInteract as
+      | ((
+          row: TableRowType,
+          key: string,
+          oldValue: unknown,
+          newValue: unknown,
+        ) => Promise<void> | void)
+      | undefined,
+  });
 
   // ─── Virtualization: only safe when no grouping (group rows + collapsibles
   // mess with virtualizer flat-index assumptions) and no DnD (sortable needs
@@ -2366,43 +1385,81 @@ export function TablePreview({
                       {renderHeaderLeading()}
                       {visibleCols.map((col) => {
                         const sortState = sortStateFor(col.key);
-                        const { widthStyle, headSticky } = getPinnedColumnLayout(
-                          col,
-                          visibleCols,
-                          config,
+                        const width = columnWidths[col.id] || col.width;
+                        const startCols = config.enablePinnedColumns
+                          ? visibleCols.filter((c) => c.pinned === "start")
+                          : [];
+                        const endCols = config.enablePinnedColumns
+                          ? visibleCols.filter((c) => c.pinned === "end")
+                          : [];
+                        const startOffsets = computePinOffsets(
+                          startCols,
                           columnWidths,
                         );
+                        const endOffsets = computePinOffsets(
+                          [...endCols].reverse(),
+                          columnWidths,
+                        );
+                        const pinIdx =
+                          col.pinned === "start"
+                            ? startCols.findIndex((c) => c.id === col.id)
+                            : col.pinned === "end"
+                              ? endCols.findIndex((c) => c.id === col.id)
+                              : -1;
+                        const pinOffset =
+                          col.pinned === "start" && pinIdx >= 0
+                            ? startOffsets[pinIdx]
+                            : col.pinned === "end" && pinIdx >= 0
+                              ? endOffsets[endCols.length - 1 - pinIdx]
+                              : undefined;
+                        const sticky = config.enablePinnedColumns
+                          ? pinStyle(
+                              col.pinned ?? null,
+                              pinOffset,
+                              config.direction,
+                              col.pinned === "start" &&
+                                pinIdx === startCols.length - 1,
+                              col.pinned === "end" && pinIdx === 0,
+                            )
+                          : undefined;
+                        const widthStyle = width
+                          ? { width: `${width}px`, minWidth: `${width}px` }
+                          : undefined;
+                        const headSticky = sticky
+                          ? {
+                              ...sticky,
+                              zIndex: 3,
+                              background: "hsl(var(--muted) / 0.4)",
+                            }
+                          : undefined;
                         return (
                           <TableHead
                             key={col.id}
                             style={{ ...widthStyle, ...headSticky }}
                             className={cn(
-                              "relative group min-w-0",
+                              "relative group",
                               col.align === "center" && "text-center",
                               col.align === "right" && "text-end",
                             )}
                           >
                             {col.sortable ? (
                               <button
-                                type="button"
                                 onClick={(e) => toggleSort(col.key, e.shiftKey)}
-                                className="inline-flex max-w-full min-w-0 w-full items-center gap-0 text-xs font-medium uppercase tracking-wider hover:text-foreground transition-colors"
+                                className="inline-flex items-center text-xs font-medium uppercase tracking-wider hover:text-foreground transition-colors"
                               >
-                                <span className="min-w-0 flex-1 truncate text-start">
-                                  {col.label}
-                                </span>
+                                {col.label}
                                 {sortState ? (
                                   sortState.dir === "asc" ? (
-                                    <ChevronUp className="h-3 w-3 shrink-0 ms-1" />
+                                    <ChevronUp className="h-3 w-3 ms-1" />
                                   ) : (
-                                    <ChevronDown className="h-3 w-3 shrink-0 ms-1" />
+                                    <ChevronDown className="h-3 w-3 ms-1" />
                                   )
                                 ) : (
-                                  <ChevronsUpDown className="h-3 w-3 ms-1 shrink-0 opacity-40" />
+                                  <ChevronsUpDown className="h-3 w-3 ms-1 opacity-40" />
                                 )}
                               </button>
                             ) : (
-                              <span className="block max-w-full min-w-0 truncate text-xs font-medium uppercase tracking-wider">
+                              <span className="text-xs font-medium uppercase tracking-wider">
                                 {col.label}
                               </span>
                             )}
@@ -2410,7 +1467,7 @@ export function TablePreview({
                               col.resizable !== false && (
                                 <div
                                   onMouseDown={(e) => startResize(col.id, e)}
-                                  className="absolute end-0 top-0 z-20 h-full w-1 cursor-col-resize bg-transparent hover:bg-primary/40 group-hover:bg-border opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="absolute end-0 top-0 h-full w-1 cursor-col-resize bg-transparent hover:bg-primary/40 group-hover:bg-border opacity-0 group-hover:opacity-100 transition-opacity"
                                 />
                               )}
                           </TableHead>
@@ -2423,39 +1480,24 @@ export function TablePreview({
                           // render placeholders; don't repeat content (checkbox should not show again)
                           <TableHead key={`fp-${i}`} className="w-9" />
                         ))}
-                        {visibleCols.map((col) => {
-                          const { widthStyle, filterSticky } =
-                            getPinnedColumnLayout(
-                              col,
-                              visibleCols,
-                              config,
-                              columnWidths,
-                            );
-                          return (
-                            <TableHead
-                              key={col.id}
-                              className="min-w-0 overflow-hidden py-1.5 px-2 align-middle"
-                              style={{ ...widthStyle, ...filterSticky }}
-                            >
-                              {col.filterable ? (
-                                <div className="min-w-0 max-w-full overflow-x-hidden">
-                                  <Input
-                                    value={columnFilters[col.key] || ""}
-                                    onChange={(e) => {
-                                      setColumnFilters((p) => ({
-                                        ...p,
-                                        [col.key]: e.target.value,
-                                      }));
-                                      setPage(0);
-                                    }}
-                                    placeholder="Filter…"
-                                    className="h-7 w-full min-w-0 max-w-full overflow-x-hidden text-[11px]"
-                                  />
-                                </div>
-                              ) : null}
-                            </TableHead>
-                          );
-                        })}
+                        {visibleCols.map((col) => (
+                          <TableHead key={col.id} className="py-1.5 px-2">
+                            {col.filterable ? (
+                              <Input
+                                value={columnFilters[col.key] || ""}
+                                onChange={(e) => {
+                                  setColumnFilters((p) => ({
+                                    ...p,
+                                    [col.key]: e.target.value,
+                                  }));
+                                  setPage(0);
+                                }}
+                                placeholder="Filter…"
+                                className="h-7 text-[11px]"
+                              />
+                            ) : null}
+                          </TableHead>
+                        ))}
                       </TableRow>
                     )}
                   </TableHeader>
@@ -2463,6 +1505,12 @@ export function TablePreview({
                     enabled={config.enableDnD}
                     rowIds={paged.map((r) => r.id as string)}
                     onMove={moveRow}
+                    colSpan={
+                      visibleCols.length +
+                      (config.enableDnD ? 1 : 0) +
+                      (config.enableRowSelection ? 1 : 0) +
+                      (config.enableExpandableRows ? 1 : 0)
+                    }
                   >
                     <>
                       {paged.length === 0 ? (
@@ -2532,29 +1580,32 @@ export function TablePreview({
                                 const row = paged[vi.index];
                                 if (!row) return null;
                                 return (
-                                  <SortableRow
-                                    key={row.id as string}
-                                    row={row}
-                                    rowIdx={vi.index}
-                                    config={config}
-                                    visibleCols={visibleCols}
-                                    selected={selected}
-                                    onToggleSelect={toggleSelect}
-                                    density={config.density}
-                                    onCellUpdate={wrappedCellUpdate}
-                                    expanded={expanded}
-                                    onToggleExpand={toggleExpand}
-                                    columnWidths={columnWidths}
-                                    getRowActionButtons={getRowActionButtons}
-                                    onRowClick={
-                                      rowClickActive
-                                        ? rowClickHandler
-                                        : undefined
-                                    }
-                                    onOpenRowDialog={openRowDialog}
-                                  />
+                                  <React.Fragment key={row.id as string}>
+                                    <DndGhostRow index={vi.index} />
+                                    <SortableRow
+                                      row={row}
+                                      rowIdx={vi.index}
+                                      config={config}
+                                      visibleCols={visibleCols}
+                                      selected={selected}
+                                      onToggleSelect={toggleSelect}
+                                      density={config.density}
+                                      onCellUpdate={wrappedCellUpdate}
+                                      expanded={expanded}
+                                      onToggleExpand={toggleExpand}
+                                      columnWidths={columnWidths}
+                                      getRowActionButtons={getRowActionButtons}
+                                      onRowClick={
+                                        rowClickActive
+                                          ? rowClickHandler
+                                          : undefined
+                                      }
+                                      onOpenRowDialog={openRowDialog}
+                                    />
+                                  </React.Fragment>
                                 );
                               })}
+                              <DndGhostRow index={paged.length} />
                               {paddingBottom > 0 && (
                                 <TableRow
                                   style={{ height: `${paddingBottom}px` }}
@@ -2569,30 +1620,36 @@ export function TablePreview({
                           );
                         })()
                       ) : (
-                        paged.map((row, rowIdx) => (
-                          <SortableRow
-                            key={row.id as string}
-                            row={row}
-                            rowIdx={rowIdx}
-                            config={config}
-                            visibleCols={visibleCols}
-                            selected={selected}
-                            onToggleSelect={toggleSelect}
-                            density={config.density}
-                            onCellUpdate={wrappedCellUpdate}
-                            expanded={expanded}
-                            onToggleExpand={toggleExpand}
-                            columnWidths={columnWidths}
-                            getRowActionButtons={getRowActionButtons}
-                            onRowClick={
-                              rowClickActive ? rowClickHandler : undefined
-                            }
-                            onOpenRowDialog={openRowDialog}
-                          />
-                        ))
+                        <>
+                          {paged.map((row, rowIdx) => (
+                            <React.Fragment key={row.id as string}>
+                              <DndGhostRow index={rowIdx} />
+                              <SortableRow
+                                row={row}
+                                rowIdx={rowIdx}
+                                config={config}
+                                visibleCols={visibleCols}
+                                selected={selected}
+                                onToggleSelect={toggleSelect}
+                                density={config.density}
+                                onCellUpdate={wrappedCellUpdate}
+                                expanded={expanded}
+                                onToggleExpand={toggleExpand}
+                                columnWidths={columnWidths}
+                                getRowActionButtons={getRowActionButtons}
+                                onRowClick={
+                                  rowClickActive ? rowClickHandler : undefined
+                                }
+                                onOpenRowDialog={openRowDialog}
+                              />
+                            </React.Fragment>
+                          ))}
+                          <DndGhostRow index={paged.length} />
+                        </>
                       )}
                     </>
                   </DndTableBody>
+
                   {showFooter && (
                     <TableFooter>
                       <TableRow>
@@ -2628,17 +1685,24 @@ export function TablePreview({
               </DndProvider>
             </div>
           )}
-          {config.enablePagination && !isLoading && (
-            <PaginationBar
-              page={page}
-              setPage={setPage}
-              totalPages={totalPages}
-              pageSize={effectivePageSize}
-              setPageSize={setPageSize}
-              sortedLength={sorted.length}
-              config={config}
-            />
-          )}
+          {config.enablePagination &&
+            !isLoading &&
+            (() => {
+              // Resolution order: config.renderPagination → DefaultPaginationBar.
+              const ctx = {
+                page,
+                setPage,
+                totalPages,
+                pageSize: effectivePageSize,
+                setPageSize,
+                totalRows: sorted.length,
+              };
+              if (config.renderPagination) {
+                const out = config.renderPagination(ctx);
+                if (out !== undefined && out !== null) return out;
+              }
+              return <DefaultPaginationBar {...ctx} config={config} />;
+            })()}
         </CardContent>
       </Card>
 
@@ -2649,25 +1713,91 @@ export function TablePreview({
         onClose={() => setDialogRow(null)}
       />
 
-      <VariantJsonConfigPanel
-        open={showJson}
-        onOpenChange={setShowJson}
-        titleMeta={`${config.columns.length} columns · ${data.length} rows`}
-        blocks={[
-          {
-            label: "Table config",
-            value: config,
-            maxHeightClass: "max-h-[320px]",
-            copySuccessDescription: "Config JSON copied to clipboard",
-          },
-          {
-            label: "Sample data",
-            value: data,
-            maxHeightClass: "max-h-[260px]",
-            copySuccessDescription: "Sample data copied to clipboard",
-          },
-        ]}
-      />
+      {/* JSON Configuration Panel — mirrors Form Builder UX */}
+      <Card className="border-border">
+        <Collapsible open={showJson} onOpenChange={setShowJson}>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="pb-3 pt-3 px-4 cursor-pointer hover:bg-muted/30 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileJson className="h-4 w-4 text-primary" />
+                  <CardTitle className="text-sm">JSON Configuration</CardTitle>
+                  <span className="text-[10px] text-muted-foreground font-normal">
+                    {config.columns.length} columns · {data.length} rows
+                  </span>
+                </div>
+                <Button variant="ghost" size="icon" className="h-7 w-7">
+                  {showJson ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="pt-0 px-4 pb-4 space-y-3">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                    Table config
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-[10px] gap-1"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(
+                        JSON.stringify(config, null, 2),
+                      );
+                      toast({
+                        title: "Copied",
+                        description: "Config JSON copied to clipboard",
+                      });
+                    }}
+                  >
+                    <ExternalLink className="h-3 w-3" /> Copy
+                  </Button>
+                </div>
+                <ScrollArea className="max-h-[320px]">
+                  <pre className="text-[11px] font-mono p-3 rounded-lg bg-muted/50 border border-border overflow-x-auto leading-relaxed">
+                    {JSON.stringify(config, null, 2)}
+                  </pre>
+                </ScrollArea>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                    Sample data
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-[10px] gap-1"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(
+                        JSON.stringify(data, null, 2),
+                      );
+                      toast({
+                        title: "Copied",
+                        description: "Sample data copied to clipboard",
+                      });
+                    }}
+                  >
+                    <ExternalLink className="h-3 w-3" /> Copy
+                  </Button>
+                </div>
+                <ScrollArea className="max-h-[260px]">
+                  <pre className="text-[11px] font-mono p-3 rounded-lg bg-muted/50 border border-border overflow-x-auto leading-relaxed">
+                    {JSON.stringify(data, null, 2)}
+                  </pre>
+                </ScrollArea>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
     </div>
   );
 }
@@ -2682,55 +1812,55 @@ function RowDetailDialog({
   action,
   onClose,
 }: {
-  onClose: () => void;
   row: Record<string, unknown> | null;
   action: TableRowClickConfig | undefined;
+  onClose: () => void;
 }) {
   const widthClass = action?.dialogWidthClass ?? "max-w-2xl";
-  // Extract optional-chain values into stable locals so the React Compiler's
-  // dependency inference matches our manual useMemo/useEffect deps exactly.
-  const dialogTitle = action?.dialogTitle;
-  const dialogDescription = action?.dialogDescription;
-  const dialogTemplate = action?.dialogTemplate;
-  const dialogJs = action?.dialogJs;
-  const hasTemplate = !!dialogTemplate?.trim();
+  const hasTemplate = !!action?.dialogTemplate?.trim();
   const contentRef = useRef<HTMLDivElement | null>(null);
 
-  const ctx = useMemo(
-    () => ({ row: row ?? {}, value: undefined as unknown }),
-    [row],
-  );
+  // Plain derivations — the React Compiler memoizes these; manual useMemo here
+  // could not be preserved (cross-memo `ctx` reference + optional-chain deps).
+  const ctx = { row: row ?? {}, value: undefined as unknown };
 
-  const renderedTitle = useMemo(() => {
-    if (!dialogTitle) return "Row details";
-    return renderRowDialogText(dialogTitle, ctx);
-  }, [dialogTitle, ctx]);
+  const renderedTitle = !action?.dialogTitle
+    ? "Row details"
+    : renderRowDialogText(action.dialogTitle, ctx);
 
-  const renderedDescription = useMemo(() => {
-    if (!dialogDescription) return null;
-    return renderRowDialogText(dialogDescription, ctx);
-  }, [dialogDescription, ctx]);
+  const renderedDescription = !action?.dialogDescription
+    ? null
+    : renderRowDialogText(action.dialogDescription, ctx);
 
-  const renderedHtml = useMemo(() => {
-    if (!hasTemplate || !row || !dialogTemplate) return "";
-    return renderRowDialogTemplate(dialogTemplate, ctx);
-  }, [hasTemplate, row, dialogTemplate, ctx]);
+  const renderedJsx =
+    !row || !action?.renderDialog
+      ? null
+      : action.renderDialog({
+          row: row as TableRowType,
+          value: undefined,
+          close: onClose,
+        }) ?? null;
+
+  const renderedHtml =
+    !hasTemplate || !row || renderedJsx
+      ? ""
+      : renderRowDialogTemplate(action!.dialogTemplate!, ctx);
 
   // Run the user-supplied dialogJs once the template is in the DOM.
   useEffect(() => {
     if (!row) return;
-    const trimmed = dialogJs?.trim();
-    if (!trimmed) return;
+    if (renderedJsx) return; // JSX path skips the sandboxed JS hook.
+    if (!action?.dialogJs?.trim()) return;
     // Defer one tick so dangerouslySetInnerHTML has flushed.
     const id = window.requestAnimationFrame(() => {
-      runCellJs(trimmed, {
+      runCellJs(action.dialogJs!, {
         row,
         value: undefined,
         el: contentRef.current,
       });
     });
     return () => window.cancelAnimationFrame(id);
-  }, [row, dialogJs]);
+  }, [row, action?.dialogJs, renderedJsx]);
 
   return (
     <Dialog open={!!row} onOpenChange={(open) => !open && onClose()}>
@@ -2751,7 +1881,12 @@ function RowDetailDialog({
             </DialogDescription>
           )}
         </DialogHeader>
-        {row && hasTemplate && (
+        {row && renderedJsx && (
+          <ScrollArea className="max-h-[70vh] pe-2">
+            <div ref={contentRef}>{renderedJsx}</div>
+          </ScrollArea>
+        )}
+        {row && !renderedJsx && hasTemplate && (
           <ScrollArea className="max-h-[70vh] pe-2">
             <div
               ref={contentRef}
@@ -2760,25 +1895,9 @@ function RowDetailDialog({
             />
           </ScrollArea>
         )}
-        {row && !hasTemplate && (
+        {row && !renderedJsx && !hasTemplate && (
           <ScrollArea className="max-h-[60vh] pe-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {Object.entries(row).map(([k, v]) => (
-                <div
-                  key={k}
-                  className="p-2.5 rounded-md bg-muted/40 border border-border/50"
-                >
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                    {k}
-                  </div>
-                  <div className="text-xs font-medium break-words mt-0.5">
-                    {typeof v === "object"
-                      ? JSON.stringify(v)
-                      : String(v ?? "—")}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <DefaultRowDialogBody row={row as TableRowType} />
           </ScrollArea>
         )}
       </DialogContent>

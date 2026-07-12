@@ -18,7 +18,14 @@ const TABLES_JSON = path.join(ROOT, "public", "registry", "tables.json");
 const TARGET_TO_SOURCE = {
   "components/tables/TablePreview.tsx": "app/table-builder/TablePreview.tsx",
   "components/tables/useTablePreview.ts": "app/table-builder/hooks/useTablePreview.ts",
-  "components/tables/types.ts": "app/tables/types/types.ts",
+  "components/tables/types.ts": "app/tables/types.ts",
+  "components/tables/defaultCellRenderer.tsx": "app/tables/defaultCellRenderer.tsx",
+  "components/tables/defaultExpandedRowRenderer.tsx": "app/tables/defaultExpandedRowRenderer.tsx",
+  "components/tables/defaultPaginationBar.tsx": "app/tables/defaultPaginationBar.tsx",
+  "components/tables/defaultRowDialog.tsx": "app/tables/defaultRowDialog.tsx",
+  "components/tables/tableServices.ts": "app/tables/tableServices.ts",
+  "components/tables/useRowApiActions.hook.ts": "app/tables/useRowApiActions.hook.ts",
+  "components/tables/attachRenderers.ts": "app/tables/attachRenderers.ts",
   "utils/cellJsRunner.ts": "app/utils/cellJsRunner.ts",
   "utils/rowDialogTemplate.ts": "app/utils/rowDialogTemplate.ts",
   "components/ui/table.tsx": "app/components/ui/table.tsx",
@@ -43,6 +50,10 @@ function rewriteSharedFileImports(source) {
     .replace(
       /from\s+(["'])@\/table-builder\/data\/tableBuilderTemplates\1/g,
       "from $1./types$1",
+    )
+    .replace(
+      /from\s+(["'])@\/tables\/([^"']+)\1/g,
+      "from $1./$2$1",
     )
     .replace(
       /from\s+(["'])@\/utils\/cellJsRunner\1/g,

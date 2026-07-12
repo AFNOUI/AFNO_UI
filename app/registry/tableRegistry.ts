@@ -11,13 +11,13 @@
  * config flags. See `app/registry/kanbanRegistry.ts` for the same pattern.
  */
 
-import type { TableBuilderConfig } from "@/tables/types/types";
+import type { TableBuilderConfig } from "@/tables/types";
 
 import {
-  generatedSharedTableFiles,
   tableInstall,
-  tableRegistryGeneratedAt,
   type TableRegistryFile,
+  tableRegistryGeneratedAt,
+  generatedSharedTableFiles,
 } from "./tableRegistryGenerated";
 
 /**
@@ -27,31 +27,37 @@ import {
  * `GeneratedFile` from `tableCodeGenerator.ts` so the UI can render them interchangeably.
  */
 export interface SharedTableFile {
+  code: string;
   name: string;
   path: string;
   description: string;
   language: "tsx" | "ts" | "css";
-  code: string;
 }
 
 const RE_EXPORT_LANGUAGE = {
-  typescript: "ts" as const,
   tsx: "tsx" as const,
   css: "css" as const,
+  typescript: "ts" as const,
 };
 
 function toSharedFile(file: TableRegistryFile): SharedTableFile {
   return {
+    code: file.code,
     name: file.name,
     path: `src/${file.path}`,
     description: file.description,
     language: RE_EXPORT_LANGUAGE[file.language],
-    code: file.code,
   };
 }
 
-/** Always-shipped engine files — copy these once into any project. */
-export const SHARED_TABLE_FILES: SharedTableFile[] = generatedSharedTableFiles.map(toSharedFile);
+/**
+ * Always-shipped engine files. These are required for ANY table variant
+ * (rendering, state, types, primitives). Optional/feature-gated files are
+ * appended by `getOptionalEngineFiles` below — they only ship when the
+ * matching feature is actually enabled on the config.
+ */
+export const SHARED_TABLE_FILES: SharedTableFile[] =
+  generatedSharedTableFiles.map(toSharedFile);
 
 // ── Variant feature-detection ──────────────────────────────────────────────
 
@@ -71,8 +77,8 @@ function variantUsesRowDialogTemplate(config?: TableBuilderConfig): boolean {
   const row = config.rowClickAction;
   return Boolean(
     row?.dialogTemplate?.trim() ||
-      row?.dialogTitle?.trim() ||
-      row?.dialogDescription?.trim(),
+    row?.dialogTitle?.trim() ||
+    row?.dialogDescription?.trim(),
   );
 }
 
@@ -137,13 +143,32 @@ export function getSharedTableFiles(
 
   const filtered = SHARED_TABLE_FILES.filter((f) => {
     if (!usesCellJs && f.name === "cellJsRunner.ts") return false;
-    if (!usesRowDialogTemplate && f.name === "rowDialogTemplate.ts") return false;
+    if (!usesRowDialogTemplate && f.name === "rowDialogTemplate.ts")
+      return false;
     return true;
   });
 
   return filtered.map((f) =>
     pruneEngineSource(f, { usesCellJs, usesRowDialogTemplate }),
   );
+}
+
+/**
+ * @deprecated Returns `[]`.
+ *
+ * Historically this appended feature-gated engine files (renderers, services,
+ * the DnD library) on top of {@link SHARED_TABLE_FILES}. As of the engine
+ * refactor, `TablePreview.tsx` imports every default renderer + the row-action
+ * hook + the DnD primitives *unconditionally*, so they are now part of the
+ * always-shipped engine bundle (`generatedSharedTableFiles` → `SHARED_TABLE_FILES`).
+ * Gating them would emit code that fails to compile, so this returns nothing.
+ *
+ * Kept (returning an empty array) so existing call sites that spread
+ * `[...SHARED_TABLE_FILES, ...getOptionalEngineFiles(config)]` keep working
+ * without duplicating files.
+ */
+export function getOptionalEngineFiles(_config: TableBuilderConfig): SharedTableFile[] {
+  return [];
 }
 
 export { tableInstall, tableRegistryGeneratedAt };

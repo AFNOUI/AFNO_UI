@@ -1,40 +1,39 @@
-"use client";
-
 /**
  * Generic, user-templated dialog for kanban cards. Mirrors the row-detail
  * dialog used by the Table Builder: the user supplies an HTML/Tailwind
  * template with {{card.field}} mustache tokens, plus optional sandboxed JS
  * that runs after the template mounts.
  */
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 import { runCellJs } from "@/utils/cellJsRunner";
-import { renderRowDialogTemplate, renderRowDialogText } from "@/utils/rowDialogTemplate";
 import type { KanbanBuilderConfig, KanbanCardData } from "@/kanban/types";
+import { renderRowDialogTemplate, renderRowDialogText } from "@/utils/rowDialogTemplate";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Props {
   card: KanbanCardData | null;
-  action?: KanbanBuilderConfig["cardClickAction"];
   onOpenChange: (open: boolean) => void;
+  action?: KanbanBuilderConfig["cardClickAction"];
 }
 
 export function KanbanCardDialog({ card, action, onOpenChange }: Props) {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const open = !!card;
-  // Extract optional-chain values into stable locals so React Compiler's
-  // dependency inference exactly matches our manual deps.
-  const dialogTemplate = action?.dialogTemplate;
-  const ctx = useMemo(
-    () => ({ row: (card ?? {}) as Record<string, unknown>, value: undefined }),
-    [card],
-  );
-  const html = useMemo(() => {
-    if (!card) return "";
-    if (dialogTemplate?.trim()) {
-      return renderRowDialogTemplate(dialogTemplate, ctx);
+  // Plain derivations — the React Compiler memoizes these; manual useMemo here
+  // could not be preserved (mixed optional-chain deps + cross-memo references).
+  const ctx = { row: (card ?? {}) as Record<string, unknown>, value: undefined };
+  // Typed JSX renderer wins over the mustache template path.
+  const jsxNode =
+    !card || !action?.renderDialog
+      ? null
+      : action.renderDialog({ card, close: () => onOpenChange(false) }) ?? null;
+  const html = ((): string => {
+    if (!card || jsxNode) return "";
+    if (action?.dialogTemplate?.trim()) {
+      return renderRowDialogTemplate(action.dialogTemplate, ctx);
     }
     // Default fallback — show every defined field as a key/value grid.
     const rows = Object.entries(card)
@@ -48,23 +47,20 @@ export function KanbanCardDialog({ card, action, onOpenChange }: Props) {
       )
       .join("");
     return `<div>${rows}</div>`;
-  }, [card, dialogTemplate, ctx]);
+  })();
 
-  const dialogJs = action?.dialogJs;
   useEffect(() => {
-    if (!open || !card) return;
-    const trimmed = dialogJs?.trim();
-    if (!trimmed) return;
+    if (!open || !action?.dialogJs?.trim() || !card || jsxNode) return;
     const t = window.setTimeout(() => {
       if (!contentRef.current) return;
-      runCellJs(trimmed, {
+      runCellJs(action.dialogJs!, {
         row: card as unknown as Record<string, unknown>,
         value: undefined,
         el: contentRef.current,
       });
     }, 0);
     return () => window.clearTimeout(t);
-  }, [open, card, dialogJs]);
+  }, [open, card, action?.dialogJs]);
 
   if (!card) return null;
   const title = action?.dialogTitle?.trim()
@@ -81,7 +77,11 @@ export function KanbanCardDialog({ card, action, onOpenChange }: Props) {
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        <div ref={contentRef} dangerouslySetInnerHTML={{ __html: html }} />
+        {jsxNode ? (
+          <div ref={contentRef}>{jsxNode}</div>
+        ) : (
+          <div ref={contentRef} dangerouslySetInnerHTML={{ __html: html }} />
+        )}
       </DialogContent>
     </Dialog>
   );

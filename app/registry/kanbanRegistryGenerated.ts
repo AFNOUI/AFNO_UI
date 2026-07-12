@@ -11,7 +11,7 @@ export interface KanbanRegistryFile {
   description: string;
 }
 
-export const kanbanRegistryGeneratedAt = "2026-05-15T06:55:27.172Z";
+export const kanbanRegistryGeneratedAt = "2026-07-12T18:29:27.908Z";
 
 export const kanbanInstall = {
   "npmDependencies": [
@@ -38,9 +38,7 @@ export const kanbanInstall = {
   ]
 } as const;
 
-const components_kanban_KanbanBoardRaw = `"use client";
-
-/**
+const components_kanban_KanbanBoardRaw = `/**
  * Config-driven kanban board powered by our custom Pointer DnD library
  * (\`src/components/kanban/dnd\`). Three layouts: "board" | "compact" | "swimlane".
  *
@@ -49,25 +47,27 @@ const components_kanban_KanbanBoardRaw = `"use client";
  * pushes hover state down so a single <DropIndicator> renders per zone — no
  * per-card flicker on pointermove.
  */
-import { Plus, AlertTriangle } from "lucide-react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { Plus, AlertTriangle, GripVertical } from "lucide-react";
+import { JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
-  useDropZone,
   DndProvider,
+  useDropZone,
   useDraggable,
+  useDndContext,
   DropIndicator,
   type DropResult,
 } from "@/components/dnd";
 import { cn } from "@/lib/utils";
 import { runCellJs } from "../../utils/cellJsRunner";
 import type {
+  CardRenderer,
   KanbanCardData,
   KanbanCardField,
   KanbanColumnConfig,
   KanbanBuilderConfig,
-  KanbanCardChangeEvent,
   KanbanLoadMoreEvent,
+  KanbanCardChangeEvent,
 } from "./types";
 
 import { Badge } from "@/components/ui/badge";
@@ -78,7 +78,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { KanbanCard } from "./KanbanCard";
 import { KanbanCardDialog } from "./KanbanCardDialog";
 import { KanbanAddCardDialog } from "./KanbanAddCardDialog";
-
+import { defaultRichCardRenderer } from "./defaultCardRenderer";
 
 interface Props {
   config: KanbanBuilderConfig;
@@ -93,15 +93,13 @@ interface Props {
    * to persist the change. Receives the moved card plus the from/to positions.
    */
   onCardChange?: (event: KanbanCardChangeEvent) => void;
+  /**
+   * Optional callback fired whenever columns are reordered via column-header DnD.
+   * Receives the reordered column array — the host should persist it and pass
+   * the new order back in via \`config.columns\`.
+   */
+  onColumnsChange?: (next: KanbanColumnConfig[]) => void;
 }
-
-/**
- * The board emits two event shapes — both moved to \`@/kanban/types\` so the
- * generated code can import them without dragging in the engine module. We
- * re-export here so existing \`import { KanbanCardChangeEvent } from "@/kanban/KanbanBoard"\`
- * call-sites keep resolving.
- */
-export type { KanbanCardChangeEvent, KanbanLoadMoreEvent } from "./types";
 
 const COLUMN_ACCENT: Record<string, string> = {
   muted: "border-muted-foreground/20",
@@ -117,6 +115,10 @@ interface CardDragData extends Record<string, unknown> {
   fromLane?: string;
 }
 
+function isColumnDragData(data: Record<string, unknown> | undefined): data is ColumnDragData {
+  return data?.kind === "column" && typeof data.columnId === "string";
+}
+
 interface ZoneData extends Record<string, unknown> {
   columnId: string;
   lane?: string;
@@ -126,7 +128,7 @@ function getZoneId(columnId: string, lane?: string) {
   return lane ? \`\${columnId}::\${lane}\` : columnId;
 }
 
-export function KanbanBoard({ config, cards, onCardsChange, onCardChange, onLoadMore, onAddCard }: Props) {
+export function KanbanBoard({ config, cards, onCardsChange, onCardChange, onColumnsChange, onLoadMore, onAddCard }: Props) {
   const swimlaneKey = config.swimlaneKey ?? "assignee";
   const [selectedCard, setSelectedCard] = useState<KanbanCardData | null>(null);
   const [addTarget, setAddTarget] = useState<{ columnId: string; lane?: string } | null>(null);
@@ -135,6 +137,25 @@ export function KanbanBoard({ config, cards, onCardsChange, onCardChange, onLoad
     setAddTarget(event);
     onAddCard?.(event);
   }, [onAddCard]);
+
+  const handleColumnReorder = useCallback((fromIndex: number, toIndex: number) => {
+    if (!onColumnsChange || fromIndex === toIndex) return;
+    const next = [...config.columns];
+    const [moved] = next.splice(fromIndex, 1);
+    const clamped = Math.max(0, Math.min(toIndex, next.length));
+    next.splice(clamped, 0, moved);
+    onColumnsChange(next);
+    if (config.onColumnsChangeJs?.trim()) {
+      try {
+        runCellJs(config.onColumnsChangeJs, {
+          row: { columns: next, fromIndex, toIndex: clamped } as unknown as Record<string, unknown>,
+          value: undefined,
+        });
+      } catch (err) {
+        console.error("[kanban] onColumnsChangeJs threw:", err);
+      }
+    }
+  }, [config.columns, config.onColumnsChangeJs, onColumnsChange]);
 
   const sampleForAdd = useMemo(() => {
     if (!addTarget) return undefined;
@@ -270,6 +291,7 @@ export function KanbanBoard({ config, cards, onCardsChange, onCardChange, onLoad
       onCardClick={setSelectedCard}
       onLoadMore={onLoadMore}
       onAddCard={handleAddClick}
+      onColumnReorder={handleColumnReorder}
     />
   );
 
@@ -312,9 +334,15 @@ interface InnerProps {
   onCardClick: (card: KanbanCardData) => void;
   onLoadMore?: (event: KanbanLoadMoreEvent) => void | Promise<void>;
   onAddCard?: (event: { columnId: string; lane?: string }) => void;
+  onColumnReorder?: (fromIndex: number, toIndex: number) => void;
 }
 
-function BoardInner({ config, cardsByColumn, cardsByZone, lanes, onDrop, onCardClick, onLoadMore, onAddCard }: InnerProps) {
+function BoardInner({ config, cardsByColumn, cardsByZone, lanes, onDrop, onCardClick, onLoadMore, onAddCard, onColumnReorder }: InnerProps) {
+  const cardById = useMemo(() => {
+    const map = new Map<string, KanbanCardData>();
+    for (const group of cardsByColumn.values()) for (const card of group) map.set(card.id, card);
+    return map;
+  }, [cardsByColumn]);
   const dir = config.direction ?? "ltr";
   const dirStyle: React.CSSProperties = { direction: dir };
   if (config.layout === "timeline") {
@@ -361,6 +389,8 @@ function BoardInner({ config, cardsByColumn, cardsByZone, lanes, onDrop, onCardC
                     reduceMotion={config.reduceMotion}
                     onLoadMore={onLoadMore}
                     infiniteScroll={config.infiniteScroll}
+                    cardById={cardById}
+                    renderCard={config.renderCard}
                     axis="y"
                     scrollable={config.scrollableColumns}
                     maxHeightPx={config.columnMaxHeightPx}
@@ -398,6 +428,8 @@ function BoardInner({ config, cardsByColumn, cardsByZone, lanes, onDrop, onCardC
                 reduceMotion={config.reduceMotion}
                     onLoadMore={onLoadMore}
                     infiniteScroll={config.infiniteScroll}
+                    cardById={cardById}
+                    renderCard={config.renderCard}
                     scrollable={config.scrollableColumns}
                     maxHeightPx={config.columnMaxHeightPx}
               />
@@ -446,6 +478,8 @@ function BoardInner({ config, cardsByColumn, cardsByZone, lanes, onDrop, onCardC
               reduceMotion={config.reduceMotion}
                     onLoadMore={onLoadMore}
                     infiniteScroll={config.infiniteScroll}
+                    cardById={cardById}
+                    renderCard={config.renderCard}
                     scrollable={config.scrollableColumns}
                     maxHeightPx={config.columnMaxHeightPx}
             />
@@ -504,6 +538,8 @@ function BoardInner({ config, cardsByColumn, cardsByZone, lanes, onDrop, onCardC
                     reduceMotion={config.reduceMotion}
                     onLoadMore={onLoadMore}
                     infiniteScroll={config.infiniteScroll}
+                    cardById={cardById}
+                    renderCard={config.renderCard}
                   />
                 );
               })}
@@ -516,24 +552,51 @@ function BoardInner({ config, cardsByColumn, cardsByZone, lanes, onDrop, onCardC
   }
 
   // Default: "board"
+  const columnDndEnabled = !!config.enableColumnDnd && !!onColumnReorder;
   return (
     <ScrollArea className="w-full">
-      <div className="flex min-w-[900px] items-start gap-4 pb-4" style={dirStyle}>
-        {config.columns.map((column) => {
+      <ColumnsRow
+        enabled={columnDndEnabled}
+        columns={config.columns}
+        onReorder={onColumnReorder}
+        reduceMotion={config.reduceMotion}
+        dirStyle={dirStyle}
+      >
+        {config.columns.map((column, columnIndex) => {
           const cols = cardsByColumn.get(column.id) ?? [];
           const overWip =
             config.enableWipLimits &&
             column.wipLimit !== undefined &&
             cols.length > column.wipLimit;
           return (
-            <div key={column.id} className="max-w-[300px] min-w-[240px] flex-1">
-              <ColumnHeader
-                col={column}
-                count={cols.length}
-                overWip={!!overWip}
-                showWip={config.enableWipLimits}
-                showTotal={config.showColumnTotals}
-              />
+            <DraggableColumn
+              key={column.id}
+              column={column}
+              index={columnIndex}
+              enabled={columnDndEnabled}
+              preview={
+                <ColumnDragPreview
+                  column={column}
+                  cards={cols}
+                  compact={config.compactCards}
+                  visibleFields={config.visibleFields}
+                  renderCard={config.renderCard}
+                  overWip={!!overWip}
+                  showWip={config.enableWipLimits}
+                  showTotal={config.showColumnTotals}
+                />
+              }
+              header={
+                <ColumnHeader
+                  col={column}
+                  count={cols.length}
+                  overWip={!!overWip}
+                  showWip={config.enableWipLimits}
+                  showTotal={config.showColumnTotals}
+                  draggable={columnDndEnabled}
+                />
+              }
+            >
               <Zone
                 columnId={column.id}
                 cards={cols}
@@ -551,13 +614,15 @@ function BoardInner({ config, cardsByColumn, cardsByZone, lanes, onDrop, onCardC
                 reduceMotion={config.reduceMotion}
                     onLoadMore={onLoadMore}
                     infiniteScroll={config.infiniteScroll}
+                    cardById={cardById}
+                    renderCard={config.renderCard}
                     scrollable={config.scrollableColumns}
                     maxHeightPx={config.columnMaxHeightPx}
               />
-            </div>
+            </DraggableColumn>
           );
         })}
-      </div>
+      </ColumnsRow>
       <ScrollBar orientation="horizontal" />
     </ScrollArea>
   );
@@ -582,10 +647,13 @@ interface ZoneProps {
   onCardClick?: (card: KanbanCardData) => void;
   onLoadMore?: (event: KanbanLoadMoreEvent) => void | Promise<void>;
   infiniteScroll?: KanbanBuilderConfig["infiniteScroll"];
+  cardById?: Map<string, KanbanCardData>;
   /** Constrain this zone to a fixed max-height with overflow-auto. */
   scrollable?: boolean;
   /** Max-height in px when scrollable. Defaults to 520. */
   maxHeightPx?: number;
+  /** Board-wide reusable card renderer, threaded from config.renderCard. */
+  renderCard?: CardRenderer;
 }
 
 function Zone({
@@ -604,8 +672,10 @@ function Zone({
   onCardClick,
   onLoadMore,
   infiniteScroll,
+  cardById,
   scrollable,
   maxHeightPx,
+  renderCard,
 }: ZoneProps) {
   const zoneId = getZoneId(columnId, lane);
   const zoneData = useMemo<ZoneData>(() => ({ columnId, lane }), [columnId, lane]);
@@ -613,6 +683,7 @@ function Zone({
   const { zoneProps, hoverIndex, isOver, slotSize, animationsEnabled } = useDropZone<ZoneData, CardDragData>({
     id: zoneId,
     data: zoneData,
+    accepts: (drag) => !isColumnDragData(drag.data) && typeof drag.data.cardId === "string",
     onDrop,
     disabled: !enableDnd,
     axis,
@@ -636,7 +707,7 @@ function Zone({
   // surrounding cards close up naturally and the indicator opens a clean,
   // real-sized gap exactly where the card will land — no overlapping/faded
   // duplicate, no two-cards-in-the-same-row artifact.
-  const items: React.ReactElement[] = [];
+  const items: JSX.Element[] = [];
   const showIndicatorAt = isOver && hoverIndex != null ? hoverIndex : -1;
   cards.forEach((card, idx) => {
     if (showIndicatorAt === idx) {
@@ -659,6 +730,7 @@ function Zone({
         visibleFields={visibleFields}
         enabled={enableDnd}
         onClick={onCardClick}
+        renderCard={renderCard}
       />,
     );
   });
@@ -715,6 +787,38 @@ interface DraggableCardItemProps {
   visibleFields: KanbanCardField[];
   enabled: boolean;
   onClick?: (card: KanbanCardData) => void;
+  renderCard?: CardRenderer;
+}
+
+/**
+ * Resolve the card body using the same 3-level priority as tables/tree:
+ *   1. card.render        (per-card override)
+ *   2. config.renderCard  (board-wide reusable renderer)
+ *   3. built-in <KanbanCard />
+ *
+ * Each level may return \`undefined\`/\`null\` to fall through to the next.
+ */
+function ResolvedCard({
+  card,
+  visibleFields,
+  compact,
+  isDragging,
+  renderCard,
+}: {
+  card: KanbanCardData;
+  visibleFields: KanbanCardField[];
+  compact: boolean;
+  isDragging: boolean;
+  renderCard?: CardRenderer;
+}) {
+  const ctx = { card, visibleFields, compact, isDragging };
+  const perCard = card.render?.(ctx);
+  if (perCard != null) return <>{perCard}</>;
+  const reusable = renderCard?.(ctx);
+  if (reusable != null) return <>{reusable}</>;
+  const rich = defaultRichCardRenderer(ctx);
+  if (rich != null) return <>{rich}</>;
+  return <KanbanCard card={card} visibleFields={visibleFields} compact={compact} />;
 }
 
 function DraggableCardItem({
@@ -725,49 +829,55 @@ function DraggableCardItem({
   visibleFields,
   enabled,
   onClick,
+  renderCard,
 }: DraggableCardItemProps) {
+  const sourceRef = useRef<HTMLDivElement | null>(null);
   const { dragProps, isDragging } = useDraggable<CardDragData>({
     id: card.id,
     data: useMemo(() => ({ cardId: card.id, fromColumnId: columnId, fromLane: lane }), [card.id, columnId, lane]),
     disabled: !enabled,
-    preview: () => (
-      <div className="w-[260px]">
-        <KanbanCard card={card} visibleFields={visibleFields} compact={compact} />
-      </div>
-    ),
+    sourceRef,
+    preview: () => {
+      // Capture the source card's real rendered width so the drag overlay
+      // matches the card exactly (not a hardcoded 260px). This mirrors the
+      // Multi-list transfer variant's behavior: the ghost you see under the
+      // cursor is a 1:1 replica of the source card.
+      const rect = sourceRef.current?.getBoundingClientRect();
+      const width = rect?.width ? Math.round(rect.width) : undefined;
+      return (
+        <div
+          style={{ width, transform: "rotate(1.5deg)" }}
+          className="pointer-events-none"
+        >
+          <ResolvedCard card={card} visibleFields={visibleFields} compact={compact} isDragging renderCard={renderCard} />
+        </div>
+      );
+    },
   });
 
   return (
     <div
       {...dragProps}
+      ref={sourceRef}
       style={{
         ...dragProps.style,
-        // While this card is the active drag source, collapse it out of the
-        // layout so the floating preview/ghost is the ONLY visible instance.
-        // This matches the behaviour in the reference video — no faded
-        // duplicate left behind, no overlapping text.
         ...(isDragging
           ? {
-              height: 0,
-              minHeight: 0,
-              marginTop: 0,
-              marginBottom: 0,
-              paddingTop: 0,
-              paddingBottom: 0,
-              opacity: 0,
-              overflow: "hidden",
-              pointerEvents: "none" as const,
+              // Fully remove from layout so surrounding cards close up cleanly
+              // and the DropIndicator opens a real-sized gap at the target
+              // position — same pattern as the Multi-list transfer variant.
+              display: "none" as const,
             }
           : null),
       }}
       onClick={() => onClick?.(card)}
       className={cn(
-        "select-none transition-opacity duration-100",
+        "select-none",
         enabled && "cursor-grab active:cursor-grabbing",
         onClick && "cursor-pointer",
       )}
     >
-      <KanbanCard card={card} visibleFields={visibleFields} compact={compact} />
+      <ResolvedCard card={card} visibleFields={visibleFields} compact={compact} isDragging={isDragging} renderCard={renderCard} />
     </div>
   );
 }
@@ -778,16 +888,27 @@ function ColumnHeader({
   overWip,
   showWip,
   showTotal,
+  draggable,
 }: {
   col: KanbanColumnConfig;
   count: number;
   overWip: boolean;
   showWip: boolean;
   showTotal: boolean;
+  draggable?: boolean;
 }) {
   return (
     <div className="mb-2 flex items-center justify-between px-1">
       <div className="flex items-center gap-2">
+        {draggable && (
+          <span
+            data-column-drag-handle
+            className="inline-flex h-5 w-5 cursor-grab items-center justify-center rounded text-muted-foreground hover:bg-muted active:cursor-grabbing"
+            aria-label="Reorder column"
+          >
+            <GripVertical className="h-3.5 w-3.5" />
+          </span>
+        )}
         <span className="text-sm font-semibold">{col.title}</span>
         {showTotal && (
           <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
@@ -812,6 +933,258 @@ function ColumnHeader({
   );
 }
 
+/* ─── Column-reorder DnD ────────────────────────────────────────────────── */
+
+interface ColumnDragData extends Record<string, unknown> {
+  kind: "column";
+  columnId: string;
+  fromIndex: number;
+}
+
+function ColumnsRow({
+  enabled,
+  columns,
+  onReorder,
+  reduceMotion,
+  dirStyle,
+  children,
+}: {
+  enabled: boolean;
+  columns: KanbanColumnConfig[];
+  onReorder?: (fromIndex: number, toIndex: number) => void;
+  reduceMotion?: boolean;
+  dirStyle: React.CSSProperties;
+  children: React.ReactNode;
+}) {
+  const handleDrop = useCallback((result: DropResult<ColumnDragData, Record<string, unknown>>) => {
+    if (!enabled || !onReorder) return;
+    onReorder(result.item.data.fromIndex, result.index);
+  }, [enabled, onReorder]);
+
+  const { zoneProps, hoverIndex, isOver, slotSize, animationsEnabled } = useDropZone<Record<string, unknown>, ColumnDragData>({
+    id: "kanban-column-row",
+    data: useMemo(() => ({}), []),
+    accepts: (drag) => isColumnDragData(drag.data),
+    onDrop: handleDrop,
+    disabled: !enabled,
+    axis: "x",
+    getItemIndex: (drag) => columns.findIndex((c) => c.id === drag.data.columnId),
+  });
+  const { active } = useDndContext();
+
+  // Follow the horizontal-pill pattern: compute the "visual" target index in
+  // the original array, hide the source when target != source, and render a
+  // single inline drop shadow at the target position. Result: smooth, matches
+  // exactly what the user sees, no flex-1 wobble, no double-slot.
+  const activeIndex = active && isColumnDragData(active.data)
+    ? columns.findIndex((c) => c.id === active.data.columnId)
+    : -1;
+  const targetIndex = hoverIndex === null || activeIndex === -1
+    ? null
+    : hoverIndex > activeIndex
+      ? hoverIndex + 1
+      : hoverIndex;
+  const showTarget = isOver && targetIndex !== null && targetIndex !== activeIndex;
+
+  const arr = Array.isArray(children) ? (children as React.ReactNode[]) : [children];
+  const items: React.ReactNode[] = [];
+  arr.forEach((child, idx) => {
+    if (showTarget && targetIndex === idx) {
+      items.push(
+        <ColumnDropSlot
+          key={\`col-slot-\${idx}\`}
+          width={slotSize.width}
+          height={slotSize.height}
+          animated={animationsEnabled && !reduceMotion}
+        />,
+      );
+    }
+    items.push(child);
+  });
+  if (showTarget && targetIndex === arr.length) {
+    items.push(
+      <ColumnDropSlot
+        key="col-slot-end"
+        width={slotSize.width}
+        height={slotSize.height}
+        animated={animationsEnabled && !reduceMotion}
+      />,
+    );
+  }
+
+  return (
+    <div
+      {...(enabled ? zoneProps : {})}
+      data-column-collapse={showTarget ? "true" : "false"}
+      className="flex min-w-[900px] items-start gap-4 pb-4"
+      style={dirStyle}
+    >
+      {items}
+    </div>
+  );
+}
+
+function DraggableColumn({
+  column,
+  index,
+  enabled,
+  preview,
+  header,
+  children,
+}: {
+  column: KanbanColumnConfig;
+  index: number;
+  enabled: boolean;
+  preview: React.ReactNode;
+  header: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const columnRef = useRef<HTMLDivElement | null>(null);
+  const { dragProps, isDragging } = useDraggable<ColumnDragData>({
+    id: \`column-\${column.id}\`,
+    data: useMemo(
+      () => ({ kind: "column" as const, columnId: column.id, fromIndex: index }),
+      [column.id, index],
+    ),
+    disabled: !enabled,
+    sourceRef: columnRef,
+    preview: () => preview,
+  });
+
+  // Only hide the source when the row is actively showing a target slot at a
+  // different index (parent sets data-column-collapse). Otherwise (drag over
+  // source's own slot, or not-yet-hovering a real target) leave the source
+  // visible in place — that's what the user sees in the pill variant.
+  const [collapse, setCollapse] = useState(false);
+  const rowRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!isDragging) { setCollapse(false); return; }
+    const el = columnRef.current;
+    if (!el) return;
+    rowRef.current = el.parentElement;
+    let raf = 0;
+    const tick = () => {
+      const parent = rowRef.current;
+      const flag = parent?.getAttribute("data-column-collapse") === "true";
+      setCollapse((prev) => (prev === flag ? prev : flag));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [isDragging]);
+
+  return (
+    <div
+      ref={columnRef}
+      data-dnd-item={enabled ? "true" : undefined}
+      data-dragging={isDragging ? "true" : "false"}
+      className={cn(
+        "max-w-[300px] min-w-[240px] flex-1 transition-opacity duration-150",
+        collapse && "hidden",
+        isDragging && !collapse && "opacity-40",
+      )}
+    >
+      <div
+        {...(enabled ? {
+          onPointerDown: dragProps.onPointerDown,
+          draggable: dragProps.draggable,
+          style: dragProps.style,
+        } : {})}
+        className={cn(enabled && "cursor-grab active:cursor-grabbing")}
+      >
+        {header}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function ColumnDragPreview({
+  column,
+  cards,
+  compact,
+  visibleFields,
+  renderCard,
+  overWip,
+  showWip,
+  showTotal,
+}: {
+  column: KanbanColumnConfig;
+  cards: KanbanCardData[];
+  compact: boolean;
+  visibleFields: KanbanCardField[];
+  renderCard?: CardRenderer;
+  overWip: boolean;
+  showWip: boolean;
+  showTotal: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "relative w-[280px] rounded-lg border bg-card p-2 shadow-2xl ring-1 ring-primary/40",
+        COLUMN_ACCENT[column.color ?? "muted"],
+        overWip && "border-destructive/60 bg-destructive/5",
+      )}
+      style={{ maxHeight: 420, overflow: "hidden" }}
+    >
+      <ColumnHeader
+        col={column}
+        count={cards.length}
+        overWip={overWip}
+        showWip={showWip}
+        showTotal={showTotal}
+      />
+      <div className="space-y-2">
+        {cards.slice(0, 4).map((card) => (
+          <ResolvedCard
+            key={card.id}
+            card={card}
+            visibleFields={visibleFields}
+            compact={compact}
+            isDragging
+            renderCard={renderCard}
+          />
+        ))}
+        {cards.length === 0 && (
+          <div className="min-h-[60px] rounded-md border border-dashed border-border" />
+        )}
+        {cards.length > 4 && (
+          <div className="px-1 py-1 text-[10px] font-medium text-muted-foreground">
+            +{cards.length - 4} more
+          </div>
+        )}
+      </div>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-card to-transparent"
+      />
+    </div>
+  );
+}
+
+function ColumnDropSlot({
+  width,
+  height,
+  animated,
+}: {
+  width: number;
+  height: number;
+  animated: boolean;
+}) {
+  const w = width > 0 ? width : 260;
+  const h = height > 0 ? Math.min(height, 420) : 200;
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "shrink-0 rounded-lg border-2 border-dashed border-primary/60 bg-primary/10 ring-1 ring-primary/20",
+        animated && "animate-in fade-in zoom-in-95 duration-150",
+      )}
+      style={{ width: w, height: h, minWidth: w, maxWidth: w }}
+    />
+  );
+}
+
 function AddCardButton({ onClick }: { onClick?: () => void }) {
   return (
     <Button
@@ -826,136 +1199,82 @@ function AddCardButton({ onClick }: { onClick?: () => void }) {
 }
 `;
 const components_kanban_KanbanCardRaw = `/**
- * Config-driven kanban card. Renders only the fields enabled in
- * \`visibleFields\` so the same component powers every template.
+ * Minimal text-only fallback card.
+ *
+ * Used as the very last resort in the renderer chain after \`card.render\`,
+ * \`config.renderCard\`, and \`defaultRichCardRenderer\` have all opted out by
+ * returning \`undefined\`. Kept intentionally bare — no Badge/Avatar/Progress
+ * — so users always have a predictable "raw" surface for fully custom boards.
  */
-import { Calendar, MessageSquare, Paperclip, Clock } from "lucide-react";
-
 import { cn } from "@/lib/utils";
-
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-
 import type { KanbanCardData, KanbanCardField } from "./types";
 
-const priorityColors: Record<string, string> = {
-  low: "bg-muted text-muted-foreground",
-  medium: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-  high: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  urgent: "bg-destructive/10 text-destructive",
-};
-
 interface Props {
+  compact?: boolean;
   card: KanbanCardData;
   visibleFields: KanbanCardField[];
-  compact?: boolean;
 }
 
 export function KanbanCard({ card, visibleFields, compact }: Props) {
   const has = (k: KanbanCardField) => visibleFields.includes(k);
-
   return (
     <div className={cn(
-      "rounded-lg border border-border bg-card p-3 space-y-2 transition-shadow hover:shadow-md",
-      compact && "p-2 space-y-1"
+      "rounded-lg border border-border bg-card p-3 space-y-1 transition-shadow hover:shadow-md",
+      compact && "p-2"
     )}>
-      {has("tags") && card.tags && card.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {card.tags.map(tag => (
-            <Badge key={tag} variant="secondary" className="text-[9px] h-4 px-1.5 font-normal">{tag}</Badge>
-          ))}
-        </div>
-      )}
-
       <p className={cn("text-sm font-medium leading-tight", compact && "text-xs")}>{card.title}</p>
-
       {!compact && has("description") && card.description && (
         <p className="text-xs text-muted-foreground line-clamp-2">{card.description}</p>
       )}
-
-      {has("progress") && typeof card.progress === "number" && (
-        <Progress value={card.progress} className="h-1" />
+      {(has("priority") || has("dueDate") || has("assignee")) && (
+        <p className="text-[10px] text-muted-foreground">
+          {[
+            has("priority") && card.priority,
+            has("dueDate") && card.dueDate,
+            has("assignee") && card.assignee,
+          ].filter(Boolean).join(" · ")}
+        </p>
       )}
-
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0 flex-wrap">
-          {has("priority") && card.priority && (
-            <Badge variant="outline" className={cn("text-[9px] h-4 px-1.5 font-medium border-0", priorityColors[card.priority])}>
-              {card.priority}
-            </Badge>
-          )}
-          {has("dueDate") && card.dueDate && (
-            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-              <Calendar className="h-2.5 w-2.5" />{card.dueDate}
-            </span>
-          )}
-          {has("estimate") && card.estimate && (
-            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-              <Clock className="h-2.5 w-2.5" />{card.estimate}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {has("comments") && card.comments && card.comments > 0 && (
-            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-              <MessageSquare className="h-2.5 w-2.5" />{card.comments}
-            </span>
-          )}
-          {has("attachments") && card.attachments && card.attachments > 0 && (
-            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-              <Paperclip className="h-2.5 w-2.5" />{card.attachments}
-            </span>
-          )}
-          {has("assignee") && card.assignee && (
-            <Avatar className="h-5 w-5">
-              <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
-                {card.assignee.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-          )}
-        </div>
-      </div>
     </div>
   );
-}`;
-const components_kanban_KanbanCardDialogRaw = `"use client";
-
-/**
+}
+`;
+const components_kanban_KanbanCardDialogRaw = `/**
  * Generic, user-templated dialog for kanban cards. Mirrors the row-detail
  * dialog used by the Table Builder: the user supplies an HTML/Tailwind
  * template with {{card.field}} mustache tokens, plus optional sandboxed JS
  * that runs after the template mounts.
  */
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 import { runCellJs } from "../../utils/cellJsRunner";
-import { renderRowDialogTemplate, renderRowDialogText } from "../../utils/rowDialogTemplate";
 import type { KanbanBuilderConfig, KanbanCardData } from "./types";
+import { renderRowDialogTemplate, renderRowDialogText } from "../../utils/rowDialogTemplate";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Props {
   card: KanbanCardData | null;
-  action?: KanbanBuilderConfig["cardClickAction"];
   onOpenChange: (open: boolean) => void;
+  action?: KanbanBuilderConfig["cardClickAction"];
 }
 
 export function KanbanCardDialog({ card, action, onOpenChange }: Props) {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const open = !!card;
-  // Extract optional-chain values into stable locals so React Compiler's
-  // dependency inference exactly matches our manual deps.
-  const dialogTemplate = action?.dialogTemplate;
-  const ctx = useMemo(
-    () => ({ row: (card ?? {}) as Record<string, unknown>, value: undefined }),
-    [card],
-  );
-  const html = useMemo(() => {
-    if (!card) return "";
-    if (dialogTemplate?.trim()) {
-      return renderRowDialogTemplate(dialogTemplate, ctx);
+  // Plain derivations — the React Compiler memoizes these; manual useMemo here
+  // could not be preserved (mixed optional-chain deps + cross-memo references).
+  const ctx = { row: (card ?? {}) as Record<string, unknown>, value: undefined };
+  // Typed JSX renderer wins over the mustache template path.
+  const jsxNode =
+    !card || !action?.renderDialog
+      ? null
+      : action.renderDialog({ card, close: () => onOpenChange(false) }) ?? null;
+  const html = ((): string => {
+    if (!card || jsxNode) return "";
+    if (action?.dialogTemplate?.trim()) {
+      return renderRowDialogTemplate(action.dialogTemplate, ctx);
     }
     // Default fallback — show every defined field as a key/value grid.
     const rows = Object.entries(card)
@@ -969,23 +1288,20 @@ export function KanbanCardDialog({ card, action, onOpenChange }: Props) {
       )
       .join("");
     return \`<div>\${rows}</div>\`;
-  }, [card, dialogTemplate, ctx]);
+  })();
 
-  const dialogJs = action?.dialogJs;
   useEffect(() => {
-    if (!open || !card) return;
-    const trimmed = dialogJs?.trim();
-    if (!trimmed) return;
+    if (!open || !action?.dialogJs?.trim() || !card || jsxNode) return;
     const t = window.setTimeout(() => {
       if (!contentRef.current) return;
-      runCellJs(trimmed, {
+      runCellJs(action.dialogJs!, {
         row: card as unknown as Record<string, unknown>,
         value: undefined,
         el: contentRef.current,
       });
     }, 0);
     return () => window.clearTimeout(t);
-  }, [open, card, dialogJs]);
+  }, [open, card, action?.dialogJs]);
 
   if (!card) return null;
   const title = action?.dialogTitle?.trim()
@@ -1002,7 +1318,11 @@ export function KanbanCardDialog({ card, action, onOpenChange }: Props) {
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        <div ref={contentRef} dangerouslySetInnerHTML={{ __html: html }} />
+        {jsxNode ? (
+          <div ref={contentRef}>{jsxNode}</div>
+        ) : (
+          <div ref={contentRef} dangerouslySetInnerHTML={{ __html: html }} />
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -1237,6 +1557,20 @@ const components_kanban_typesRaw = `/**
  * and editor metadata live in \`app/kanban-builder/data/kanbanBuilderTemplates.ts\`,
  * which re-exports these types so existing builder code keeps working.
  */
+/* ----------------------------------------------------------------
+ * Render-function card API (mirrors \`CellRenderer\` for tables).
+ * ----------------------------------------------------------------
+ * Two-level resolution at render time (built into \`KanbanBoard\`):
+ *   1. card.render        — per-card override   (highest priority)
+ *   2. config.renderCard  — board-wide reusable renderer
+ *   3. built-in <KanbanCard /> default          (fallback)
+ *
+ * Return \`undefined\` from either renderer to fall through to the
+ * next level — handy when a reusable renderer only customises *some*
+ * cards (e.g. only \`priority === "urgent"\`).
+ */
+
+import { ReactNode } from "react";
 
 export type KanbanComplexity = "basic" | "intermediate" | "advanced" | "expert";
 
@@ -1251,14 +1585,26 @@ export type KanbanCardField =
   | "progress"
   | "estimate";
 
-export interface KanbanColumnConfig {
-  id: string;
-  title: string;
-  /** Optional WIP limit. Visual warning when exceeded. */
-  wipLimit?: number;
-  /** Tailwind/semantic color token for the column accent. */
-  color?: string;
+  export interface KanbanColumnConfig {
+    id: string;
+    title: string;
+    /** Optional WIP limit. Visual warning when exceeded. */
+    wipLimit?: number;
+    /** Tailwind/semantic color token for the column accent. */
+    color?: string;
+  }
+
+export interface KanbanCardRenderContext {
+  /** The full card object. */
+  card: KanbanCardData;
+  /** Fields the board is configured to surface (e.g. ["priority","tags"]). */
+  visibleFields: KanbanCardField[];
+  /** Whether the board is in compact mode. */
+  compact: boolean;
+  /** True while the card is being dragged. */
+  isDragging: boolean;
 }
+export type CardRenderer = (ctx: KanbanCardRenderContext) => ReactNode | undefined;
 
 export interface KanbanCardData {
   id: string;
@@ -1275,6 +1621,12 @@ export interface KanbanCardData {
   estimate?: string;
   /** Optional swimlane key (used when groupBy is enabled). */
   swimlane?: string;
+  /**
+   * Per-card render override (highest priority). Receives a typed
+   * \`KanbanCardRenderContext\`. Overrides \`config.renderCard\` and the
+   * built-in <KanbanCard /> for this card only.
+   */
+  render?: CardRenderer;
 }
 
 export interface KanbanBuilderConfig {
@@ -1292,8 +1644,10 @@ export interface KanbanBuilderConfig {
   columns: KanbanColumnConfig[];
   /** Which optional fields to render on cards. */
   visibleFields: KanbanCardField[];
-  /** Allow drag and drop. */
+  /** Allow drag and drop (cards). */
   enableDnd: boolean;
+  /** Allow reordering columns by dragging their headers (board + compact layouts). */
+  enableColumnDnd?: boolean;
   /** Show "+ Add card" button per column. */
   enableAddCard: boolean;
   /** Show column WIP limits + warnings. */
@@ -1335,13 +1689,36 @@ export interface KanbanBuilderConfig {
     dialogTitle?: string;
     dialogDescription?: string;
     dialogWidthClass?: string;
+    /**
+     * Typed JSX renderer for the dialog body. Takes precedence over the
+     * mustache \`dialogTemplate\` + \`dialogJs\` path when set.
+     *
+     * Resolution order:
+     *   cardClickAction.renderDialog → cardClickAction.dialogTemplate → default field-grid
+     */
+    renderDialog?: CardDialogRenderer;
   };
   /**
    * Sandboxed JS snippet executed whenever DnD changes a card's column/index.
    * Receives \`row\` (= the change event { card, fromColumnId, toColumnId,
-   * fromIndex, toIndex, cards }) and \`helpers\` (toast/copy/open).
+   * fromIndex, toIndex, cards }) and \`helpers\` (toast/copy/open). Use this
+   * to call your backend (e.g. \`helpers.fetch?.('PATCH', ...)\`).
    */
   onCardChangeJs?: string;
+  /**
+   * Sandboxed JS snippet executed whenever DnD reorders columns. Receives
+   * \`row\` (= { columns, fromIndex, toIndex }). Use to PATCH /columns.
+   */
+  onColumnsChangeJs?: string;
+  /**
+   * Board-wide reusable card renderer. Every card renders through this
+   * unless it defines its own \`card.render\`. Return \`undefined\` to fall
+   * through to the built-in \`<KanbanCard />\`.
+   *
+   * Resolution order at render time:
+   *   card.render  ->  config.renderCard  ->  built-in default
+   */
+  renderCard?: CardRenderer;
 }
 
 /** Emitted by KanbanBoard whenever DnD reorders or moves a card. */
@@ -1359,6 +1736,163 @@ export interface KanbanLoadMoreEvent {
   columnId: string;
   lane?: string;
   cursor?: string;
+}
+
+export interface KanbanTemplate {
+  title: string;
+  description: string;
+  complexity: KanbanComplexity;
+  config: KanbanBuilderConfig;
+  cards: KanbanCardData[];
+  /**
+   * Optional renderer source strings — when present, the code generator emits
+   * a \`renderers.tsx\` file alongside \`config.ts\` / \`data.ts\`, matching the
+   * tree-builder pattern. Live preview uses \`config.renderCard\` / \`card.render\`
+   * directly; \`rendererSources\` is only consumed by the code generator.
+   */
+  rendererSources?: KanbanRendererSources;
+}
+
+/** Source-string descriptors mirroring \`TreeRendererSources\`. */
+export interface KanbanRendererSources {
+  imports?: string;
+  reusable?: string;
+  perCard?: Record<string, string>;
+  /** Source of \`cardClickAction.renderDialog\` — typed JSX dialog renderer. */
+  dialog?: string;
+}
+
+/** Context for a typed card-dialog renderer. */
+export interface CardDialogRenderContext {
+  card: KanbanCardData;
+  /** Programmatically close the dialog. */
+  close: () => void;
+}
+export type CardDialogRenderer = (
+  ctx: CardDialogRenderContext,
+) => ReactNode | undefined;
+`;
+const components_kanban_defaultCardRendererRaw = `/**
+ * Default *rich* card renderer.
+ *
+ * Reproduces the Badge/Avatar/Progress/icon visuals that used to be hard-coded
+ * inside \`KanbanCard.tsx\`. It's wired as the engine's fallback in
+ * \`KanbanBoard.tsx\` so existing variants keep their look. Templates that want
+ * a custom design either:
+ *   • set \`config.renderCard\` (board-wide), or
+ *   • set \`card.render\` (per-card),
+ * and they fall through to this renderer or the minimal \`<KanbanCard />\` by
+ * returning \`undefined\`.
+ *
+ * Resolution order at render time:
+ *   card.render → config.renderCard → defaultRichCardRenderer → <KanbanCard />
+ */
+import { Calendar, MessageSquare, Paperclip, Clock } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
+import { cn } from "@/lib/utils";
+import type { CardRenderer, KanbanCardField } from "./types";
+
+const priorityColors: Record<string, string> = {
+  low: "bg-muted text-muted-foreground",
+  medium: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  high: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  urgent: "bg-destructive/10 text-destructive",
+};
+
+export const defaultRichCardRenderer: CardRenderer = ({ card, visibleFields, compact }) => {
+  const has = (k: KanbanCardField) => visibleFields.includes(k);
+  return (
+    <div className={cn(
+      "rounded-lg border border-border bg-card p-3 space-y-2 transition-shadow hover:shadow-md",
+      compact && "p-2 space-y-1"
+    )}>
+      {has("tags") && card.tags && card.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {card.tags.map(tag => (
+            <Badge key={tag} variant="secondary" className="text-[9px] h-4 px-1.5 font-normal">{tag}</Badge>
+          ))}
+        </div>
+      )}
+
+      <p className={cn("text-sm font-medium leading-tight", compact && "text-xs")}>{card.title}</p>
+
+      {!compact && has("description") && card.description && (
+        <p className="text-xs text-muted-foreground line-clamp-2">{card.description}</p>
+      )}
+
+      {has("progress") && typeof card.progress === "number" && (
+        <Progress value={card.progress} className="h-1" />
+      )}
+
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0 flex-wrap">
+          {has("priority") && card.priority && (
+            <Badge variant="outline" className={cn("text-[9px] h-4 px-1.5 font-medium border-0", priorityColors[card.priority])}>
+              {card.priority}
+            </Badge>
+          )}
+          {has("dueDate") && card.dueDate && (
+            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+              <Calendar className="h-2.5 w-2.5" />{card.dueDate}
+            </span>
+          )}
+          {has("estimate") && card.estimate && (
+            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+              <Clock className="h-2.5 w-2.5" />{card.estimate}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {has("comments") && card.comments && card.comments > 0 && (
+            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+              <MessageSquare className="h-2.5 w-2.5" />{card.comments}
+            </span>
+          )}
+          {has("attachments") && card.attachments && card.attachments > 0 && (
+            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+              <Paperclip className="h-2.5 w-2.5" />{card.attachments}
+            </span>
+          )}
+          {has("assignee") && card.assignee && (
+            <Avatar className="h-5 w-5">
+              <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
+                {card.assignee.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+`;
+const components_kanban_attachRenderersRaw = `/**
+ * Wire per-card renderers onto initial card data.
+ *
+ * Resolution order applied at render time:
+ *   card.render  →  config.renderCard  →  defaultRichCardRenderer  →  <KanbanCard />
+ *
+ * O(n) single pass.
+ */
+import type { CardRenderer, KanbanCardData } from "./types";
+
+export type CardRendererMap = Readonly<Record<string, CardRenderer | undefined>>;
+
+export function attachCardRenderers(
+  cards: readonly KanbanCardData[],
+  renderers: CardRendererMap,
+): KanbanCardData[] {
+  const out: KanbanCardData[] = new Array(cards.length);
+  for (let i = 0; i < cards.length; i++) {
+    const card = cards[i];
+    const renderer = renderers[card.id];
+    out[i] = renderer ? { ...card, render: renderer } : card;
+  }
+  return out;
 }
 `;
 const utils_cellJsRunnerRaw = `/**
@@ -1690,16 +2224,8 @@ function findScrollableAncestor(
     const style = window.getComputedStyle(node);
     const overflowY = style.overflowY;
     const overflowX = style.overflowX;
-    const scrollableY =
-      (overflowY === "auto" ||
-        overflowY === "scroll" ||
-        overflowY === "overlay") &&
-      node.scrollHeight > node.clientHeight;
-    const scrollableX =
-      (overflowX === "auto" ||
-        overflowX === "scroll" ||
-        overflowX === "overlay") &&
-      node.scrollWidth > node.clientWidth;
+    const scrollableY = (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") && node.scrollHeight > node.clientHeight;
+    const scrollableX = (overflowX === "auto" || overflowX === "scroll" || overflowX === "overlay") && node.scrollWidth > node.clientWidth;
     if (axis === "y" && scrollableY) return node;
     if (axis === "x" && scrollableX) return node;
     if (axis === "both" && (scrollableX || scrollableY)) return node;
@@ -1735,16 +2261,18 @@ function isPointInsideRect(x: number, y: number, rect: DOMRect) {
 }
 
 function isPointInsideSourceBounds(x: number, y: number, snap: DragSnapshot) {
-  return (
-    snap.sourceLeft != null &&
-    snap.sourceRight != null &&
-    snap.sourceTop != null &&
-    snap.sourceBottom != null &&
-    x >= snap.sourceLeft &&
-    x <= snap.sourceRight &&
-    y >= snap.sourceTop &&
-    y <= snap.sourceBottom
-  );
+  return snap.sourceLeft != null && snap.sourceRight != null && snap.sourceTop != null && snap.sourceBottom != null
+    && x >= snap.sourceLeft
+    && x <= snap.sourceRight
+    && y >= snap.sourceTop
+    && y <= snap.sourceBottom;
+}
+
+function getZoneItems(zoneEl: HTMLElement): HTMLElement[] {
+  return Array.from(zoneEl.querySelectorAll<HTMLElement>('[data-dnd-item="true"]')).filter((el) => {
+    const nearestZone = el.closest<HTMLElement>("[data-dnd-zone]");
+    return nearestZone === zoneEl;
+  });
 }
 
 /**
@@ -1757,18 +2285,13 @@ function findSiblingIndexAt(
   x: number,
   y: number,
 ): { visibleIndex: number; rect: DOMRect } | null {
-  const items = zoneEl.querySelectorAll<HTMLElement>('[data-dnd-item="true"]');
+  const items = getZoneItems(zoneEl);
   let visibleIndex = 0;
   for (let i = 0; i < items.length; i += 1) {
     const el = items[i];
     if (el.dataset.dragging === "true") continue;
     const rect = el.getBoundingClientRect();
-    if (
-      x >= rect.left &&
-      x <= rect.right &&
-      y >= rect.top &&
-      y <= rect.bottom
-    ) {
+    if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
       return { visibleIndex, rect };
     }
     visibleIndex += 1;
@@ -1789,10 +2312,8 @@ function resolveDropIndex(
   clientY: number,
   axis: "x" | "y" | "grid",
 ): number {
-  const items = zoneEl.querySelectorAll<HTMLElement>('[data-dnd-item="true"]');
-  const isRtl =
-    (axis === "x" || axis === "grid") &&
-    window.getComputedStyle(zoneEl).direction === "rtl";
+  const items = getZoneItems(zoneEl);
+  const isRtl = (axis === "x" || axis === "grid") && window.getComputedStyle(zoneEl).direction === "rtl";
   let count = 0;
 
   if (axis === "grid") {
@@ -1815,30 +2336,19 @@ function resolveDropIndex(
       const rowGap = Number.parseFloat(style.rowGap) || 0;
       const cellWidth = (zoneRect.width - columnGap * (columns - 1)) / columns;
       const rowHeight = Math.max(...visible.map((item) => item.rect.height));
-      const xInZone = Math.max(
-        0,
-        Math.min(clientX - zoneRect.left, zoneRect.width - 1),
-      );
+      const xInZone = Math.max(0, Math.min(clientX - zoneRect.left, zoneRect.width - 1));
       const yInZone = Math.max(0, clientY - zoneRect.top);
       const trackWidth = cellWidth + columnGap;
       const rowStep = rowHeight + rowGap;
-      const visualCol = Math.max(
-        0,
-        Math.min(columns - 1, Math.floor(xInZone / trackWidth)),
-      );
+      const visualCol = Math.max(0, Math.min(columns - 1, Math.floor(xInZone / trackWidth)));
       const col = isRtl ? columns - 1 - visualCol : visualCol;
       const row = Math.max(0, Math.floor(yInZone / rowStep));
       const rawIndex = row * columns + col;
       if (rawIndex >= visible.length) return visible.length;
       const cellStart = visualCol * trackWidth;
       const localX = xInZone - cellStart;
-      const afterCellMidpoint = isRtl
-        ? localX < cellWidth / 2
-        : localX > cellWidth / 2;
-      return Math.max(
-        0,
-        Math.min(visible.length, rawIndex + (afterCellMidpoint ? 1 : 0)),
-      );
+      const afterCellMidpoint = isRtl ? localX < cellWidth / 2 : localX > cellWidth / 2;
+      return Math.max(0, Math.min(visible.length, rawIndex + (afterCellMidpoint ? 1 : 0)));
     }
 
     // Find the row the pointer is in (or before).
@@ -1889,20 +2399,11 @@ interface ProviderProps {
   reduceMotion?: boolean;
 }
 
-export function DndProvider({
-  children,
-  onDragStart,
-  onDragEnd,
-  reduceMotion = false,
-}: ProviderProps) {
+export function DndProvider({ children, onDragStart, onDragEnd, reduceMotion = false }: ProviderProps) {
   const zonesRef = useRef<Map<string, ZoneRegistration>>(new Map());
   const [active, setActive] = useState<DragSnapshot | null>(null);
   const [hover, setHover] = useState<HoverState | null>(null);
-  const [overlay, setOverlay] = useState<{
-    x: number;
-    y: number;
-    node: ReactNode;
-  } | null>(null);
+  const [overlay, setOverlay] = useState<{ x: number; y: number; node: ReactNode } | null>(null);
   const [systemReducedMotion, setSystemReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -1918,17 +2419,10 @@ export function DndProvider({
 
   const activeRef = useRef<DragSnapshot | null>(null);
   const hoverRef = useRef<HoverState | null>(null);
-  const dropZoneCacheRef = useRef<{
-    zone: ZoneRegistration;
-    rect: DOMRect;
-  } | null>(null);
+  const dropZoneCacheRef = useRef<{ zone: ZoneRegistration; rect: DOMRect } | null>(null);
 
-  useEffect(() => {
-    activeRef.current = active;
-  }, [active]);
-  useEffect(() => {
-    hoverRef.current = hover;
-  }, [hover]);
+  useEffect(() => { activeRef.current = active; }, [active]);
+  useEffect(() => { hoverRef.current = hover; }, [hover]);
 
   const registerZone = useCallback((registration: ZoneRegistration) => {
     zonesRef.current.set(registration.id, registration);
@@ -1937,30 +2431,24 @@ export function DndProvider({
     };
   }, []);
 
-  const findZoneAt = useCallback(
-    (clientX: number, clientY: number, snap: DragSnapshot) => {
-      let result: { zone: ZoneRegistration; rect: DOMRect } | null = null;
-      for (const zone of zonesRef.current.values()) {
-        if (zone.accepts && !zone.accepts(snap)) continue;
-        const rect = zone.element.getBoundingClientRect();
-        if (
-          clientX >= rect.left &&
-          clientX <= rect.right &&
-          clientY >= rect.top &&
-          clientY <= rect.bottom
-        ) {
-          if (
-            !result ||
-            rect.width * rect.height < result.rect.width * result.rect.height
-          ) {
-            result = { zone, rect };
-          }
+  const findZoneAt = useCallback((clientX: number, clientY: number, snap: DragSnapshot) => {
+    let result: { zone: ZoneRegistration; rect: DOMRect } | null = null;
+    for (const zone of zonesRef.current.values()) {
+      if (zone.accepts && !zone.accepts(snap)) continue;
+      const rect = zone.element.getBoundingClientRect();
+      if (
+        clientX >= rect.left &&
+        clientX <= rect.right &&
+        clientY >= rect.top &&
+        clientY <= rect.bottom
+      ) {
+        if (!result || rect.width * rect.height < result.rect.width * result.rect.height) {
+          result = { zone, rect };
         }
       }
-      return result;
-    },
-    [],
-  );
+    }
+    return result;
+  }, []);
 
   // Auto-scroll while dragging near edges of the nearest scrollable ancestor of
   // the active drop-zone. Axis-aware so horizontal lists scroll horizontally.
@@ -1973,9 +2461,7 @@ export function DndProvider({
     const tick = () => {
       const cache = dropZoneCacheRef.current;
       const axis = (cache?.zone.axis ?? "y") as "x" | "y" | "both";
-      const targetEl = cache
-        ? findScrollableAncestor(cache.zone.element, axis)
-        : window;
+      const targetEl = cache ? findScrollableAncestor(cache.zone.element, axis) : window;
       const rect = getScrollRect(targetEl);
 
       let dx = 0;
@@ -1984,26 +2470,18 @@ export function DndProvider({
         const distFromTop = lastY - rect.top;
         const distFromBottom = rect.bottom - lastY;
         if (distFromTop < AUTOSCROLL_EDGE && distFromTop > 0) {
-          dy =
-            -((AUTOSCROLL_EDGE - distFromTop) / AUTOSCROLL_EDGE) *
-            AUTOSCROLL_MAX_SPEED;
+          dy = -((AUTOSCROLL_EDGE - distFromTop) / AUTOSCROLL_EDGE) * AUTOSCROLL_MAX_SPEED;
         } else if (distFromBottom < AUTOSCROLL_EDGE && distFromBottom > 0) {
-          dy =
-            ((AUTOSCROLL_EDGE - distFromBottom) / AUTOSCROLL_EDGE) *
-            AUTOSCROLL_MAX_SPEED;
+          dy = ((AUTOSCROLL_EDGE - distFromBottom) / AUTOSCROLL_EDGE) * AUTOSCROLL_MAX_SPEED;
         }
       }
       if (axis === "x" || axis === "both") {
         const distFromLeft = lastX - rect.left;
         const distFromRight = rect.right - lastX;
         if (distFromLeft < AUTOSCROLL_EDGE && distFromLeft > 0) {
-          dx =
-            -((AUTOSCROLL_EDGE - distFromLeft) / AUTOSCROLL_EDGE) *
-            AUTOSCROLL_MAX_SPEED;
+          dx = -((AUTOSCROLL_EDGE - distFromLeft) / AUTOSCROLL_EDGE) * AUTOSCROLL_MAX_SPEED;
         } else if (distFromRight < AUTOSCROLL_EDGE && distFromRight > 0) {
-          dx =
-            ((AUTOSCROLL_EDGE - distFromRight) / AUTOSCROLL_EDGE) *
-            AUTOSCROLL_MAX_SPEED;
+          dx = ((AUTOSCROLL_EDGE - distFromRight) / AUTOSCROLL_EDGE) * AUTOSCROLL_MAX_SPEED;
         }
       }
       if (dx !== 0 || dy !== 0) scrollBy(targetEl, dx, dy);
@@ -2023,255 +2501,205 @@ export function DndProvider({
     };
   }, [active]);
 
-  const beginDrag = useCallback<DndContextValue["beginDrag"]>(
-    (payload, pointerEvent) => {
-      const snap: DragSnapshot = {
-        id: payload.id,
-        data: payload.data,
-        clientX: pointerEvent.clientX,
-        clientY: pointerEvent.clientY,
-        width: payload.width,
-        height: payload.height,
-        offsetX: payload.offsetX,
-        offsetY: payload.offsetY,
-        sourceLeft: payload.sourceLeft,
-        sourceTop: payload.sourceTop,
-        sourceRight: payload.sourceRight,
-        sourceBottom: payload.sourceBottom,
-      };
-      setActive(snap);
-      setOverlay({
-        x: pointerEvent.clientX,
-        y: pointerEvent.clientY,
-        node: payload.preview ? payload.preview() : null,
-      });
-      if (typeof document !== "undefined") {
-        document.body.style.cursor = "grabbing";
-        document.body.style.userSelect = "none";
-      }
-      onDragStart?.(snap);
+  const beginDrag = useCallback<DndContextValue["beginDrag"]>((payload, pointerEvent) => {
+    const snap: DragSnapshot = {
+      id: payload.id,
+      data: payload.data,
+      clientX: pointerEvent.clientX,
+      clientY: pointerEvent.clientY,
+      width: payload.width,
+      height: payload.height,
+      offsetX: payload.offsetX,
+      offsetY: payload.offsetY,
+      sourceLeft: payload.sourceLeft,
+      sourceTop: payload.sourceTop,
+      sourceRight: payload.sourceRight,
+      sourceBottom: payload.sourceBottom,
+      previewNode: payload.preview ? payload.preview() : null,
+    };
+    setActive(snap);
+    setOverlay({
+      x: pointerEvent.clientX,
+      y: pointerEvent.clientY,
+      node: snap.previewNode,
+    });
+    if (typeof document !== "undefined") {
+      document.body.style.cursor = "grabbing";
+      document.body.style.userSelect = "none";
+    }
+    onDragStart?.(snap);
 
-      let dropped = false;
+    let dropped = false;
 
-      const handleMove = (event: PointerEvent) => {
-        const next: DragSnapshot = {
-          ...snap,
-          clientX: event.clientX,
-          clientY: event.clientY,
-        };
-        activeRef.current = next;
-        setOverlay((prev) =>
-          prev ? { ...prev, x: event.clientX, y: event.clientY } : prev,
-        );
+    const handleMove = (event: PointerEvent) => {
+      const next: DragSnapshot = { ...snap, clientX: event.clientX, clientY: event.clientY };
+      activeRef.current = next;
+      setOverlay((prev) => (prev ? { ...prev, x: event.clientX, y: event.clientY } : prev));
 
-        const found = findZoneAt(event.clientX, event.clientY, next);
-        dropZoneCacheRef.current = found;
+      const found = findZoneAt(event.clientX, event.clientY, next);
+      dropZoneCacheRef.current = found;
 
-        if (!found) {
-          if (hoverRef.current !== null) {
-            hoverRef.current = null;
-            setHover(null);
-          }
-          return;
+      if (!found) {
+        if (hoverRef.current !== null) {
+          hoverRef.current = null;
+          setHover(null);
         }
+        return;
+      }
 
-        const zoneAxis = found.zone.axis;
-        const axis = (
-          zoneAxis === "x" ? "x" : zoneAxis === "grid" ? "grid" : "y"
-        ) as "x" | "y" | "grid";
-        const sourceIndex = found.zone.getItemIndex?.(next) ?? undefined;
-        const center = getDragCenter(next);
-        const prevHover = hoverRef.current;
-        const sameZoneHover =
-          prevHover && prevHover.zoneId === found.zone.id ? prevHover : null;
+      const zoneAxis = found.zone.axis;
+      const axis = (zoneAxis === "x" ? "x" : zoneAxis === "grid" ? "grid" : "y") as "x" | "y" | "grid";
+      const sourceIndex = found.zone.getItemIndex?.(next) ?? undefined;
+      const center = getDragCenter(next);
+      const prevHover = hoverRef.current;
+      const sameZoneHover = prevHover && prevHover.zoneId === found.zone.id ? prevHover : null;
 
-        let index: number;
-        if (sourceIndex != null && sourceIndex >= 0) {
-          // Sibling-based hit test: only update index when the cursor center is
-          // actually inside another sibling. When in a gap, KEEP the previous
-          // hover index to eliminate flicker as items reflow around the slot.
-          const sibling = findSiblingIndexAt(
-            found.zone.element,
-            center.x,
-            center.y,
-          );
-          if (sibling) {
-            const horizontal = axis === "x" || axis === "grid";
-            const mid = horizontal
-              ? sibling.rect.left + sibling.rect.width / 2
-              : sibling.rect.top + sibling.rect.height / 2;
-            const coord = horizontal ? center.x : center.y;
-            const after = coord > mid;
-            index = sibling.visibleIndex + (after ? 1 : 0);
-          } else if (sameZoneHover) {
-            // Stay put in gaps — prevents flicker back to source position.
+      let index: number;
+      if (sourceIndex != null && sourceIndex >= 0) {
+        // Sibling-based hit test: only update index when the cursor center is
+        // actually inside another sibling. When in a gap, KEEP the previous
+        // hover index to eliminate flicker as items reflow around the slot.
+        const sibling = findSiblingIndexAt(found.zone.element, center.x, center.y);
+        if (sibling) {
+          const horizontal = axis === "x" || axis === "grid";
+          const mid = horizontal
+            ? sibling.rect.left + sibling.rect.width / 2
+            : sibling.rect.top + sibling.rect.height / 2;
+          const coord = horizontal ? center.x : center.y;
+          const after = coord > mid;
+          index = sibling.visibleIndex + (after ? 1 : 0);
+        } else {
+          // Not over any sibling — could be a gap OR past the edges. Use
+          // midpoint resolver to compute an edge-correct index, then only
+          // apply gap-stickiness when the resolver returns the same as the
+          // previous hover (i.e., truly a gap, not an edge).
+          const resolved = resolveDropIndex(found.zone.element, center.x, center.y, axis);
+          if (sameZoneHover && resolved === sameZoneHover.index) {
             index = sameZoneHover.index;
           } else {
-            index = sourceIndex;
+            index = resolved;
           }
+        }
+      } else {
+        index = resolveDropIndex(found.zone.element, center.x, center.y, axis);
+      }
+      const nextHover: HoverState = { zoneId: found.zone.id, index, sourceIndex };
+      if (!prevHover || prevHover.zoneId !== nextHover.zoneId || prevHover.index !== nextHover.index || prevHover.sourceIndex !== nextHover.sourceIndex) {
+        hoverRef.current = nextHover;
+        setHover(nextHover);
+      }
+    };
+
+    const cleanup = () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+      window.removeEventListener("pointercancel", handleCancel);
+      window.removeEventListener("keydown", handleKey);
+      activeRef.current = null;
+      hoverRef.current = null;
+      dropZoneCacheRef.current = null;
+      setActive(null);
+      setHover(null);
+      setOverlay(null);
+      if (typeof document !== "undefined") {
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      }
+      onDragEnd?.(snap, dropped);
+    };
+
+    const handleUp = (event: PointerEvent) => {
+      const cache = dropZoneCacheRef.current;
+      const finalSnap = { ...(activeRef.current ?? snap), clientX: event.clientX, clientY: event.clientY };
+      if (cache) {
+        // Trust the last visible hover index — that is exactly what the user
+        // saw as the drop target. Recomputing here can land back on the source
+        // because items have already shifted to make room for the drop slot.
+        const lastHover = hoverRef.current;
+        let index: number;
+        if (lastHover && lastHover.zoneId === cache.zone.id) {
+          index = lastHover.index;
         } else {
-          index = resolveDropIndex(
-            found.zone.element,
-            center.x,
-            center.y,
-            axis,
-          );
+          const cAxis = cache.zone.axis;
+          const axis = (cAxis === "x" ? "x" : cAxis === "grid" ? "grid" : "y") as "x" | "y" | "grid";
+          const center = getDragCenter(finalSnap);
+          index = resolveDropIndex(cache.zone.element, center.x, center.y, axis);
         }
-        const nextHover: HoverState = {
-          zoneId: found.zone.id,
-          index,
-          sourceIndex,
-        };
-        if (
-          !prevHover ||
-          prevHover.zoneId !== nextHover.zoneId ||
-          prevHover.index !== nextHover.index ||
-          prevHover.sourceIndex !== nextHover.sourceIndex
-        ) {
-          hoverRef.current = nextHover;
-          setHover(nextHover);
+        try {
+          cache.zone.onDrop({
+            item: finalSnap,
+            zoneId: cache.zone.id,
+            zoneData: cache.zone.data,
+            index,
+            clientX: event.clientX,
+            clientY: event.clientY,
+          });
+          dropped = true;
+        } catch (err) {
+          console.error("[dnd] onDrop handler threw:", err);
         }
-      };
+      }
+      cleanup();
+    };
 
-      const cleanup = () => {
-        window.removeEventListener("pointermove", handleMove);
-        window.removeEventListener("pointerup", handleUp);
-        window.removeEventListener("pointercancel", handleCancel);
-        window.removeEventListener("keydown", handleKey);
-        activeRef.current = null;
-        hoverRef.current = null;
-        dropZoneCacheRef.current = null;
-        setActive(null);
-        setHover(null);
-        setOverlay(null);
-        if (typeof document !== "undefined") {
-          document.body.style.cursor = "";
-          document.body.style.userSelect = "";
-        }
-        onDragEnd?.(snap, dropped);
-      };
+    const handleCancel = () => cleanup();
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") cleanup();
+    };
 
-      const handleUp = (event: PointerEvent) => {
-        const cache = dropZoneCacheRef.current;
-        const finalSnap = {
-          ...(activeRef.current ?? snap),
-          clientX: event.clientX,
-          clientY: event.clientY,
-        };
-        if (cache) {
-          // Trust the last visible hover index — that is exactly what the user
-          // saw as the drop target. Recomputing here can land back on the source
-          // because items have already shifted to make room for the drop slot.
-          const lastHover = hoverRef.current;
-          let index: number;
-          if (lastHover && lastHover.zoneId === cache.zone.id) {
-            index = lastHover.index;
-          } else {
-            const cAxis = cache.zone.axis;
-            const axis = (
-              cAxis === "x" ? "x" : cAxis === "grid" ? "grid" : "y"
-            ) as "x" | "y" | "grid";
-            const center = getDragCenter(finalSnap);
-            index = resolveDropIndex(
-              cache.zone.element,
-              center.x,
-              center.y,
-              axis,
-            );
-          }
-          try {
-            cache.zone.onDrop({
-              item: finalSnap,
-              zoneId: cache.zone.id,
-              zoneData: cache.zone.data,
-              index,
-              clientX: event.clientX,
-              clientY: event.clientY,
-            });
-            dropped = true;
-          } catch (err) {
-            console.error("[dnd] onDrop handler threw:", err);
-          }
-        }
-        cleanup();
-      };
+    window.addEventListener("pointermove", handleMove, { passive: true });
+    window.addEventListener("pointerup", handleUp);
+    window.addEventListener("pointercancel", handleCancel);
+    window.addEventListener("keydown", handleKey);
+  }, [findZoneAt, onDragEnd, onDragStart]);
 
-      const handleCancel = () => cleanup();
-      const handleKey = (event: KeyboardEvent) => {
-        if (event.key === "Escape") cleanup();
-      };
-
-      window.addEventListener("pointermove", handleMove, { passive: true });
-      window.addEventListener("pointerup", handleUp);
-      window.addEventListener("pointercancel", handleCancel);
-      window.addEventListener("keydown", handleKey);
-    },
-    [findZoneAt, onDragEnd, onDragStart],
-  );
-
-  const value = useMemo<DndContextValue>(
-    () => ({
-      active,
-      hover,
-      animationsEnabled,
-      registerZone,
-      beginDrag,
-    }),
-    [active, hover, animationsEnabled, registerZone, beginDrag],
-  );
+  const value = useMemo<DndContextValue>(() => ({
+    active,
+    hover,
+    animationsEnabled,
+    registerZone,
+    beginDrag,
+  }), [active, hover, animationsEnabled, registerZone, beginDrag]);
 
   return (
     <DndCtx.Provider value={value}>
       {children}
-      {overlay &&
-        typeof document !== "undefined" &&
-        createPortal(
-          (() => {
-            const offX = active?.offsetX ?? 0;
-            const offY = active?.offsetY ?? 0;
-            const w = active?.width ?? 0;
-            const h = active?.height ?? 0;
-            const vw = typeof window !== "undefined" ? window.innerWidth : 0;
-            const vh = typeof window !== "undefined" ? window.innerHeight : 0;
-            const rawLeft = overlay.x - offX;
-            const rawTop = overlay.y - offY;
-            // Soft on-screen clamp: keep a small handle of the preview visible
-            // rather than trying to fit the entire rectangle inside the
-            // viewport. The old behavior (\`left ≤ vw - w - 4\`) broke wide
-            // previews — e.g. a \`flex-1\` sortable row in the trash demo —
-            // because as soon as \`w\` approached the viewport width, the
-            // upper bound collapsed and the preview "stuck" mid-screen while
-            // the cursor moved on. We now anchor on the cursor: it can drift
-            // up to \`MIN_VISIBLE\` pixels past the preview's far edge, but no
-            // further. That lets oversized previews slide partly off-screen
-            // (so they keep tracking the pointer) without ever vanishing.
-            const MIN_VISIBLE = 24;
-            const minLeft = MIN_VISIBLE - Math.max(w, MIN_VISIBLE);
-            const maxLeft = vw - MIN_VISIBLE;
-            const minTop = MIN_VISIBLE - Math.max(h, MIN_VISIBLE);
-            const maxTop = vh - MIN_VISIBLE;
-            const left = Math.max(minLeft, Math.min(rawLeft, maxLeft));
-            const top = Math.max(minTop, Math.min(rawTop, maxTop));
-            return (
-              <div
-                style={{
-                  position: "fixed",
-                  left,
-                  top,
-                  pointerEvents: "none",
-                  zIndex: 9999,
-                  transform: "translateZ(0)",
-                  opacity: 0.95,
-                  filter: "drop-shadow(0 12px 24px rgba(0,0,0,0.18))",
-                }}
-                aria-hidden="true"
-              >
-                {overlay.node}
-              </div>
-            );
-          })(),
-          document.body,
-        )}
+      {overlay && typeof document !== "undefined" && createPortal(
+        (() => {
+          const offX = active?.offsetX ?? 0;
+          const offY = active?.offsetY ?? 0;
+          const w = active?.width ?? 0;
+          const h = active?.height ?? 0;
+          const vw = typeof window !== "undefined" ? window.innerWidth : 0;
+          const vh = typeof window !== "undefined" ? window.innerHeight : 0;
+          const rawLeft = overlay.x - offX;
+          const rawTop = overlay.y - offY;
+          // Clamp so a small sliver of the preview always stays visible,
+          // but never restrict pointer travel — otherwise wide cards can't
+          // be dragged near the viewport's right/bottom edges.
+          const MIN_VISIBLE = 40;
+          const left = Math.max(MIN_VISIBLE - w, Math.min(rawLeft, vw - MIN_VISIBLE));
+          const top = Math.max(MIN_VISIBLE - h, Math.min(rawTop, vh - MIN_VISIBLE));
+          return (
+            <div
+              style={{
+                position: "fixed",
+                left,
+                top,
+                pointerEvents: "none",
+                zIndex: 9999,
+                transform: "translateZ(0)",
+                opacity: 0.95,
+                filter: "drop-shadow(0 12px 24px rgba(0,0,0,0.18))",
+              }}
+              aria-hidden="true"
+            >
+              {overlay.node}
+            </div>
+          );
+        })(),
+        document.body,
+      )}
     </DndCtx.Provider>
   );
 }
@@ -2284,9 +2712,7 @@ export function useDndContext(): DndContextValue {
   return ctx;
 }
 `;
-const components_dnd_useDraggableRaw = `"use client";
-
-/**
+const components_dnd_useDraggableRaw = `/**
  * useDraggable — turn any element into a draggable handle.
  *
  * Usage:
@@ -2308,11 +2734,12 @@ const components_dnd_useDraggableRaw = `"use client";
  *     skips it.
  */
 import { useCallback, useMemo, useRef } from "react";
+
 import { useDndContext } from "./DndContext";
 import type { DragData, UseDraggableOptions } from "./types";
 
 export function useDraggable<T extends DragData = DragData>(options: UseDraggableOptions<T>) {
-  const { id, data, activationDistance = 5, disabled = false, preview } = options;
+  const { id, data, activationDistance = 5, disabled = false, preview, sourceRef } = options;
   const { beginDrag, active } = useDndContext();
   const startRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
   // The source element is captured from the PointerEvent target on PointerDown.
@@ -2345,7 +2772,8 @@ export function useDraggable<T extends DragData = DragData>(options: UseDraggabl
       window.removeEventListener("pointerup", handleUp);
       window.removeEventListener("pointercancel", handleUp);
       startRef.current = null;
-      const rect = elementRef.current?.getBoundingClientRect();
+      const sourceEl = sourceRef?.current ?? elementRef.current;
+      const rect = sourceEl?.getBoundingClientRect();
       beginDrag(
         {
           id,
@@ -2374,7 +2802,7 @@ export function useDraggable<T extends DragData = DragData>(options: UseDraggabl
     window.addEventListener("pointermove", handleMove, { passive: true });
     window.addEventListener("pointerup", handleUp);
     window.addEventListener("pointercancel", handleUp);
-  }, [activationDistance, beginDrag, data, disabled, id, preview]);
+  }, [activationDistance, beginDrag, data, disabled, id, preview, sourceRef]);
 
   const dragProps = useMemo(() => ({
     onPointerDown,
@@ -2391,8 +2819,7 @@ export function useDraggable<T extends DragData = DragData>(options: UseDraggabl
   }), [isDragging, onPointerDown]);
 
   return { dragProps, isDragging };
-}
-`;
+}`;
 const components_dnd_useDropZoneRaw = `"use client";
 
 /**
@@ -2614,6 +3041,8 @@ export interface DragSnapshot<T extends DragData = DragData> {
   sourceTop?: number;
   sourceRight?: number;
   sourceBottom?: number;
+  /** Rendered drag preview, also reusable by consumers as a matching drop shadow. */
+  previewNode?: React.ReactNode;
 }
 
 /** What a drop zone receives on a successful drop. */
@@ -2697,6 +3126,8 @@ export interface UseDraggableOptions<T extends DragData = DragData> {
   disabled?: boolean;
   /** Optional custom React preview rendered inside the overlay. */
   preview?: () => React.ReactNode;
+  /** Optional full source element to measure when the pointer handle is not the visual item. */
+  sourceRef?: { current: HTMLElement | null };
 }
 
 /** Options for useDropZone. */
@@ -2773,6 +3204,20 @@ export const generatedSharedKanbanFiles: KanbanRegistryFile[] = [
     code: components_kanban_typesRaw,
     language: "typescript",
     description: "KanbanBuilderConfig + KanbanCardData + supporting event shapes.",
+  },
+  {
+    name: "defaultCardRenderer.tsx",
+    path: "components/kanban/defaultCardRenderer.tsx",
+    code: components_kanban_defaultCardRendererRaw,
+    language: "tsx",
+    description: "Built-in rich card renderer (badge/progress/avatar/meta) — fallback when no config.renderCard / card.render is set.",
+  },
+  {
+    name: "attachRenderers.ts",
+    path: "components/kanban/attachRenderers.ts",
+    code: components_kanban_attachRenderersRaw,
+    language: "typescript",
+    description: "O(n) helper that wires a reusable + per-card renderer map onto KanbanCardData before rendering.",
   },
   {
     name: "cellJsRunner.ts",

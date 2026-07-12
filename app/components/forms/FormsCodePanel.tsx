@@ -7,10 +7,11 @@ import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
-import type { FormConfig } from "@/forms/types/types";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { formStackInstall, type ImplementationMode } from "@/registry/formRegistry";
+
+import type { FormConfig } from "@/forms/types/types";
 import { generateAllFiles } from "@/form-builder/utils/formCodeGenerator";
+import { formStackInstall, type ImplementationMode } from "@/registry/formRegistry";
 
 export type FormsCodePanelLibrary = "rhf" | "tanstack" | "action";
 

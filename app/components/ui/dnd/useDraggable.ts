@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * useDraggable — turn any element into a draggable handle.
  *
@@ -22,11 +20,12 @@
  *     skips it.
  */
 import { useCallback, useMemo, useRef } from "react";
+
 import { useDndContext } from "./DndContext";
 import type { DragData, UseDraggableOptions } from "./types";
 
 export function useDraggable<T extends DragData = DragData>(options: UseDraggableOptions<T>) {
-  const { id, data, activationDistance = 5, disabled = false, preview } = options;
+  const { id, data, activationDistance = 5, disabled = false, preview, sourceRef } = options;
   const { beginDrag, active } = useDndContext();
   const startRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
   // The source element is captured from the PointerEvent target on PointerDown.
@@ -59,7 +58,8 @@ export function useDraggable<T extends DragData = DragData>(options: UseDraggabl
       window.removeEventListener("pointerup", handleUp);
       window.removeEventListener("pointercancel", handleUp);
       startRef.current = null;
-      const rect = elementRef.current?.getBoundingClientRect();
+      const sourceEl = sourceRef?.current ?? elementRef.current;
+      const rect = sourceEl?.getBoundingClientRect();
       beginDrag(
         {
           id,
@@ -88,7 +88,7 @@ export function useDraggable<T extends DragData = DragData>(options: UseDraggabl
     window.addEventListener("pointermove", handleMove, { passive: true });
     window.addEventListener("pointerup", handleUp);
     window.addEventListener("pointercancel", handleUp);
-  }, [activationDistance, beginDrag, data, disabled, id, preview]);
+  }, [activationDistance, beginDrag, data, disabled, id, preview, sourceRef]);
 
   const dragProps = useMemo(() => ({
     onPointerDown,

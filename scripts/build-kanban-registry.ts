@@ -125,6 +125,23 @@ const KANBAN_SHARED_SOURCES: KanbanSharedSource[] = [
     language: "typescript",
     description: "KanbanBuilderConfig + KanbanCardData + supporting event shapes.",
   },
+  // ─── Engine renderers (KanbanBoard + generated boards import these) ─────────
+  {
+    sourcePath: "app/kanban/defaultCardRenderer.tsx",
+    targetPath: "components/kanban/defaultCardRenderer.tsx",
+    name: "defaultCardRenderer.tsx",
+    language: "tsx",
+    description:
+      "Built-in rich card renderer (badge/progress/avatar/meta) — fallback when no config.renderCard / card.render is set.",
+  },
+  {
+    sourcePath: "app/kanban/attachRenderers.ts",
+    targetPath: "components/kanban/attachRenderers.ts",
+    name: "attachRenderers.ts",
+    language: "typescript",
+    description:
+      "O(n) helper that wires a reusable + per-card renderer map onto KanbanCardData before rendering.",
+  },
   /**
    * Shared sandbox helpers (also installed by the tables registry under the same
    * target path). They land in a top-level `utils/` folder beside `lib/` — never
@@ -214,6 +231,9 @@ function rewriteSharedFileImports(source: string): string {
       .replace(/from\s+(["'])@\/kanban\/KanbanCard\1/g, "from $1./KanbanCard$1")
       .replace(/from\s+(["'])@\/kanban\/KanbanCardDialog\1/g, "from $1./KanbanCardDialog$1")
       .replace(/from\s+(["'])@\/kanban\/KanbanAddCardDialog\1/g, "from $1./KanbanAddCardDialog$1")
+      // Engine renderers are co-located siblings inside components/kanban/.
+      .replace(/from\s+(["'])@\/kanban\/defaultCardRenderer\1/g, "from $1./defaultCardRenderer$1")
+      .replace(/from\s+(["'])@\/kanban\/attachRenderers\1/g, "from $1./attachRenderers$1")
       // DnD library — consumer keeps the @/components/dnd alias.
       .replace(/from\s+(["'])@\/kanban\/dnd\1/g, "from $1@/components/dnd$1")
       // Shared sandbox helpers ship to a sibling `utils/` folder (not under

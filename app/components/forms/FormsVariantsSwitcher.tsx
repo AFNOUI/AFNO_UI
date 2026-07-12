@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+
 import { ComponentInstall } from "@/components/lab/ComponentInstall";
 
 import type { FormConfig, ReactHookFormZodSchema } from "@/forms/types/types";

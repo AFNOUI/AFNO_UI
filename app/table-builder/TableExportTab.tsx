@@ -9,23 +9,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { CodeBlock, InstallCommand } from "@/components/shared/CodeBlock";
-import { getSharedTableFiles } from "@/table-builder/utils/tableSharedFiles";
+
 import type { TableBuilderConfig } from "@/table-builder/data/tableBuilderTemplates";
-import { generateAllFiles, getDependencyReport, type DataMode } from "@/table-builder/utils/tableCodeGenerator";
+import { getOptionalEngineFiles, SHARED_TABLE_FILES } from "@/table-builder/utils/tableSharedFiles";
+import { generateAllFiles, getDependencyReport, TableRendererSources, type DataMode } from "@/table-builder/utils/tableCodeGenerator";
 
-interface TableExportTabProps { config: TableBuilderConfig; }
+interface TableExportTabProps {
+  config: TableBuilderConfig;
+  rendererSources?: TableRendererSources;
+}
 
-export function TableExportTab({ config }: TableExportTabProps) {
+export function TableExportTab({ config, rendererSources }: TableExportTabProps) {
   const [dataMode, setDataMode] = useState<DataMode>("static");
   const hasColumns = config.columns.filter(c => c.visible).length > 0;
 
-  const generated = useMemo(() => generateAllFiles(config, dataMode), [config, dataMode]);
-  // `getSharedTableFiles(config)` prunes engine helpers (cellJsRunner /
-  // rowDialogTemplate) the active table doesn't reach via clickAction.type
-  // === "js" / row dialog config, and rewrites the engine imports into
-  // inline no-op stubs so the displayed source still compiles end-to-end.
+  const generated = useMemo(() => generateAllFiles(config, dataMode, rendererSources), [config, dataMode, rendererSources]);
   const sharedNeeded = useMemo(
-    () => getSharedTableFiles(config).map(f => ({ ...f, isFixed: true })),
+    () => [...SHARED_TABLE_FILES, ...getOptionalEngineFiles(config)].map(f => ({ ...f, isFixed: true })),
     [config],
   );
   const allFiles = useMemo(() => [...generated, ...sharedNeeded], [generated, sharedNeeded]);

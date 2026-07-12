@@ -11,7 +11,7 @@ export interface DndRegistryFile {
   description: string;
 }
 
-export const dndRegistryGeneratedAt = "2026-05-15T06:55:28.029Z";
+export const dndRegistryGeneratedAt = "2026-07-12T18:29:28.179Z";
 
 export const dndInstall = {
   "npmDependencies": [
@@ -110,16 +110,8 @@ function findScrollableAncestor(
     const style = window.getComputedStyle(node);
     const overflowY = style.overflowY;
     const overflowX = style.overflowX;
-    const scrollableY =
-      (overflowY === "auto" ||
-        overflowY === "scroll" ||
-        overflowY === "overlay") &&
-      node.scrollHeight > node.clientHeight;
-    const scrollableX =
-      (overflowX === "auto" ||
-        overflowX === "scroll" ||
-        overflowX === "overlay") &&
-      node.scrollWidth > node.clientWidth;
+    const scrollableY = (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") && node.scrollHeight > node.clientHeight;
+    const scrollableX = (overflowX === "auto" || overflowX === "scroll" || overflowX === "overlay") && node.scrollWidth > node.clientWidth;
     if (axis === "y" && scrollableY) return node;
     if (axis === "x" && scrollableX) return node;
     if (axis === "both" && (scrollableX || scrollableY)) return node;
@@ -155,16 +147,18 @@ function isPointInsideRect(x: number, y: number, rect: DOMRect) {
 }
 
 function isPointInsideSourceBounds(x: number, y: number, snap: DragSnapshot) {
-  return (
-    snap.sourceLeft != null &&
-    snap.sourceRight != null &&
-    snap.sourceTop != null &&
-    snap.sourceBottom != null &&
-    x >= snap.sourceLeft &&
-    x <= snap.sourceRight &&
-    y >= snap.sourceTop &&
-    y <= snap.sourceBottom
-  );
+  return snap.sourceLeft != null && snap.sourceRight != null && snap.sourceTop != null && snap.sourceBottom != null
+    && x >= snap.sourceLeft
+    && x <= snap.sourceRight
+    && y >= snap.sourceTop
+    && y <= snap.sourceBottom;
+}
+
+function getZoneItems(zoneEl: HTMLElement): HTMLElement[] {
+  return Array.from(zoneEl.querySelectorAll<HTMLElement>('[data-dnd-item="true"]')).filter((el) => {
+    const nearestZone = el.closest<HTMLElement>("[data-dnd-zone]");
+    return nearestZone === zoneEl;
+  });
 }
 
 /**
@@ -177,18 +171,13 @@ function findSiblingIndexAt(
   x: number,
   y: number,
 ): { visibleIndex: number; rect: DOMRect } | null {
-  const items = zoneEl.querySelectorAll<HTMLElement>('[data-dnd-item="true"]');
+  const items = getZoneItems(zoneEl);
   let visibleIndex = 0;
   for (let i = 0; i < items.length; i += 1) {
     const el = items[i];
     if (el.dataset.dragging === "true") continue;
     const rect = el.getBoundingClientRect();
-    if (
-      x >= rect.left &&
-      x <= rect.right &&
-      y >= rect.top &&
-      y <= rect.bottom
-    ) {
+    if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
       return { visibleIndex, rect };
     }
     visibleIndex += 1;
@@ -209,10 +198,8 @@ function resolveDropIndex(
   clientY: number,
   axis: "x" | "y" | "grid",
 ): number {
-  const items = zoneEl.querySelectorAll<HTMLElement>('[data-dnd-item="true"]');
-  const isRtl =
-    (axis === "x" || axis === "grid") &&
-    window.getComputedStyle(zoneEl).direction === "rtl";
+  const items = getZoneItems(zoneEl);
+  const isRtl = (axis === "x" || axis === "grid") && window.getComputedStyle(zoneEl).direction === "rtl";
   let count = 0;
 
   if (axis === "grid") {
@@ -235,30 +222,19 @@ function resolveDropIndex(
       const rowGap = Number.parseFloat(style.rowGap) || 0;
       const cellWidth = (zoneRect.width - columnGap * (columns - 1)) / columns;
       const rowHeight = Math.max(...visible.map((item) => item.rect.height));
-      const xInZone = Math.max(
-        0,
-        Math.min(clientX - zoneRect.left, zoneRect.width - 1),
-      );
+      const xInZone = Math.max(0, Math.min(clientX - zoneRect.left, zoneRect.width - 1));
       const yInZone = Math.max(0, clientY - zoneRect.top);
       const trackWidth = cellWidth + columnGap;
       const rowStep = rowHeight + rowGap;
-      const visualCol = Math.max(
-        0,
-        Math.min(columns - 1, Math.floor(xInZone / trackWidth)),
-      );
+      const visualCol = Math.max(0, Math.min(columns - 1, Math.floor(xInZone / trackWidth)));
       const col = isRtl ? columns - 1 - visualCol : visualCol;
       const row = Math.max(0, Math.floor(yInZone / rowStep));
       const rawIndex = row * columns + col;
       if (rawIndex >= visible.length) return visible.length;
       const cellStart = visualCol * trackWidth;
       const localX = xInZone - cellStart;
-      const afterCellMidpoint = isRtl
-        ? localX < cellWidth / 2
-        : localX > cellWidth / 2;
-      return Math.max(
-        0,
-        Math.min(visible.length, rawIndex + (afterCellMidpoint ? 1 : 0)),
-      );
+      const afterCellMidpoint = isRtl ? localX < cellWidth / 2 : localX > cellWidth / 2;
+      return Math.max(0, Math.min(visible.length, rawIndex + (afterCellMidpoint ? 1 : 0)));
     }
 
     // Find the row the pointer is in (or before).
@@ -309,20 +285,11 @@ interface ProviderProps {
   reduceMotion?: boolean;
 }
 
-export function DndProvider({
-  children,
-  onDragStart,
-  onDragEnd,
-  reduceMotion = false,
-}: ProviderProps) {
+export function DndProvider({ children, onDragStart, onDragEnd, reduceMotion = false }: ProviderProps) {
   const zonesRef = useRef<Map<string, ZoneRegistration>>(new Map());
   const [active, setActive] = useState<DragSnapshot | null>(null);
   const [hover, setHover] = useState<HoverState | null>(null);
-  const [overlay, setOverlay] = useState<{
-    x: number;
-    y: number;
-    node: ReactNode;
-  } | null>(null);
+  const [overlay, setOverlay] = useState<{ x: number; y: number; node: ReactNode } | null>(null);
   const [systemReducedMotion, setSystemReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -338,17 +305,10 @@ export function DndProvider({
 
   const activeRef = useRef<DragSnapshot | null>(null);
   const hoverRef = useRef<HoverState | null>(null);
-  const dropZoneCacheRef = useRef<{
-    zone: ZoneRegistration;
-    rect: DOMRect;
-  } | null>(null);
+  const dropZoneCacheRef = useRef<{ zone: ZoneRegistration; rect: DOMRect } | null>(null);
 
-  useEffect(() => {
-    activeRef.current = active;
-  }, [active]);
-  useEffect(() => {
-    hoverRef.current = hover;
-  }, [hover]);
+  useEffect(() => { activeRef.current = active; }, [active]);
+  useEffect(() => { hoverRef.current = hover; }, [hover]);
 
   const registerZone = useCallback((registration: ZoneRegistration) => {
     zonesRef.current.set(registration.id, registration);
@@ -357,30 +317,24 @@ export function DndProvider({
     };
   }, []);
 
-  const findZoneAt = useCallback(
-    (clientX: number, clientY: number, snap: DragSnapshot) => {
-      let result: { zone: ZoneRegistration; rect: DOMRect } | null = null;
-      for (const zone of zonesRef.current.values()) {
-        if (zone.accepts && !zone.accepts(snap)) continue;
-        const rect = zone.element.getBoundingClientRect();
-        if (
-          clientX >= rect.left &&
-          clientX <= rect.right &&
-          clientY >= rect.top &&
-          clientY <= rect.bottom
-        ) {
-          if (
-            !result ||
-            rect.width * rect.height < result.rect.width * result.rect.height
-          ) {
-            result = { zone, rect };
-          }
+  const findZoneAt = useCallback((clientX: number, clientY: number, snap: DragSnapshot) => {
+    let result: { zone: ZoneRegistration; rect: DOMRect } | null = null;
+    for (const zone of zonesRef.current.values()) {
+      if (zone.accepts && !zone.accepts(snap)) continue;
+      const rect = zone.element.getBoundingClientRect();
+      if (
+        clientX >= rect.left &&
+        clientX <= rect.right &&
+        clientY >= rect.top &&
+        clientY <= rect.bottom
+      ) {
+        if (!result || rect.width * rect.height < result.rect.width * result.rect.height) {
+          result = { zone, rect };
         }
       }
-      return result;
-    },
-    [],
-  );
+    }
+    return result;
+  }, []);
 
   // Auto-scroll while dragging near edges of the nearest scrollable ancestor of
   // the active drop-zone. Axis-aware so horizontal lists scroll horizontally.
@@ -393,9 +347,7 @@ export function DndProvider({
     const tick = () => {
       const cache = dropZoneCacheRef.current;
       const axis = (cache?.zone.axis ?? "y") as "x" | "y" | "both";
-      const targetEl = cache
-        ? findScrollableAncestor(cache.zone.element, axis)
-        : window;
+      const targetEl = cache ? findScrollableAncestor(cache.zone.element, axis) : window;
       const rect = getScrollRect(targetEl);
 
       let dx = 0;
@@ -404,26 +356,18 @@ export function DndProvider({
         const distFromTop = lastY - rect.top;
         const distFromBottom = rect.bottom - lastY;
         if (distFromTop < AUTOSCROLL_EDGE && distFromTop > 0) {
-          dy =
-            -((AUTOSCROLL_EDGE - distFromTop) / AUTOSCROLL_EDGE) *
-            AUTOSCROLL_MAX_SPEED;
+          dy = -((AUTOSCROLL_EDGE - distFromTop) / AUTOSCROLL_EDGE) * AUTOSCROLL_MAX_SPEED;
         } else if (distFromBottom < AUTOSCROLL_EDGE && distFromBottom > 0) {
-          dy =
-            ((AUTOSCROLL_EDGE - distFromBottom) / AUTOSCROLL_EDGE) *
-            AUTOSCROLL_MAX_SPEED;
+          dy = ((AUTOSCROLL_EDGE - distFromBottom) / AUTOSCROLL_EDGE) * AUTOSCROLL_MAX_SPEED;
         }
       }
       if (axis === "x" || axis === "both") {
         const distFromLeft = lastX - rect.left;
         const distFromRight = rect.right - lastX;
         if (distFromLeft < AUTOSCROLL_EDGE && distFromLeft > 0) {
-          dx =
-            -((AUTOSCROLL_EDGE - distFromLeft) / AUTOSCROLL_EDGE) *
-            AUTOSCROLL_MAX_SPEED;
+          dx = -((AUTOSCROLL_EDGE - distFromLeft) / AUTOSCROLL_EDGE) * AUTOSCROLL_MAX_SPEED;
         } else if (distFromRight < AUTOSCROLL_EDGE && distFromRight > 0) {
-          dx =
-            ((AUTOSCROLL_EDGE - distFromRight) / AUTOSCROLL_EDGE) *
-            AUTOSCROLL_MAX_SPEED;
+          dx = ((AUTOSCROLL_EDGE - distFromRight) / AUTOSCROLL_EDGE) * AUTOSCROLL_MAX_SPEED;
         }
       }
       if (dx !== 0 || dy !== 0) scrollBy(targetEl, dx, dy);
@@ -443,255 +387,205 @@ export function DndProvider({
     };
   }, [active]);
 
-  const beginDrag = useCallback<DndContextValue["beginDrag"]>(
-    (payload, pointerEvent) => {
-      const snap: DragSnapshot = {
-        id: payload.id,
-        data: payload.data,
-        clientX: pointerEvent.clientX,
-        clientY: pointerEvent.clientY,
-        width: payload.width,
-        height: payload.height,
-        offsetX: payload.offsetX,
-        offsetY: payload.offsetY,
-        sourceLeft: payload.sourceLeft,
-        sourceTop: payload.sourceTop,
-        sourceRight: payload.sourceRight,
-        sourceBottom: payload.sourceBottom,
-      };
-      setActive(snap);
-      setOverlay({
-        x: pointerEvent.clientX,
-        y: pointerEvent.clientY,
-        node: payload.preview ? payload.preview() : null,
-      });
-      if (typeof document !== "undefined") {
-        document.body.style.cursor = "grabbing";
-        document.body.style.userSelect = "none";
-      }
-      onDragStart?.(snap);
+  const beginDrag = useCallback<DndContextValue["beginDrag"]>((payload, pointerEvent) => {
+    const snap: DragSnapshot = {
+      id: payload.id,
+      data: payload.data,
+      clientX: pointerEvent.clientX,
+      clientY: pointerEvent.clientY,
+      width: payload.width,
+      height: payload.height,
+      offsetX: payload.offsetX,
+      offsetY: payload.offsetY,
+      sourceLeft: payload.sourceLeft,
+      sourceTop: payload.sourceTop,
+      sourceRight: payload.sourceRight,
+      sourceBottom: payload.sourceBottom,
+      previewNode: payload.preview ? payload.preview() : null,
+    };
+    setActive(snap);
+    setOverlay({
+      x: pointerEvent.clientX,
+      y: pointerEvent.clientY,
+      node: snap.previewNode,
+    });
+    if (typeof document !== "undefined") {
+      document.body.style.cursor = "grabbing";
+      document.body.style.userSelect = "none";
+    }
+    onDragStart?.(snap);
 
-      let dropped = false;
+    let dropped = false;
 
-      const handleMove = (event: PointerEvent) => {
-        const next: DragSnapshot = {
-          ...snap,
-          clientX: event.clientX,
-          clientY: event.clientY,
-        };
-        activeRef.current = next;
-        setOverlay((prev) =>
-          prev ? { ...prev, x: event.clientX, y: event.clientY } : prev,
-        );
+    const handleMove = (event: PointerEvent) => {
+      const next: DragSnapshot = { ...snap, clientX: event.clientX, clientY: event.clientY };
+      activeRef.current = next;
+      setOverlay((prev) => (prev ? { ...prev, x: event.clientX, y: event.clientY } : prev));
 
-        const found = findZoneAt(event.clientX, event.clientY, next);
-        dropZoneCacheRef.current = found;
+      const found = findZoneAt(event.clientX, event.clientY, next);
+      dropZoneCacheRef.current = found;
 
-        if (!found) {
-          if (hoverRef.current !== null) {
-            hoverRef.current = null;
-            setHover(null);
-          }
-          return;
+      if (!found) {
+        if (hoverRef.current !== null) {
+          hoverRef.current = null;
+          setHover(null);
         }
+        return;
+      }
 
-        const zoneAxis = found.zone.axis;
-        const axis = (
-          zoneAxis === "x" ? "x" : zoneAxis === "grid" ? "grid" : "y"
-        ) as "x" | "y" | "grid";
-        const sourceIndex = found.zone.getItemIndex?.(next) ?? undefined;
-        const center = getDragCenter(next);
-        const prevHover = hoverRef.current;
-        const sameZoneHover =
-          prevHover && prevHover.zoneId === found.zone.id ? prevHover : null;
+      const zoneAxis = found.zone.axis;
+      const axis = (zoneAxis === "x" ? "x" : zoneAxis === "grid" ? "grid" : "y") as "x" | "y" | "grid";
+      const sourceIndex = found.zone.getItemIndex?.(next) ?? undefined;
+      const center = getDragCenter(next);
+      const prevHover = hoverRef.current;
+      const sameZoneHover = prevHover && prevHover.zoneId === found.zone.id ? prevHover : null;
 
-        let index: number;
-        if (sourceIndex != null && sourceIndex >= 0) {
-          // Sibling-based hit test: only update index when the cursor center is
-          // actually inside another sibling. When in a gap, KEEP the previous
-          // hover index to eliminate flicker as items reflow around the slot.
-          const sibling = findSiblingIndexAt(
-            found.zone.element,
-            center.x,
-            center.y,
-          );
-          if (sibling) {
-            const horizontal = axis === "x" || axis === "grid";
-            const mid = horizontal
-              ? sibling.rect.left + sibling.rect.width / 2
-              : sibling.rect.top + sibling.rect.height / 2;
-            const coord = horizontal ? center.x : center.y;
-            const after = coord > mid;
-            index = sibling.visibleIndex + (after ? 1 : 0);
-          } else if (sameZoneHover) {
-            // Stay put in gaps — prevents flicker back to source position.
+      let index: number;
+      if (sourceIndex != null && sourceIndex >= 0) {
+        // Sibling-based hit test: only update index when the cursor center is
+        // actually inside another sibling. When in a gap, KEEP the previous
+        // hover index to eliminate flicker as items reflow around the slot.
+        const sibling = findSiblingIndexAt(found.zone.element, center.x, center.y);
+        if (sibling) {
+          const horizontal = axis === "x" || axis === "grid";
+          const mid = horizontal
+            ? sibling.rect.left + sibling.rect.width / 2
+            : sibling.rect.top + sibling.rect.height / 2;
+          const coord = horizontal ? center.x : center.y;
+          const after = coord > mid;
+          index = sibling.visibleIndex + (after ? 1 : 0);
+        } else {
+          // Not over any sibling — could be a gap OR past the edges. Use
+          // midpoint resolver to compute an edge-correct index, then only
+          // apply gap-stickiness when the resolver returns the same as the
+          // previous hover (i.e., truly a gap, not an edge).
+          const resolved = resolveDropIndex(found.zone.element, center.x, center.y, axis);
+          if (sameZoneHover && resolved === sameZoneHover.index) {
             index = sameZoneHover.index;
           } else {
-            index = sourceIndex;
+            index = resolved;
           }
+        }
+      } else {
+        index = resolveDropIndex(found.zone.element, center.x, center.y, axis);
+      }
+      const nextHover: HoverState = { zoneId: found.zone.id, index, sourceIndex };
+      if (!prevHover || prevHover.zoneId !== nextHover.zoneId || prevHover.index !== nextHover.index || prevHover.sourceIndex !== nextHover.sourceIndex) {
+        hoverRef.current = nextHover;
+        setHover(nextHover);
+      }
+    };
+
+    const cleanup = () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+      window.removeEventListener("pointercancel", handleCancel);
+      window.removeEventListener("keydown", handleKey);
+      activeRef.current = null;
+      hoverRef.current = null;
+      dropZoneCacheRef.current = null;
+      setActive(null);
+      setHover(null);
+      setOverlay(null);
+      if (typeof document !== "undefined") {
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      }
+      onDragEnd?.(snap, dropped);
+    };
+
+    const handleUp = (event: PointerEvent) => {
+      const cache = dropZoneCacheRef.current;
+      const finalSnap = { ...(activeRef.current ?? snap), clientX: event.clientX, clientY: event.clientY };
+      if (cache) {
+        // Trust the last visible hover index — that is exactly what the user
+        // saw as the drop target. Recomputing here can land back on the source
+        // because items have already shifted to make room for the drop slot.
+        const lastHover = hoverRef.current;
+        let index: number;
+        if (lastHover && lastHover.zoneId === cache.zone.id) {
+          index = lastHover.index;
         } else {
-          index = resolveDropIndex(
-            found.zone.element,
-            center.x,
-            center.y,
-            axis,
-          );
+          const cAxis = cache.zone.axis;
+          const axis = (cAxis === "x" ? "x" : cAxis === "grid" ? "grid" : "y") as "x" | "y" | "grid";
+          const center = getDragCenter(finalSnap);
+          index = resolveDropIndex(cache.zone.element, center.x, center.y, axis);
         }
-        const nextHover: HoverState = {
-          zoneId: found.zone.id,
-          index,
-          sourceIndex,
-        };
-        if (
-          !prevHover ||
-          prevHover.zoneId !== nextHover.zoneId ||
-          prevHover.index !== nextHover.index ||
-          prevHover.sourceIndex !== nextHover.sourceIndex
-        ) {
-          hoverRef.current = nextHover;
-          setHover(nextHover);
+        try {
+          cache.zone.onDrop({
+            item: finalSnap,
+            zoneId: cache.zone.id,
+            zoneData: cache.zone.data,
+            index,
+            clientX: event.clientX,
+            clientY: event.clientY,
+          });
+          dropped = true;
+        } catch (err) {
+          console.error("[dnd] onDrop handler threw:", err);
         }
-      };
+      }
+      cleanup();
+    };
 
-      const cleanup = () => {
-        window.removeEventListener("pointermove", handleMove);
-        window.removeEventListener("pointerup", handleUp);
-        window.removeEventListener("pointercancel", handleCancel);
-        window.removeEventListener("keydown", handleKey);
-        activeRef.current = null;
-        hoverRef.current = null;
-        dropZoneCacheRef.current = null;
-        setActive(null);
-        setHover(null);
-        setOverlay(null);
-        if (typeof document !== "undefined") {
-          document.body.style.cursor = "";
-          document.body.style.userSelect = "";
-        }
-        onDragEnd?.(snap, dropped);
-      };
+    const handleCancel = () => cleanup();
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") cleanup();
+    };
 
-      const handleUp = (event: PointerEvent) => {
-        const cache = dropZoneCacheRef.current;
-        const finalSnap = {
-          ...(activeRef.current ?? snap),
-          clientX: event.clientX,
-          clientY: event.clientY,
-        };
-        if (cache) {
-          // Trust the last visible hover index — that is exactly what the user
-          // saw as the drop target. Recomputing here can land back on the source
-          // because items have already shifted to make room for the drop slot.
-          const lastHover = hoverRef.current;
-          let index: number;
-          if (lastHover && lastHover.zoneId === cache.zone.id) {
-            index = lastHover.index;
-          } else {
-            const cAxis = cache.zone.axis;
-            const axis = (
-              cAxis === "x" ? "x" : cAxis === "grid" ? "grid" : "y"
-            ) as "x" | "y" | "grid";
-            const center = getDragCenter(finalSnap);
-            index = resolveDropIndex(
-              cache.zone.element,
-              center.x,
-              center.y,
-              axis,
-            );
-          }
-          try {
-            cache.zone.onDrop({
-              item: finalSnap,
-              zoneId: cache.zone.id,
-              zoneData: cache.zone.data,
-              index,
-              clientX: event.clientX,
-              clientY: event.clientY,
-            });
-            dropped = true;
-          } catch (err) {
-            console.error("[dnd] onDrop handler threw:", err);
-          }
-        }
-        cleanup();
-      };
+    window.addEventListener("pointermove", handleMove, { passive: true });
+    window.addEventListener("pointerup", handleUp);
+    window.addEventListener("pointercancel", handleCancel);
+    window.addEventListener("keydown", handleKey);
+  }, [findZoneAt, onDragEnd, onDragStart]);
 
-      const handleCancel = () => cleanup();
-      const handleKey = (event: KeyboardEvent) => {
-        if (event.key === "Escape") cleanup();
-      };
-
-      window.addEventListener("pointermove", handleMove, { passive: true });
-      window.addEventListener("pointerup", handleUp);
-      window.addEventListener("pointercancel", handleCancel);
-      window.addEventListener("keydown", handleKey);
-    },
-    [findZoneAt, onDragEnd, onDragStart],
-  );
-
-  const value = useMemo<DndContextValue>(
-    () => ({
-      active,
-      hover,
-      animationsEnabled,
-      registerZone,
-      beginDrag,
-    }),
-    [active, hover, animationsEnabled, registerZone, beginDrag],
-  );
+  const value = useMemo<DndContextValue>(() => ({
+    active,
+    hover,
+    animationsEnabled,
+    registerZone,
+    beginDrag,
+  }), [active, hover, animationsEnabled, registerZone, beginDrag]);
 
   return (
     <DndCtx.Provider value={value}>
       {children}
-      {overlay &&
-        typeof document !== "undefined" &&
-        createPortal(
-          (() => {
-            const offX = active?.offsetX ?? 0;
-            const offY = active?.offsetY ?? 0;
-            const w = active?.width ?? 0;
-            const h = active?.height ?? 0;
-            const vw = typeof window !== "undefined" ? window.innerWidth : 0;
-            const vh = typeof window !== "undefined" ? window.innerHeight : 0;
-            const rawLeft = overlay.x - offX;
-            const rawTop = overlay.y - offY;
-            // Soft on-screen clamp: keep a small handle of the preview visible
-            // rather than trying to fit the entire rectangle inside the
-            // viewport. The old behavior (\`left ≤ vw - w - 4\`) broke wide
-            // previews — e.g. a \`flex-1\` sortable row in the trash demo —
-            // because as soon as \`w\` approached the viewport width, the
-            // upper bound collapsed and the preview "stuck" mid-screen while
-            // the cursor moved on. We now anchor on the cursor: it can drift
-            // up to \`MIN_VISIBLE\` pixels past the preview's far edge, but no
-            // further. That lets oversized previews slide partly off-screen
-            // (so they keep tracking the pointer) without ever vanishing.
-            const MIN_VISIBLE = 24;
-            const minLeft = MIN_VISIBLE - Math.max(w, MIN_VISIBLE);
-            const maxLeft = vw - MIN_VISIBLE;
-            const minTop = MIN_VISIBLE - Math.max(h, MIN_VISIBLE);
-            const maxTop = vh - MIN_VISIBLE;
-            const left = Math.max(minLeft, Math.min(rawLeft, maxLeft));
-            const top = Math.max(minTop, Math.min(rawTop, maxTop));
-            return (
-              <div
-                style={{
-                  position: "fixed",
-                  left,
-                  top,
-                  pointerEvents: "none",
-                  zIndex: 9999,
-                  transform: "translateZ(0)",
-                  opacity: 0.95,
-                  filter: "drop-shadow(0 12px 24px rgba(0,0,0,0.18))",
-                }}
-                aria-hidden="true"
-              >
-                {overlay.node}
-              </div>
-            );
-          })(),
-          document.body,
-        )}
+      {overlay && typeof document !== "undefined" && createPortal(
+        (() => {
+          const offX = active?.offsetX ?? 0;
+          const offY = active?.offsetY ?? 0;
+          const w = active?.width ?? 0;
+          const h = active?.height ?? 0;
+          const vw = typeof window !== "undefined" ? window.innerWidth : 0;
+          const vh = typeof window !== "undefined" ? window.innerHeight : 0;
+          const rawLeft = overlay.x - offX;
+          const rawTop = overlay.y - offY;
+          // Clamp so a small sliver of the preview always stays visible,
+          // but never restrict pointer travel — otherwise wide cards can't
+          // be dragged near the viewport's right/bottom edges.
+          const MIN_VISIBLE = 40;
+          const left = Math.max(MIN_VISIBLE - w, Math.min(rawLeft, vw - MIN_VISIBLE));
+          const top = Math.max(MIN_VISIBLE - h, Math.min(rawTop, vh - MIN_VISIBLE));
+          return (
+            <div
+              style={{
+                position: "fixed",
+                left,
+                top,
+                pointerEvents: "none",
+                zIndex: 9999,
+                transform: "translateZ(0)",
+                opacity: 0.95,
+                filter: "drop-shadow(0 12px 24px rgba(0,0,0,0.18))",
+              }}
+              aria-hidden="true"
+            >
+              {overlay.node}
+            </div>
+          );
+        })(),
+        document.body,
+      )}
     </DndCtx.Provider>
   );
 }
@@ -704,9 +598,7 @@ export function useDndContext(): DndContextValue {
   return ctx;
 }
 `;
-const components_dnd_useDraggableRaw = `"use client";
-
-/**
+const components_dnd_useDraggableRaw = `/**
  * useDraggable — turn any element into a draggable handle.
  *
  * Usage:
@@ -728,11 +620,12 @@ const components_dnd_useDraggableRaw = `"use client";
  *     skips it.
  */
 import { useCallback, useMemo, useRef } from "react";
+
 import { useDndContext } from "./DndContext";
 import type { DragData, UseDraggableOptions } from "./types";
 
 export function useDraggable<T extends DragData = DragData>(options: UseDraggableOptions<T>) {
-  const { id, data, activationDistance = 5, disabled = false, preview } = options;
+  const { id, data, activationDistance = 5, disabled = false, preview, sourceRef } = options;
   const { beginDrag, active } = useDndContext();
   const startRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
   // The source element is captured from the PointerEvent target on PointerDown.
@@ -765,7 +658,8 @@ export function useDraggable<T extends DragData = DragData>(options: UseDraggabl
       window.removeEventListener("pointerup", handleUp);
       window.removeEventListener("pointercancel", handleUp);
       startRef.current = null;
-      const rect = elementRef.current?.getBoundingClientRect();
+      const sourceEl = sourceRef?.current ?? elementRef.current;
+      const rect = sourceEl?.getBoundingClientRect();
       beginDrag(
         {
           id,
@@ -794,7 +688,7 @@ export function useDraggable<T extends DragData = DragData>(options: UseDraggabl
     window.addEventListener("pointermove", handleMove, { passive: true });
     window.addEventListener("pointerup", handleUp);
     window.addEventListener("pointercancel", handleUp);
-  }, [activationDistance, beginDrag, data, disabled, id, preview]);
+  }, [activationDistance, beginDrag, data, disabled, id, preview, sourceRef]);
 
   const dragProps = useMemo(() => ({
     onPointerDown,
@@ -811,8 +705,7 @@ export function useDraggable<T extends DragData = DragData>(options: UseDraggabl
   }), [isDragging, onPointerDown]);
 
   return { dragProps, isDragging };
-}
-`;
+}`;
 const components_dnd_useDropZoneRaw = `"use client";
 
 /**
@@ -1034,6 +927,8 @@ export interface DragSnapshot<T extends DragData = DragData> {
   sourceTop?: number;
   sourceRight?: number;
   sourceBottom?: number;
+  /** Rendered drag preview, also reusable by consumers as a matching drop shadow. */
+  previewNode?: React.ReactNode;
 }
 
 /** What a drop zone receives on a successful drop. */
@@ -1117,6 +1012,8 @@ export interface UseDraggableOptions<T extends DragData = DragData> {
   disabled?: boolean;
   /** Optional custom React preview rendered inside the overlay. */
   preview?: () => React.ReactNode;
+  /** Optional full source element to measure when the pointer handle is not the visual item. */
+  sourceRef?: { current: HTMLElement | null };
 }
 
 /** Options for useDropZone. */
