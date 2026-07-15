@@ -1,0 +1,30 @@
+{
+  "name": "tree/tree-support",
+  "category": "tree",
+  "variant": "tree-support",
+  "files": [
+    {
+      "path": "tree/tree-support/SupportTree.tsx",
+      "type": "registry:tree-variant",
+      "content": "import { useState } from \"react\";\nimport { TreeCanvas } from \"../../components/tree/TreeCanvas\";\nimport type { TreeNode } from \"../../components/tree/types\";\nimport { GraphToolbar, useGraphFilter, defaultGraphFilter } from \"../../components/graph\";\nimport { initialTree } from \"./data\";\nimport { treeConfig } from \"./config\";\nimport { useSupportTreeHandlers } from \"./handlers\";\n\n/**\n * SupportTree — a fully-typed, self-contained tree with a search / sort /\n * filter toolbar above the canvas.\n *\n * Drop into any page:\n *   <SupportTree />\n *\n * To plug into a backend, edit the handlers in `./handlers.ts`. To remove the\n * toolbar, delete the `GraphToolbar`/`useGraphFilter` wiring below and set\n * `showToolbar: false` in `./config.ts`.\n */\nexport function SupportTree() {\n  const [tree, setTree] = useState<TreeNode>(initialTree);\n  const [filter, setFilter] = useState(defaultGraphFilter);\n  const { handleNodeAdd, handleNodeUpdate, handleNodeRemove, handleNodeMove } = useSupportTreeHandlers();\n  const { tree: filteredTree, matches, stats, allTags } = useGraphFilter(tree, filter);\n\n  return (\n    <div className=\"flex flex-col gap-2\">\n      <GraphToolbar\n        filter={filter}\n        onChange={setFilter}\n        allTags={allTags}\n        matched={stats.matched}\n        total={stats.total}\n      />\n      <TreeCanvas\n        config={treeConfig}\n        tree={filter.mode === \"hide\" ? filteredTree : tree}\n        onTreeChange={setTree}\n        highlightIds={filter.mode === \"dim\" ? matches : undefined}\n        onNodeAdd={handleNodeAdd}\n        onNodeUpdate={handleNodeUpdate}\n        onNodeRemove={handleNodeRemove}\n        onNodeMove={handleNodeMove}\n      />\n    </div>\n  );\n}\n"
+    },
+    {
+      "path": "tree/tree-support/config.ts",
+      "type": "registry:tree-variant",
+      "content": "import type { TreeCanvasConfig } from \"../../components/tree/types\";\n\n/** Static configuration. All fields are typed and validated. */\nexport const treeConfig: TreeCanvasConfig = {\n  \"title\": \"Support Triage\",\n  \"layout\": \"vertical\",\n  \"editable\": true,\n  \"draggable\": true,\n  \"connector\": \"stepped\",\n  \"nodeShape\": \"diamond\",\n  \"panZoom\": true,\n  \"background\": \"grid\",\n  \"siblingGap\": 28,\n  \"levelGap\": 80,\n  \"minHeight\": 540\n};\n"
+    },
+    {
+      "path": "tree/tree-support/data.ts",
+      "type": "registry:tree-variant",
+      "content": "import type { TreeNode } from \"../../components/tree/types\";\n\n/** Initial tree data. Swap with your own backend fetch when wiring up production. */\nexport const initialTree: TreeNode = {\n  \"id\": \"ticket\",\n  \"label\": \"New Ticket\",\n  \"meta\": {\n    \"shape\": \"diamond\",\n    \"color\": \"hsl(217 91% 60%)\"\n  },\n  \"children\": [\n    {\n      \"id\": \"triage\",\n      \"label\": \"Triage\",\n      \"meta\": {\n        \"shape\": \"diamond\"\n      },\n      \"children\": [\n        {\n          \"id\": \"p1\",\n          \"label\": \"P1 — Critical\",\n          \"meta\": {\n            \"color\": \"hsl(0 84% 60%)\"\n          },\n          \"children\": [\n            {\n              \"id\": \"page-on-call\",\n              \"label\": \"Page On-Call\"\n            }\n          ]\n        },\n        {\n          \"id\": \"p2\",\n          \"label\": \"P2 — Standard\",\n          \"children\": [\n            {\n              \"id\": \"assign\",\n              \"label\": \"Assign Agent\"\n            },\n            {\n              \"id\": \"respond\",\n              \"label\": \"Respond < 4h\"\n            }\n          ]\n        },\n        {\n          \"id\": \"spam\",\n          \"label\": \"Spam / Closed\",\n          \"meta\": {\n            \"color\": \"hsl(0 0% 50%)\"\n          }\n        }\n      ]\n    }\n  ]\n};\n"
+    },
+    {
+      "path": "tree/tree-support/handlers.ts",
+      "type": "registry:tree-variant",
+      "content": "import { useCallback } from \"react\";\nimport type {\n  TreeNodeAddEvent,\n  TreeNodeUpdateEvent,\n  TreeNodeRemoveEvent,\n  TreeNodeMoveEvent,\n} from \"../../components/tree/types\";\n\n/**\n * One handler per mutation — wire each to your backend.\n */\nexport function useSupportTreeHandlers() {\n  const handleNodeAdd = useCallback((event: TreeNodeAddEvent) => {\n    console.log(\"[tree] node added\", event);\n  }, []);\n\n  const handleNodeUpdate = useCallback((event: TreeNodeUpdateEvent) => {\n    console.log(\"[tree] node updated\", event);\n  }, []);\n\n  const handleNodeRemove = useCallback((event: TreeNodeRemoveEvent) => {\n    console.log(\"[tree] node removed\", event);\n  }, []);\n\n  const handleNodeMove = useCallback((event: TreeNodeMoveEvent) => {\n    console.log(\"[tree] node moved\", event);\n  }, []);\n\n  return { handleNodeAdd, handleNodeUpdate, handleNodeRemove, handleNodeMove };\n}\n"
+    }
+  ],
+  "features": [
+    "toolbar"
+  ]
+}

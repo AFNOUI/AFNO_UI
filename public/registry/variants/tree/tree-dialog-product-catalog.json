@@ -1,0 +1,30 @@
+{
+  "name": "tree/tree-dialog-product-catalog",
+  "category": "tree",
+  "variant": "tree-dialog-product-catalog",
+  "files": [
+    {
+      "path": "tree/tree-dialog-product-catalog/DialogProductCatalogTree.tsx",
+      "type": "registry:tree-variant",
+      "content": "import { useState } from \"react\";\nimport { TreeCanvas } from \"../../components/tree/TreeCanvas\";\nimport type { TreeNode } from \"../../components/tree/types\";\nimport { GraphToolbar, useGraphFilter, defaultGraphFilter } from \"../../components/graph\";\nimport { initialTree } from \"./data\";\nimport { treeConfig } from \"./config\";\nimport { useDialogProductCatalogTreeHandlers } from \"./handlers\";\n\n/**\n * DialogProductCatalogTree — a fully-typed, self-contained tree with a search / sort /\n * filter toolbar above the canvas.\n *\n * Drop into any page:\n *   <DialogProductCatalogTree />\n *\n * To plug into a backend, edit the handlers in `./handlers.ts`. To remove the\n * toolbar, delete the `GraphToolbar`/`useGraphFilter` wiring below and set\n * `showToolbar: false` in `./config.ts`.\n */\nexport function DialogProductCatalogTree() {\n  const [tree, setTree] = useState<TreeNode>(initialTree);\n  const [filter, setFilter] = useState(defaultGraphFilter);\n  const { handleNodeAdd, handleNodeUpdate, handleNodeRemove, handleNodeMove } = useDialogProductCatalogTreeHandlers();\n  const { tree: filteredTree, matches, stats, allTags } = useGraphFilter(tree, filter);\n\n  return (\n    <div className=\"flex flex-col gap-2\">\n      <GraphToolbar\n        filter={filter}\n        onChange={setFilter}\n        allTags={allTags}\n        matched={stats.matched}\n        total={stats.total}\n      />\n      <TreeCanvas\n        config={treeConfig}\n        tree={filter.mode === \"hide\" ? filteredTree : tree}\n        onTreeChange={setTree}\n        highlightIds={filter.mode === \"dim\" ? matches : undefined}\n        onNodeAdd={handleNodeAdd}\n        onNodeUpdate={handleNodeUpdate}\n        onNodeRemove={handleNodeRemove}\n        onNodeMove={handleNodeMove}\n      />\n    </div>\n  );\n}\n"
+    },
+    {
+      "path": "tree/tree-dialog-product-catalog/config.ts",
+      "type": "registry:tree-variant",
+      "content": "import type { TreeCanvasConfig } from \"../../components/tree/types\";\n\n/** Static configuration. All fields are typed and validated. */\nexport const treeConfig: TreeCanvasConfig = {\n  \"title\": \"Product Catalog\",\n  \"layout\": \"horizontal\",\n  \"editable\": true,\n  \"draggable\": true,\n  \"showPositionControls\": true,\n  \"connector\": \"curved\",\n  \"panZoom\": true,\n  \"background\": \"dots\",\n  \"siblingGap\": 22,\n  \"levelGap\": 100,\n  \"minHeight\": 460\n};\n"
+    },
+    {
+      "path": "tree/tree-dialog-product-catalog/data.ts",
+      "type": "registry:tree-variant",
+      "content": "import type { TreeNode } from \"../../components/tree/types\";\n\n/** Initial tree data. Swap with your own backend fetch when wiring up production. */\nexport const initialTree: TreeNode = {\n  \"id\": \"store\",\n  \"label\": \"Storefront\",\n  \"meta\": {\n    \"badge\": \"ROOT\",\n    \"color\": \"hsl(217 91% 60%)\"\n  },\n  \"children\": [\n    {\n      \"id\": \"apparel\",\n      \"label\": \"Apparel\",\n      \"meta\": {\n        \"badge\": \"CATEGORY\",\n        \"action\": {\n          \"kind\": \"dialog\",\n          \"title\": \"Apparel — featured\",\n          \"body\": \"Top 5 SKUs this week. Drop in a product table or carousel here.\"\n        }\n      },\n      \"children\": [\n        {\n          \"id\": \"tees\",\n          \"label\": \"T-Shirts\",\n          \"meta\": {\n            \"action\": {\n              \"kind\": \"dialog\",\n              \"title\": \"T-Shirts\",\n              \"body\": \"12 SKUs across 4 fits.\"\n            }\n          }\n        },\n        {\n          \"id\": \"hoodies\",\n          \"label\": \"Hoodies\",\n          \"meta\": {\n            \"action\": {\n              \"kind\": \"dialog\",\n              \"title\": \"Hoodies\",\n              \"body\": \"8 SKUs, heavyweight cotton blend.\"\n            }\n          }\n        }\n      ]\n    },\n    {\n      \"id\": \"shoes\",\n      \"label\": \"Footwear\",\n      \"meta\": {\n        \"badge\": \"CATEGORY\",\n        \"action\": {\n          \"kind\": \"dialog\",\n          \"title\": \"Footwear\",\n          \"body\": \"Sneakers, boots, sandals.\"\n        }\n      }\n    },\n    {\n      \"id\": \"accessories\",\n      \"label\": \"Accessories\",\n      \"meta\": {\n        \"badge\": \"CATEGORY\",\n        \"action\": {\n          \"kind\": \"dialog\",\n          \"title\": \"Accessories\",\n          \"body\": \"Bags, hats, socks.\"\n        }\n      }\n    }\n  ]\n};\n"
+    },
+    {
+      "path": "tree/tree-dialog-product-catalog/handlers.ts",
+      "type": "registry:tree-variant",
+      "content": "import { useCallback } from \"react\";\nimport type {\n  TreeNodeAddEvent,\n  TreeNodeUpdateEvent,\n  TreeNodeRemoveEvent,\n  TreeNodeMoveEvent,\n} from \"../../components/tree/types\";\n\n/**\n * One handler per mutation — wire each to your backend.\n */\nexport function useDialogProductCatalogTreeHandlers() {\n  const handleNodeAdd = useCallback((event: TreeNodeAddEvent) => {\n    console.log(\"[tree] node added\", event);\n  }, []);\n\n  const handleNodeUpdate = useCallback((event: TreeNodeUpdateEvent) => {\n    console.log(\"[tree] node updated\", event);\n  }, []);\n\n  const handleNodeRemove = useCallback((event: TreeNodeRemoveEvent) => {\n    console.log(\"[tree] node removed\", event);\n  }, []);\n\n  const handleNodeMove = useCallback((event: TreeNodeMoveEvent) => {\n    console.log(\"[tree] node moved\", event);\n  }, []);\n\n  return { handleNodeAdd, handleNodeUpdate, handleNodeRemove, handleNodeMove };\n}\n"
+    }
+  ],
+  "features": [
+    "toolbar"
+  ]
+}
