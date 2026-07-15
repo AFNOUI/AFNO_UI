@@ -1,0 +1,30 @@
+{
+  "name": "tree/tree-static-org-chart",
+  "category": "tree",
+  "variant": "tree-static-org-chart",
+  "files": [
+    {
+      "path": "tree/tree-static-org-chart/StaticOrgChartTree.tsx",
+      "type": "registry:tree-variant",
+      "content": "import { useState } from \"react\";\nimport { TreeCanvas } from \"../../components/tree/TreeCanvas\";\nimport type { TreeNode } from \"../../components/tree/types\";\nimport { GraphToolbar, useGraphFilter, defaultGraphFilter } from \"../../components/graph\";\nimport { initialTree } from \"./data\";\nimport { treeConfig } from \"./config\";\nimport { useStaticOrgChartTreeHandlers } from \"./handlers\";\n\n/**\n * StaticOrgChartTree — a fully-typed, self-contained tree with a search / sort /\n * filter toolbar above the canvas.\n *\n * Drop into any page:\n *   <StaticOrgChartTree />\n *\n * To plug into a backend, edit the handlers in `./handlers.ts`. To remove the\n * toolbar, delete the `GraphToolbar`/`useGraphFilter` wiring below and set\n * `showToolbar: false` in `./config.ts`.\n */\nexport function StaticOrgChartTree() {\n  const [tree, setTree] = useState<TreeNode>(initialTree);\n  const [filter, setFilter] = useState(defaultGraphFilter);\n  const { handleNodeAdd, handleNodeUpdate, handleNodeRemove, handleNodeMove } = useStaticOrgChartTreeHandlers();\n  const { tree: filteredTree, matches, stats, allTags } = useGraphFilter(tree, filter);\n\n  return (\n    <div className=\"flex flex-col gap-2\">\n      <GraphToolbar\n        filter={filter}\n        onChange={setFilter}\n        allTags={allTags}\n        matched={stats.matched}\n        total={stats.total}\n      />\n      <TreeCanvas\n        config={treeConfig}\n        tree={filter.mode === \"hide\" ? filteredTree : tree}\n        onTreeChange={setTree}\n        highlightIds={filter.mode === \"dim\" ? matches : undefined}\n        onNodeAdd={handleNodeAdd}\n        onNodeUpdate={handleNodeUpdate}\n        onNodeRemove={handleNodeRemove}\n        onNodeMove={handleNodeMove}\n      />\n    </div>\n  );\n}\n"
+    },
+    {
+      "path": "tree/tree-static-org-chart/config.ts",
+      "type": "registry:tree-variant",
+      "content": "import type { TreeCanvasConfig } from \"../../components/tree/types\";\n\n/** Static configuration. All fields are typed and validated. */\nexport const treeConfig: TreeCanvasConfig = {\n  \"title\": \"Org Chart\",\n  \"layout\": \"vertical\",\n  \"readOnly\": true,\n  \"connector\": \"stepped\",\n  \"nodeShape\": \"rounded\",\n  \"panZoom\": true,\n  \"background\": \"grid\",\n  \"siblingGap\": 24,\n  \"levelGap\": 80,\n  \"minHeight\": 480\n};\n"
+    },
+    {
+      "path": "tree/tree-static-org-chart/data.ts",
+      "type": "registry:tree-variant",
+      "content": "import type { TreeNode } from \"../../components/tree/types\";\n\n/** Initial tree data. Swap with your own backend fetch when wiring up production. */\nexport const initialTree: TreeNode = {\n  \"id\": \"ceo\",\n  \"label\": \"Asha Mehta — CEO\",\n  \"meta\": {\n    \"badge\": \"C-LEVEL\",\n    \"color\": \"hsl(217 91% 60%)\"\n  },\n  \"children\": [\n    {\n      \"id\": \"cto\",\n      \"label\": \"Ravi Patel — CTO\",\n      \"meta\": {\n        \"badge\": \"VP\"\n      },\n      \"children\": [\n        {\n          \"id\": \"eng-platform\",\n          \"label\": \"Platform Eng\",\n          \"meta\": {\n            \"badge\": \"TEAM\"\n          }\n        },\n        {\n          \"id\": \"eng-product\",\n          \"label\": \"Product Eng\",\n          \"meta\": {\n            \"badge\": \"TEAM\"\n          }\n        },\n        {\n          \"id\": \"eng-data\",\n          \"label\": \"Data Eng\",\n          \"meta\": {\n            \"badge\": \"TEAM\"\n          }\n        }\n      ]\n    },\n    {\n      \"id\": \"cpo\",\n      \"label\": \"Sara Kim — CPO\",\n      \"meta\": {\n        \"badge\": \"VP\"\n      },\n      \"children\": [\n        {\n          \"id\": \"design\",\n          \"label\": \"Design\",\n          \"meta\": {\n            \"badge\": \"TEAM\"\n          }\n        },\n        {\n          \"id\": \"product\",\n          \"label\": \"PM\",\n          \"meta\": {\n            \"badge\": \"TEAM\"\n          }\n        }\n      ]\n    },\n    {\n      \"id\": \"cfo\",\n      \"label\": \"Lin Wei — CFO\",\n      \"meta\": {\n        \"badge\": \"VP\"\n      },\n      \"children\": [\n        {\n          \"id\": \"finance\",\n          \"label\": \"Finance\",\n          \"meta\": {\n            \"badge\": \"TEAM\"\n          }\n        },\n        {\n          \"id\": \"legal\",\n          \"label\": \"Legal\",\n          \"meta\": {\n            \"badge\": \"TEAM\"\n          }\n        }\n      ]\n    }\n  ]\n};\n"
+    },
+    {
+      "path": "tree/tree-static-org-chart/handlers.ts",
+      "type": "registry:tree-variant",
+      "content": "import { useCallback } from \"react\";\nimport type {\n  TreeNodeAddEvent,\n  TreeNodeUpdateEvent,\n  TreeNodeRemoveEvent,\n  TreeNodeMoveEvent,\n} from \"../../components/tree/types\";\n\n/**\n * One handler per mutation — wire each to your backend.\n */\nexport function useStaticOrgChartTreeHandlers() {\n  const handleNodeAdd = useCallback((event: TreeNodeAddEvent) => {\n    console.log(\"[tree] node added\", event);\n  }, []);\n\n  const handleNodeUpdate = useCallback((event: TreeNodeUpdateEvent) => {\n    console.log(\"[tree] node updated\", event);\n  }, []);\n\n  const handleNodeRemove = useCallback((event: TreeNodeRemoveEvent) => {\n    console.log(\"[tree] node removed\", event);\n  }, []);\n\n  const handleNodeMove = useCallback((event: TreeNodeMoveEvent) => {\n    console.log(\"[tree] node moved\", event);\n  }, []);\n\n  return { handleNodeAdd, handleNodeUpdate, handleNodeRemove, handleNodeMove };\n}\n"
+    }
+  ],
+  "features": [
+    "toolbar"
+  ]
+}

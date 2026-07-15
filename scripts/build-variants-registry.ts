@@ -14,6 +14,8 @@ import type { DataMode } from "../app/table-builder/utils/tableCodeGenerator";
 import { buildTableVariantFiles } from "../app/table-builder/utils/variantBundle";
 import { kanbanTemplates } from "../app/kanban-builder/data/kanbanBuilderTemplates";
 import { buildKanbanVariantFiles } from "../app/kanban-builder/utils/variantBundle";
+import { treeTemplates } from "../app/tree-builder/data/treeBuilderTemplates";
+import { buildTreeVariantFiles, treeVariantFeatures } from "../app/tree-builder/utils/variantBundle";
 
 /**
  * Build Variants Registry Script
@@ -53,6 +55,8 @@ type VariantRegistryItem = {
   variant: string;
   files: VariantRegistryItemFile[];
   stacks?: Record<string, VariantRegistryItemFile[]>;
+  /** Optional engine feature groups this variant needs (e.g. `["toolbar"]`). */
+  features?: string[];
 };
 
 const REGISTRY_ROOT = path.join(process.cwd(), "public", "registry", "variants");
@@ -72,6 +76,13 @@ const TABLE_VARIANT_SLUG_OVERRIDES: Partial<Record<string, string>> = {
  */
 const KANBAN_VARIANT_SLUG_OVERRIDES: Partial<Record<string, string>> = {};
 
+/**
+ * Slug overrides for tree templates (record key in `treeTemplates` → kebab slug).
+ * Empty by default so new templates auto-derive `tree-<kebab>`; add an entry only
+ * to preserve an existing public URL.
+ */
+const TREE_VARIANT_SLUG_OVERRIDES: Partial<Record<string, string>> = {};
+
 function toKebabCase(value: string): string {
   return value
     .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
@@ -85,6 +96,10 @@ function tableTemplateKeyToVariantSlug(key: string): string {
 
 function kanbanTemplateKeyToVariantSlug(key: string): string {
   return KANBAN_VARIANT_SLUG_OVERRIDES[key] ?? `kanban-${toKebabCase(key)}`;
+}
+
+function treeTemplateKeyToVariantSlug(key: string): string {
+  return TREE_VARIANT_SLUG_OVERRIDES[key] ?? `tree-${toKebabCase(key)}`;
 }
 
 function collectRegistryVariantFiles(dir: string): string[] {
@@ -138,6 +153,7 @@ async function buildVariantsRegistry() {
       category === "charts" ||
       category === "tables" ||
       category === "kanban" ||
+      category === "tree" ||
       category === "dnd"
     ) {
       // Charts, tables, kanban, and dnd variants are emitted from their
@@ -311,6 +327,46 @@ async function buildVariantsRegistry() {
       })),
     };
     const targetPath = path.join(kanbanVariantRoot, `${variantSlug}.json`);
+    fs.writeFileSync(targetPath, JSON.stringify(item, null, 2));
+    index.add(variantName);
+  }
+
+  /**
+   * Tree variants are generated directly from `treeTemplates` (the merged
+   * hierarchical + workflow catalogue that powers the `/trees` and
+   * `/tree-builder` pages) so the registry can never drift from what users see
+   * in-app. Mirrors the kanban pipeline above. Each variant records the engine
+   * `features` it needs (e.g. `["toolbar"]` → GraphToolbar) so the CLI installs
+   * the matching optional group from `tree.json`.
+   */
+  const treeVariantRoot = path.join(REGISTRY_ROOT, "tree");
+  if (fs.existsSync(treeVariantRoot)) {
+    fs.rmSync(treeVariantRoot, { recursive: true, force: true });
+  }
+  fs.mkdirSync(treeVariantRoot, { recursive: true });
+
+  for (const [templateKey, template] of Object.entries(treeTemplates)) {
+    const variantSlug = treeTemplateKeyToVariantSlug(templateKey);
+    const variantName = `tree/${variantSlug}`;
+    const files = buildTreeVariantFiles(
+      template.config,
+      template.tree,
+      variantSlug,
+      template.rendererSources,
+    );
+    const features = treeVariantFeatures(template.config);
+    const item: VariantRegistryItem = {
+      name: variantName,
+      category: "tree",
+      variant: variantSlug,
+      files: files.map((f) => ({
+        path: f.path,
+        type: "registry:tree-variant",
+        content: f.content,
+      })),
+      ...(features.length ? { features } : {}),
+    };
+    const targetPath = path.join(treeVariantRoot, `${variantSlug}.json`);
     fs.writeFileSync(targetPath, JSON.stringify(item, null, 2));
     index.add(variantName);
   }

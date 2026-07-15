@@ -270,6 +270,7 @@ function ensureTestProject() {
             chartVariants: "charts",
             tableVariants: "tables",
             kanbanVariants: "kanban",
+            treeVariants: "tree",
             dndVariants: "dnd",
             lib: "lib",
           },
@@ -304,6 +305,7 @@ async function main() {
   run(pm === "pnpm" ? "pnpm run build:forms-registry" : "npm run build:forms-registry");
   run(pm === "pnpm" ? "pnpm run build:tables-registry" : "npm run build:tables-registry");
   run(pm === "pnpm" ? "pnpm run build:kanban-registry" : "npm run build:kanban-registry");
+  run(pm === "pnpm" ? "pnpm run build:tree-registry" : "npm run build:tree-registry");
   run(pm === "pnpm" ? "pnpm run build:dnd-registry" : "npm run build:dnd-registry");
   const nextDir = path.join(ROOT, ".next");
   if (fs.existsSync(nextDir)) {
