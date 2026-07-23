@@ -11,7 +11,7 @@ export interface KanbanRegistryFile {
   description: string;
 }
 
-export const kanbanRegistryGeneratedAt = "2026-07-23T05:09:16.005Z";
+export const kanbanRegistryGeneratedAt = "2026-07-23T18:42:52.492Z";
 
 export const kanbanInstall = {
   "npmDependencies": [

@@ -11,7 +11,7 @@ export interface DndRegistryFile {
   description: string;
 }
 
-export const dndRegistryGeneratedAt = "2026-07-23T05:09:16.844Z";
+export const dndRegistryGeneratedAt = "2026-07-23T18:42:52.908Z";
 
 export const dndInstall = {
   "npmDependencies": [
