@@ -169,21 +169,6 @@ function resolveClickAction(
   };
 }
 
-/** Split visible columns by pin state, preserving original order within each bucket. */
-function splitPinned(cols: TableColumnConfig[], enabled: boolean) {
-  if (!enabled)
-    return { start: [], middle: cols, end: [] as TableColumnConfig[] };
-  const start: TableColumnConfig[] = [];
-  const middle: TableColumnConfig[] = [];
-  const end: TableColumnConfig[] = [];
-  for (const c of cols) {
-    if (c.pinned === "start") start.push(c);
-    else if (c.pinned === "end") end.push(c);
-    else middle.push(c);
-  }
-  return { start, middle, end };
-}
-
 /** Compute cumulative offset (px) for sticky pinned columns. */
 function computePinOffsets(
   pinned: TableColumnConfig[],

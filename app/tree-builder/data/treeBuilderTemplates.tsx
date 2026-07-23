@@ -4,7 +4,7 @@
  */
 import type { TreeCanvasConfig, TreeNode, NodeRenderer } from "@/trees/types";
 import { Badge } from "@/components/ui/badge";
-import { Folder, File, GitBranch, Cpu, Database, Cloud, Sparkles, Play, GitMerge, CheckCircle2, AlertTriangle, Mail, Webhook } from "lucide-react";
+import { Play, GitMerge, CheckCircle2, AlertTriangle, Mail, Webhook } from "lucide-react";
 
 export type TreeComplexity = "basic" | "intermediate" | "advanced" | "expert";
 
@@ -30,26 +30,6 @@ export interface TreeTemplate {
    */
   rendererSources?: TreeRendererSources;
 }
-
-/* ------------------------------------------------------------------
- * Reusable node renderer (Case 1) — every node uses the same body.
- * ------------------------------------------------------------------ */
-const reusableNodeRenderer: NodeRenderer = ({ node, depth, childCount, isRoot }) => (
-  <div className="flex items-center gap-2 px-3 py-2">
-    <div className="grid h-7 w-7 place-items-center rounded-md bg-primary/10 text-primary">
-      <Sparkles className="h-3.5 w-3.5" />
-    </div>
-    <div className="min-w-0 flex-1">
-      <div className="truncate text-sm font-semibold">{node.label}</div>
-      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-        <span>depth {depth}</span>
-        {childCount > 0 && <span>· {childCount} child{childCount === 1 ? "" : "ren"}</span>}
-        {isRoot && <Badge variant="outline" className="h-3.5 px-1 text-[9px]">ROOT</Badge>}
-      </div>
-    </div>
-  </div>
-);
-
 
 const fulfilmentTree: TreeNode = {
   id: "order-pool", label: "Order Pool",
@@ -1603,9 +1583,5 @@ import { Play, GitMerge, CheckCircle2, AlertTriangle, Mail, Webhook } from "luci
     },
   },
 };
-
-// Keep the Database icon import referenced for future renderers.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _keepDatabaseImport = Database;
 
 export const defaultTreeKey = "fulfilment";

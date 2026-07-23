@@ -68,8 +68,6 @@ export const RelationEdge = memo(function RelationEdge(props: EdgeProps<Relation
 
   const baseStroke = isActive ? "hsl(var(--primary))" : "hsl(var(--muted-foreground) / 0.55)";
   const baseWidth = isActive ? 1.8 : 1.2;
-  const sourceDash = sourcePartial ? "4 3" : undefined;
-  const targetDash = targetPartial ? "4 3" : undefined;
   // For visual continuity, the centre line uses the "stronger" dash style.
   const centerDash = sourcePartial && targetPartial ? "4 3" : undefined;
 

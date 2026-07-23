@@ -94,16 +94,6 @@ import { generateTreeFiles } from "@/tree-builder/utils/treeCodeGenerator";
 import { treeTemplates, defaultTreeKey, type TreeTemplate } from "@/tree-builder/data/treeBuilderTemplates";
 import { SHARED_TREE_FILES, OPTIONAL_TREE_FILES, TREE_DEPENDENCIES } from "@/tree-builder/utils/treeSharedFiles";
 
-const complexityColors: Record<string, string> = {
-  basic:
-    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-  intermediate:
-    "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-  advanced:
-    "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
-  expert:
-    "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-};
 
 /* ============================================================ */
 /*  Tree utilities (pure)                                        */
@@ -253,90 +243,6 @@ function FilesPanel({
 }
 
 /* ============================================================ */
-/*  Action dispatcher (Preview tab)                              */
-/* ============================================================ */
-
-function ActionDispatcher({
-  action,
-  node,
-  tableDataset,
-  inlinePanel,
-  setInlinePanel,
-}: {
-  action: TreeNodeAction;
-  node: TreeNode;
-  tableDataset: TreeNode | null;
-  inlinePanel: {
-    node: TreeNode;
-    action: Extract<TreeNodeAction, { kind: "panel" | "table-panel" }>;
-  } | null;
-  setInlinePanel: (
-    v: {
-      node: TreeNode;
-      action: Extract<TreeNodeAction, { kind: "panel" | "table-panel" }>;
-    } | null,
-  ) => void;
-}) {
-  void node;
-  void tableDataset;
-  void inlinePanel;
-  void setInlinePanel;
-  void action;
-  return null;
-}
-
-/* ============================================================ */
-/*  Variant picker (left rail)                                   */
-/* ============================================================ */
-
-function VariantPicker({
-  variants,
-  activeKey,
-  onPick,
-}: {
-  variants: (TreeTemplate & { key: string })[];
-  activeKey: string;
-  onPick: (k: string) => void;
-}) {
-  return (
-    <Card className="border-border">
-      <CardContent className="p-2 space-y-1">
-        <p className="px-2 pt-1 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-          Variants
-        </p>
-        <ScrollArea className="max-h-[520px]">
-          <div className="space-y-1">
-            {variants.map((v) => (
-              <button
-                key={v.key}
-                onClick={() => onPick(v.key)}
-                className={cn(
-                  "w-full text-left px-2.5 py-2 rounded-md text-xs transition-colors flex flex-col gap-1",
-                  activeKey === v.key
-                    ? "bg-primary/10 text-foreground ring-1 ring-primary/30"
-                    : "hover:bg-muted text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <span className="font-medium leading-tight">{v.title}</span>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "text-[9px] h-4 px-1 self-start capitalize",
-                    complexityColors[v.complexity],
-                  )}
-                >
-                  {v.complexity}
-                </Badge>
-              </button>
-            ))}
-          </div>
-        </ScrollArea>
-      </CardContent>
-    </Card>
-  );
-}
-
-/* ============================================================ */
 /*  Properties panel (right rail) — edits the selected node      */
 /* ============================================================ */
 
@@ -436,7 +342,7 @@ function NodePropertiesPanel({
             className="h-8 text-sm"
           />
           <p className="text-[10px] text-muted-foreground">
-            Used by the connector line and the "Has edge label" filter
+            Used by the connector line and the &quot;Has edge label&quot; filter
             predicate.
           </p>
         </div>
@@ -450,8 +356,8 @@ function NodePropertiesPanel({
                   <HelpCircle className="h-3 w-3 text-muted-foreground" />
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs text-xs">
-                  Comma-separated tags. Used by the toolbar's tag chips and the
-                  "Has any tag" filter.
+                  Comma-separated tags. Used by the toolbar&apos;s tag chips and the
+                  &quot;Has any tag&quot; filter.
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -482,7 +388,7 @@ function NodePropertiesPanel({
                   <HelpCircle className="h-3 w-3 text-muted-foreground" />
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs text-xs">
-                  When the toolbar's Sort is "Custom (meta.sortKey)" each parent
+                  When the toolbar&apos;s Sort is &quot;Custom (meta.sortKey)&quot; each parent
                   orders its children by this value.
                 </TooltipContent>
               </Tooltip>
@@ -632,8 +538,8 @@ function NodePropertiesPanel({
           <Label className="text-xs">On click (Preview)</Label>
           <p className="text-[10px] text-muted-foreground">
             Pick <em>None</em> for an informational node, or open a dialog /
-            drawer / panel / table when clicked in Preview. Drives the "Has an
-            action" filter predicate.
+            drawer / panel / table when clicked in Preview. Drives the &quot;Has an
+            action&quot; filter predicate.
           </p>
           <Select
             value={action.kind}
@@ -786,9 +692,6 @@ function BuilderTab({
   const handleNodeChange = (id: string, updater: (n: TreeNode) => TreeNode) => {
     setTree(updateNode(tree, id, updater));
   };
-
-  const [rendererSheetOpen, setRendererSheetOpen] = useState(false);
-  const [rendererTab, setRendererTab] = useState<"flow" | "node">("flow");
 
   return (
     <div className="grid lg:grid-cols-[1fr_320px] gap-4">

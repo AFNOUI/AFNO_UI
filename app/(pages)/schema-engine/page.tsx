@@ -55,10 +55,6 @@ export default function SchemaEnginePage() {
     else toast.error(result.errors[0]);
   }, [result.errors, schema.tables.length]);
 
-  const onSampleLoad = useCallback(() => {
-    setKind("ddl"); setRaw(SAMPLE_DDL); toast.success("Sample schema loaded");
-  }, []);
-
   const onExportDdl = useCallback(() => {
     if (schema.tables.length === 0) {
       toast.error("No tables to export — paste a schema first.");

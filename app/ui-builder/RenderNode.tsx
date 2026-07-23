@@ -138,7 +138,7 @@ function RenderComponent({ node, breakpoint }: { node: BuilderNode; breakpoint: 
     case "testimonial":
       return (
         <div>
-          <blockquote className="text-lg italic text-foreground mb-4">"{p.quote as string}"</blockquote>
+          <blockquote className="text-lg italic text-foreground mb-4">&quot;{p.quote as string}&quot;</blockquote>
           <div className="font-medium text-foreground">{p.author as string}</div>
           <div className="text-sm text-muted-foreground">{p.role as string}</div>
         </div>

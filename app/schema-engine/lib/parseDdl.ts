@@ -29,7 +29,6 @@ function stripComments(sql: string): string {
   return sql.replace(/--[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
 }
 
-interface RawColumn { line: string; }
 
 function splitTopLevel(body: string): string[] {
   const out: string[] = [];

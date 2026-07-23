@@ -11,7 +11,7 @@ export interface TableRegistryFile {
   description: string;
 }
 
-export const tableRegistryGeneratedAt = "2026-07-15T02:59:38.219Z";
+export const tableRegistryGeneratedAt = "2026-07-23T05:09:15.635Z";
 
 export const tableInstall = {
   "npmDependencies": [
@@ -218,21 +218,6 @@ function resolveClickAction(
       window.location.href = url;
     }
   };
-}
-
-/** Split visible columns by pin state, preserving original order within each bucket. */
-function splitPinned(cols: TableColumnConfig[], enabled: boolean) {
-  if (!enabled)
-    return { start: [], middle: cols, end: [] as TableColumnConfig[] };
-  const start: TableColumnConfig[] = [];
-  const middle: TableColumnConfig[] = [];
-  const end: TableColumnConfig[] = [];
-  for (const c of cols) {
-    if (c.pinned === "start") start.push(c);
-    else if (c.pinned === "end") end.push(c);
-    else middle.push(c);
-  }
-  return { start, middle, end };
 }
 
 /** Compute cumulative offset (px) for sticky pinned columns. */
@@ -4451,17 +4436,6 @@ function getDragCenter(snap: DragSnapshot) {
   };
 }
 
-function isPointInsideRect(x: number, y: number, rect: DOMRect) {
-  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
-}
-
-function isPointInsideSourceBounds(x: number, y: number, snap: DragSnapshot) {
-  return snap.sourceLeft != null && snap.sourceRight != null && snap.sourceTop != null && snap.sourceBottom != null
-    && x >= snap.sourceLeft
-    && x <= snap.sourceRight
-    && y >= snap.sourceTop
-    && y <= snap.sourceBottom;
-}
 
 function getZoneItems(zoneEl: HTMLElement): HTMLElement[] {
   return Array.from(zoneEl.querySelectorAll<HTMLElement>('[data-dnd-item="true"]')).filter((el) => {

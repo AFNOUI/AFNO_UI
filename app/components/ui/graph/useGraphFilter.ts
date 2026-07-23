@@ -6,7 +6,6 @@
 import { useMemo } from "react";
 import type { GraphFilterState, GraphPredicate } from "./types";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface FilterableNode {
   id: string;
   label: string;

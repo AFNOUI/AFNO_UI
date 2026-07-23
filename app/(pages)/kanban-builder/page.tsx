@@ -42,7 +42,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
-import { VariantJsonConfigPanel } from "@/components/shared/VariantJsonConfigPanel";
 
 import {
   kanbanTemplates,

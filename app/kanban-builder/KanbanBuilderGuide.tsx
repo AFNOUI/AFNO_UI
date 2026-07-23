@@ -26,7 +26,7 @@ export function KanbanBuilderGuide() {
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-1.5">
           <p>DnD uses our custom Pointer DnD library (zero <code className="text-xs bg-muted px-1 rounded">@dnd-kit</code> dependency).</p>
-          <p>Sibling cards animate to <em>open a real-sized gap</em> at the insertion point — exactly matching the dragged card's dimensions.</p>
+          <p>Sibling cards animate to <em>open a real-sized gap</em> at the insertion point — exactly matching the dragged card&apos;s dimensions.</p>
           <p>Toggle <strong>Reduce motion</strong> in Features (or set the OS-level <code className="text-xs bg-muted px-1 rounded">prefers-reduced-motion</code>) to disable the animation.</p>
         </CardContent>
       </Card>
@@ -53,7 +53,7 @@ export function KanbanBuilderGuide() {
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-1.5">
           <p>Configure the click-dialog from the <strong>Card click dialog</strong> section in the sidebar.</p>
-          <p>Provide your own <strong>HTML / Tailwind template</strong> with <code className="text-xs bg-muted px-1 rounded">{`{{row.field}}`}</code> tokens, plus optional sandboxed JS that runs after mount. Same engine as the Table Builder's row-detail dialog.</p>
+          <p>Provide your own <strong>HTML / Tailwind template</strong> with <code className="text-xs bg-muted px-1 rounded">{`{{row.field}}`}</code> tokens, plus optional sandboxed JS that runs after mount. Same engine as the Table Builder&apos;s row-detail dialog.</p>
         </CardContent>
       </Card>
       <Card>

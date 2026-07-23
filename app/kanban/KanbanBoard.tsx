@@ -617,25 +617,24 @@ interface ZoneProps {
 }
 
 function Zone({
-  columnId,
   lane,
   cards,
-  compact,
-  visibleFields,
-  enableDnd,
-  onDrop,
-  className,
   header,
   footer,
+  compact,
+  columnId,
+  enableDnd,
+  className,
   axis = "y",
-  reduceMotion = false,
-  onCardClick,
-  onLoadMore,
-  infiniteScroll,
-  cardById,
   scrollable,
   maxHeightPx,
+  visibleFields,
+  infiniteScroll,
+  reduceMotion = false,
+  onDrop,
+  onLoadMore,
   renderCard,
+  onCardClick,
 }: ZoneProps) {
   const zoneId = getZoneId(columnId, lane);
   const zoneData = useMemo<ZoneData>(() => ({ columnId, lane }), [columnId, lane]);

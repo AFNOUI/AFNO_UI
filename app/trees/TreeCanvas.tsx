@@ -451,22 +451,6 @@ export function TreeCanvas({
     return { id: targetId, mode };
   }, [drag, tree, horizontalAxis, siblingAxisInverted, dir, horizontalAxisLayout, config.dragModes]);
 
-
-  /** Persist a free-position offset onto a node (Alt+drag drop). */
-  const handleFreeMove = useCallback((id: string, delta: { dx: number; dy: number }) => {
-    if (delta.dx === 0 && delta.dy === 0) return;
-    const prev = findNode(tree, id);
-    if (!prev) return;
-    const existing = prev.meta?.positionOffset ?? { dx: 0, dy: 0 };
-    const newOff = { dx: existing.dx + delta.dx, dy: existing.dy + delta.dy };
-    const next = mapTree(tree, (n) =>
-      n.id === id ? { ...n, meta: { ...n.meta, positionOffset: newOff } } : n,
-    );
-    commit(next);
-    const updated = findNode(next, id)!;
-    onNodeUpdate?.({ node: updated, prev, tree: next });
-  }, [tree, commit, onNodeUpdate]);
-
   /** Promote a pending pointer-down to an active drag once the pointer has
    *  travelled >5px. If the pointer comes up first, treat it as a click. */
   useEffect(() => {

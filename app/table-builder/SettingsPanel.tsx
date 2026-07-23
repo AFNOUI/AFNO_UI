@@ -406,7 +406,7 @@ export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
                   />
                 </label>
                 <label className="flex items-center justify-between gap-2 text-xs py-1 cursor-pointer">
-                  <span>Show "Showing X–Y of Z"</span>
+                  <span>Show &quot;Showing X–Y of Z&quot;</span>
                   <Switch
                     checked={config.showPageInfo !== false}
                     onCheckedChange={(v) =>

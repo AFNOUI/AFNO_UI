@@ -159,7 +159,7 @@ export function GraphToolbar({
         <Info className="h-3 w-3 mt-0.5 shrink-0" />
         <span>
           {showSearch && <><b>Search</b> matches node labels. </>}
-          {showSort && <><b>Sort</b> re-orders each parent's children. </>}
+          {showSort && <><b>Sort</b> re-orders each parent&apos;s children. </>}
           {showFilter && <><b>Tags / smart filter</b> mark which nodes match; </>}
           {showFilter && <><b>Dim</b> fades non-matches in place, <b>Hide</b> removes them from the tree.</>}
         </span>

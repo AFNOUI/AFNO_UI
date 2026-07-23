@@ -17,6 +17,16 @@ const eslintConfig = defineConfig([
   ]),
   {
     rules: {
+      // Treat a leading underscore as "intentionally unused" for vars, args, and
+      // caught errors — the standard convention (e.g. API-shape stub params).
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
       // Form builder and field render props often use `any` until stricter generics land.
       "@typescript-eslint/no-explicit-any": "warn",
       // Many valid patterns (mounted flags, resetting UI when props change) still use setState in effects.
