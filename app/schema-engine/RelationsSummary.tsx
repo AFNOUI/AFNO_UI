@@ -14,7 +14,6 @@ import { ChevronDown, ChevronUp, GitBranch, Link2 } from "lucide-react";
 import type { VirtualSchema } from "@/schema-engine/types/types";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface FkEdge {

@@ -11,7 +11,7 @@ export interface KanbanRegistryFile {
   description: string;
 }
 
-export const kanbanRegistryGeneratedAt = "2026-07-15T02:59:38.495Z";
+export const kanbanRegistryGeneratedAt = "2026-07-23T18:42:52.492Z";
 
 export const kanbanInstall = {
   "npmDependencies": [
@@ -657,25 +657,24 @@ interface ZoneProps {
 }
 
 function Zone({
-  columnId,
   lane,
   cards,
-  compact,
-  visibleFields,
-  enableDnd,
-  onDrop,
-  className,
   header,
   footer,
+  compact,
+  columnId,
+  enableDnd,
+  className,
   axis = "y",
-  reduceMotion = false,
-  onCardClick,
-  onLoadMore,
-  infiniteScroll,
-  cardById,
   scrollable,
   maxHeightPx,
+  visibleFields,
+  infiniteScroll,
+  reduceMotion = false,
+  onDrop,
+  onLoadMore,
   renderCard,
+  onCardClick,
 }: ZoneProps) {
   const zoneId = getZoneId(columnId, lane);
   const zoneData = useMemo<ZoneData>(() => ({ columnId, lane }), [columnId, lane]);
@@ -2256,17 +2255,6 @@ function getDragCenter(snap: DragSnapshot) {
   };
 }
 
-function isPointInsideRect(x: number, y: number, rect: DOMRect) {
-  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
-}
-
-function isPointInsideSourceBounds(x: number, y: number, snap: DragSnapshot) {
-  return snap.sourceLeft != null && snap.sourceRight != null && snap.sourceTop != null && snap.sourceBottom != null
-    && x >= snap.sourceLeft
-    && x <= snap.sourceRight
-    && y >= snap.sourceTop
-    && y <= snap.sourceBottom;
-}
 
 function getZoneItems(zoneEl: HTMLElement): HTMLElement[] {
   return Array.from(zoneEl.querySelectorAll<HTMLElement>('[data-dnd-item="true"]')).filter((el) => {

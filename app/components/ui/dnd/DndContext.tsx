@@ -79,17 +79,6 @@ function getDragCenter(snap: DragSnapshot) {
   };
 }
 
-function isPointInsideRect(x: number, y: number, rect: DOMRect) {
-  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
-}
-
-function isPointInsideSourceBounds(x: number, y: number, snap: DragSnapshot) {
-  return snap.sourceLeft != null && snap.sourceRight != null && snap.sourceTop != null && snap.sourceBottom != null
-    && x >= snap.sourceLeft
-    && x <= snap.sourceRight
-    && y >= snap.sourceTop
-    && y <= snap.sourceBottom;
-}
 
 function getZoneItems(zoneEl: HTMLElement): HTMLElement[] {
   return Array.from(zoneEl.querySelectorAll<HTMLElement>('[data-dnd-item="true"]')).filter((el) => {

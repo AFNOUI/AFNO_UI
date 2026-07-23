@@ -14,6 +14,7 @@ import {
   SlidersHorizontal, PanelTop, Command, ListFilter, Navigation,
   ChevronsLeft, Image as ImageIcon, FileText, CheckSquare, CircleDot,
   PanelLeftClose, Maximize2, Loader2, ScrollText, Minus, PanelRightOpen, Kanban,
+  Network, Workflow,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -74,6 +75,7 @@ const NAV_SECTIONS = [
       { id: "form-builder", name: "Form Builder", icon: <FileText size={16} />, path: "/form-builder" },
       { id: "table-builder", name: "Table Builder", icon: <Table2 size={16} />, path: "/table-builder" },
       {id:"kanban-builder", name: "Kanban Builder", icon: <Kanban size={16} />, path: "/kanban-builder" },
+      { id: "tree-builder", name: "Tree Builder", icon: <Workflow size={16} />, path: "/tree-builder" },
     ],
   },
   {
@@ -82,6 +84,7 @@ const NAV_SECTIONS = [
       { id: "forms", name: "Form Variants", icon: <FormInput size={16} />, path: "/forms" },
       { id: "tables", name: "Table Variants", icon: <Table size={16} />, path: "/tables" },
       { id: "kanban", name: "Kanban Variants", icon: <Kanban size={16} />, path: "/kanban" },
+      { id: "trees", name: "Tree Variants", icon: <Network size={16} />, path: "/trees" },
       { id: "schema-engine", name: "Schema Engine", icon: <Database size={16} />, path: "/schema-engine" },
       { id: "dashboard", name: "Dashboard", icon: <LayoutDashboard size={16} />, path: "/dashboard" },
       { id: "galleries", name: "Galleries", icon: <ImageIcon size={16} />, path: "/galleries" },

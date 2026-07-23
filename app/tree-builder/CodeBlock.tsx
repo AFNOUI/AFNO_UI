@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/hooks/use-toast";
 import { Copy, Check, FileCode, Terminal } from "lucide-react";
 
-export function CodeBlock({ code, language, filename }: { code: string; language: string; filename?: string }) {
+export function CodeBlock({ code, filename }: { code: string; language?: string; filename?: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {

@@ -555,7 +555,7 @@ export function ColumnEditor({ config, onChange }: ColumnEditorProps) {
         </DndProvider>
         {config.columns.length === 0 && (
           <div className="text-center py-8 text-muted-foreground text-xs">
-            No columns yet. Click "Add" to create one.
+            No columns yet. Click &quot;Add&quot; to create one.
           </div>
         )}
       </CardContent>

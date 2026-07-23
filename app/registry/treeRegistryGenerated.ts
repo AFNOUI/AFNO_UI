@@ -18,7 +18,7 @@ export interface TreeOptionalGroup {
   files: TreeRegistryFile[];
 }
 
-export const treeRegistryGeneratedAt = "2026-07-15T02:59:38.788Z";
+export const treeRegistryGeneratedAt = "2026-07-23T18:42:52.714Z";
 
 export const treeInstall = {
   "npmDependencies": [
@@ -486,22 +486,6 @@ export function TreeCanvas({
     }
     return { id: targetId, mode };
   }, [drag, tree, horizontalAxis, siblingAxisInverted, dir, horizontalAxisLayout, config.dragModes]);
-
-
-  /** Persist a free-position offset onto a node (Alt+drag drop). */
-  const handleFreeMove = useCallback((id: string, delta: { dx: number; dy: number }) => {
-    if (delta.dx === 0 && delta.dy === 0) return;
-    const prev = findNode(tree, id);
-    if (!prev) return;
-    const existing = prev.meta?.positionOffset ?? { dx: 0, dy: 0 };
-    const newOff = { dx: existing.dx + delta.dx, dy: existing.dy + delta.dy };
-    const next = mapTree(tree, (n) =>
-      n.id === id ? { ...n, meta: { ...n.meta, positionOffset: newOff } } : n,
-    );
-    commit(next);
-    const updated = findNode(next, id)!;
-    onNodeUpdate?.({ node: updated, prev, tree: next });
-  }, [tree, commit, onNodeUpdate]);
 
   /** Promote a pending pointer-down to an active drag once the pointer has
    *  travelled >5px. If the pointer comes up first, treat it as a click. */
@@ -1986,7 +1970,7 @@ export function GraphToolbar({
         <Info className="h-3 w-3 mt-0.5 shrink-0" />
         <span>
           {showSearch && <><b>Search</b> matches node labels. </>}
-          {showSort && <><b>Sort</b> re-orders each parent's children. </>}
+          {showSort && <><b>Sort</b> re-orders each parent&apos;s children. </>}
           {showFilter && <><b>Tags / smart filter</b> mark which nodes match; </>}
           {showFilter && <><b>Dim</b> fades non-matches in place, <b>Hide</b> removes them from the tree.</>}
         </span>
@@ -2003,7 +1987,6 @@ const components_graph_useGraphFilterRaw = `/**
 import { useMemo } from "react";
 import type { GraphFilterState, GraphPredicate } from "./types";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface FilterableNode {
   id: string;
   label: string;
