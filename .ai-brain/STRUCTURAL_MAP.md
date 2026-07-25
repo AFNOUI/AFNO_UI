@@ -377,7 +377,7 @@ Schema invariants (validated in `afnoui-cli/src/lib/helpers/registryShape.ts`):
 | Variant `files[].path` | logical relative path inside the variant alias root (e.g. `kanban/<slug>/Board.tsx`) | every variant JSON |
 | Variant `files[].content` | full TSX/TS source with imports **already rewritten to relative** (CLI skips its alias-rewriter for charts/tables/kanban variants — see THE_DECISION_LOG 1.12) | charts + tables + kanban variants |
 
-The CLI never imports these JSONs from disk in the consumer’s project — it always fetches them from `getRegistryUrl()` (`afnoui-cli/src/lib/constants.ts`): `AFNOUI_REGISTRY_URL` override wins, else `http://localhost:3000/registry` when `NODE_ENV=development`, else the production CDN `https://afnoui.aniketrouniyar.com.np/registry`.
+The CLI never imports these JSONs from disk in the consumer’s project — it always fetches them from `getRegistryUrl()` (`afnoui-cli/src/lib/constants.ts`): `AFNOUI_REGISTRY_URL` override wins, else `http://localhost:3000/registry` when `NODE_ENV=development`, else the production CDN `https://afnoui.com/registry`.
 
 ---
 

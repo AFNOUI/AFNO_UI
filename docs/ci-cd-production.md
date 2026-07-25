@@ -208,7 +208,7 @@ Global Options:
   --force               Force overwrite existing files
 
 ────────────────────────────────────────────────────────────────────
-📚 Documentation: https://afnoui.aniketrouniyar.com.np/docs
+📚 Documentation: https://afnoui.com/docs
 💬 Support: https://github.com/afnoui/afnoui/issues
 ```
 
@@ -394,7 +394,7 @@ After running `afnoui init`, a `afnoui.json` file is created:
 In `afnoui-cli/src/index.tsx`, update the default registry URL:
 
 ```typescript
-const DEFAULT_REGISTRY = "https://afnoui.aniketrouniyar.com.np/registry";
+const DEFAULT_REGISTRY = "https://afnoui.com/registry";
 ```
 
 ### 2. Build CLI
