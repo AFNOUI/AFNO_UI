@@ -25,6 +25,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { AfnoMark } from "@/components/brand/afno-mark";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
@@ -86,7 +87,8 @@ const NAV_SECTIONS = [
       { id: "kanban", name: "Kanban Variants", icon: <Kanban size={16} />, path: "/kanban" },
       { id: "trees", name: "Tree Variants", icon: <Network size={16} />, path: "/trees" },
       { id: "schema-engine", name: "Schema Engine", icon: <Database size={16} />, path: "/schema-engine" },
-      { id: "dashboard", name: "Dashboard", icon: <LayoutDashboard size={16} />, path: "/dashboard" },
+      // Dashboard page not yet complete — re-enable when implemented.
+      // { id: "dashboard", name: "Dashboard", icon: <LayoutDashboard size={16} />, path: "/dashboard" },
       { id: "galleries", name: "Galleries", icon: <ImageIcon size={16} />, path: "/galleries" },
     ],
   },
@@ -172,12 +174,14 @@ function SidebarContent({ collapsed = false, railCollapse }: SidebarContentProps
           collapsed ? "justify-center px-0" : "gap-3 px-2"
         )}
       >
-        <div className="p-2 bg-primary rounded-xl text-primary-foreground shadow-lg shrink-0 ring-1 ring-primary/20">
-          <Sparkles size={collapsed ? 16 : 20} aria-hidden />
+        <div className="rounded-xl bg-foreground/[0.04] p-1.5 shadow-lg shrink-0 ring-1 ring-border">
+          <AfnoMark size={collapsed ? 22 : 28} />
         </div>
         {!collapsed && (
           <div className="min-w-0 flex-1 pr-1">
-            <h1 className="truncate text-xl font-black tracking-tight">Afno UI</h1>
+            <h1 className="truncate text-xl font-black tracking-tight">
+              Afno<span className="text-primary">UI</span>
+            </h1>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
               Component System
             </p>

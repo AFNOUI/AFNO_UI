@@ -2,10 +2,8 @@ import type { Metadata } from "next";
 
 import { routeMeta } from "@/lib/seo";
 
-import { ChartsChrome } from "./ChartsChrome";
-
-export const metadata: Metadata = routeMeta("/charts");
+export const metadata: Metadata = routeMeta("/lab");
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <ChartsChrome>{children}</ChartsChrome>;
+  return <>{children}</>;
 }

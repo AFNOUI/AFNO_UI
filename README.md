@@ -1,4 +1,28 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<p align="center">
+  <img src="https://afnoui.com/brand/afno-banner.svg" alt="AfnoUI" width="100%">
+</p>
+
+<h1 align="center">AfnoUI</h1>
+
+<p align="center">
+  Open-source, registry-driven React + TypeScript component library with visual
+  builders (form, UI, table, kanban, tree), a chart library, and a live theme lab.
+  <br>
+  <a href="https://afnoui.com"><b>afnoui.com</b></a> ·
+  <a href="https://www.npmjs.com/package/afnoui">npm</a> ·
+  <a href="https://reddit.com/user/AfnoUI">Reddit</a> ·
+  <a href="https://instagram.com/afno.ui">Instagram</a>
+</p>
+
+```bash
+npx afnoui init          # set up Tailwind, tokens, and the design system
+npx afnoui add button    # copy components into your project (you own the source)
+```
+
+This repo contains the AfnoUI web app + registry (Next.js 15 / React 19 /
+Tailwind v4) and the `afnoui` CLI (under `afnoui-cli/`). Brand assets live in
+[`brand/`](./brand/). See [`AGENTS.md`](./AGENTS.md) and `.ai-brain/` for
+architecture.
 
 ## Getting Started
 

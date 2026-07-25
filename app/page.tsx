@@ -16,7 +16,6 @@ import {
   Palette,
   Database,
   Terminal,
-  Sparkles,
   FileText,
   FormInput,
   GitBranch,
@@ -25,7 +24,6 @@ import {
   ArrowRight,
   CheckCircle2,
   MousePointer2,
-  LayoutDashboard,
 } from "lucide-react";
 
 import { useTheme } from "@/contexts/ThemeContext";
@@ -36,6 +34,9 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { siteConfig } from "@/lib/seo/config";
+import { siteNav } from "@/lib/seo/content";
+import { AfnoMark } from "@/components/brand/afno-mark";
 import { ScrollToTopButton } from "@/components/shared/ScrollToTopButton";
 
 const features = [
@@ -63,21 +64,22 @@ const features = [
     description:
       "Pre-built form examples: contact, login, payment, survey, multi-step, and more — same JSON field config with React Hook Form, TanStack Form, or ActionForm (`npx afnoui form init --stack …`).",
   },
-  {
-    href: "/dashboard",
-    title: "Dashboard",
-    icon: LayoutDashboard,
-    badges: ["Stats Cards", "Data Table", "Activity"],
-    description:
-      "Analytics dashboard with stats cards, data tables, recent activity feed, and quick actions. Complete with responsive layout and charts.",
-  },
+  // TODO: Dashboard page not yet complete — re-enable when implemented.
+  // {
+  //   href: "/dashboard",
+  //   title: "Dashboard",
+  //   icon: LayoutDashboard,
+  //   badges: ["Stats Cards", "Data Table", "Activity"],
+  //   description:
+  //     "Analytics dashboard with stats cards, data tables, recent activity feed, and quick actions. Complete with responsive layout and charts.",
+  // },
   {
     icon: Image,
     title: "Charts & Data Viz",
-    href: "/components/bar-chart",
-    badges: ["4 Chart Types", "25+ Variants", "RTL/LTR"],
+    href: "/charts",
+    badges: ["Zero Deps", "25+ Variants", "RTL/LTR"],
     description:
-      "Bar, Line, Pie, and Area charts with 25+ variants — hover tooltips, gradient fills, sparklines, exploded slices, and full RTL/LTR support.",
+      "Bar, Line, Pie, and Area charts with 25+ variants — hover tooltips, gradient fills, sparklines, and full RTL/LTR support. Built from scratch with no charting library.",
   },
   {
     href: "/lab",
@@ -219,11 +221,11 @@ export default function LandingPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
         <div className="container mx-auto flex items-center justify-between h-14 px-4">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="p-1.5 bg-primary rounded-lg text-primary-foreground">
-              <Sparkles size={18} />
-            </div>
-            <span className="font-black text-lg tracking-tight">Afno UI</span>
+          <Link href="/" className="flex items-center gap-2">
+            <AfnoMark size={30} />
+            <span className="font-black text-lg tracking-tight">
+              Afno<span className="text-primary">UI</span>
+            </span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm">
             <Link
@@ -701,9 +703,76 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      {/* <footer className="border-t border-border py-6">
-      </footer> */}
+      {/* Footer — descriptive sitewide links to every builder (sitelinks signal + UX) */}
+      <footer className="border-t border-border bg-background">
+        <div className="container mx-auto px-4 py-12">
+          <div className="grid gap-8 md:grid-cols-4">
+            <div className="space-y-3">
+              <Link href="/" className="flex items-center gap-2">
+                <AfnoMark size={26} />
+                <span className="font-black text-base tracking-tight">
+                  Afno<span className="text-primary">UI</span>
+                </span>
+              </Link>
+              <p className="text-sm text-muted-foreground max-w-xs">
+                Open-source React + TypeScript component library with visual
+                builders, charts, and a theme lab.
+              </p>
+            </div>
+
+            <nav aria-label="Builders" className="space-y-3">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Builders
+              </h3>
+              <ul className="space-y-2 text-sm">
+                {siteNav.map((item) => (
+                  <li key={item.path}>
+                    <Link
+                      href={item.path}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {item.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            <nav aria-label="Explore" className="space-y-3">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Explore
+              </h3>
+              <ul className="space-y-2 text-sm">
+                <li><Link href="/lab" className="text-muted-foreground hover:text-foreground transition-colors">Component Lab</Link></li>
+                <li><Link href="/forms" className="text-muted-foreground hover:text-foreground transition-colors">Form Templates</Link></li>
+                <li><Link href="/tables" className="text-muted-foreground hover:text-foreground transition-colors">Table Variants</Link></li>
+                <li><Link href="/kanban" className="text-muted-foreground hover:text-foreground transition-colors">Kanban Variants</Link></li>
+                <li><Link href="/trees" className="text-muted-foreground hover:text-foreground transition-colors">Tree Variants</Link></li>
+                {/* Dashboard page not yet complete — re-enable when implemented.
+                <li><Link href="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link></li> */}
+              </ul>
+            </nav>
+
+            <nav aria-label="Resources" className="space-y-3">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Resources
+              </h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href={siteConfig.npm} className="text-muted-foreground hover:text-foreground transition-colors">npm package</a></li>
+                <li><a href={siteConfig.github} className="text-muted-foreground hover:text-foreground transition-colors">GitHub</a></li>
+                <li><a href={siteConfig.social.reddit} className="text-muted-foreground hover:text-foreground transition-colors">Reddit</a></li>
+                <li><a href={siteConfig.social.instagram} className="text-muted-foreground hover:text-foreground transition-colors">Instagram</a></li>
+              </ul>
+            </nav>
+          </div>
+
+          <div className="mt-10 border-t border-border pt-6 text-xs text-muted-foreground">
+            © {siteConfig.name} · Open-source React UI component library, form
+            builder, table builder, kanban builder, tree builder, and chart
+            builder.
+          </div>
+        </div>
+      </footer>
 
       <ScrollToTopButton />
     </div>
