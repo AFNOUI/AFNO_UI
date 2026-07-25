@@ -115,7 +115,7 @@ target exists?
   `safeInstall` skips already-present deps and promotes dev→runtime when needed.
 - **Registry URL** `constants.ts:17 getRegistryUrl`: `AFNOUI_REGISTRY_URL` override →
   `NODE_ENV=development` ⇒ `http://localhost:3000/registry` → else production CDN
-  `https://afnoui.aniketrouniyar.com.np/registry`.
+  `https://afnoui.com/registry`.
 
 ---
 
@@ -264,7 +264,7 @@ Caught during the source scan and **fixed** (see commit alongside this doc):
 
 1. ~~**Registry URL** — `STRUCTURAL_MAP.md` claimed the prod CDN URL is "commented
    out."~~ Corrected: `constants.ts:17 getRegistryUrl` actively returns
-   `https://afnoui.aniketrouniyar.com.np/registry` for non-dev; the dev branch keys
+   `https://afnoui.com/registry` for non-dev; the dev branch keys
    on `NODE_ENV === "development"`; `AFNOUI_REGISTRY_URL` overrides both.
 2. ~~**`lib/dnd` vs `components/dnd`**~~ — Wave-7 moved DnD primitives to
    `components/dnd/*`. Stale **present-tense** mentions were corrected in the

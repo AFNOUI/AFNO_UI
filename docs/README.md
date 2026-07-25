@@ -89,7 +89,7 @@ See [CONFIGURATION.md](./CONFIGURATION.md) for complete configuration guide.
 
 | Environment | Registry URL | Tailwind Setup |
 |-------------|---------------|---------------|
-| **Production** (default) | `https://afnoui.aniketrouniyar.com.np/registry` | Uses `@theme` block in CSS |
+| **Production** (default) | `https://afnoui.com/registry` | Uses `@theme` block in CSS |
 | **Development** | `http://localhost:3000/registry` | Uses `@theme` block in CSS |
 
 To use development mode:
