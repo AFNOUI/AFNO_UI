@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 import { buildRootJsonLd, siteConfig } from "./lib/seo";
+import { GoogleAnalytics } from "./components/GoogleAnalytics";
 import { QueryProvider } from "./providers/QueryProvider";
 import { RtlLayoutProvider } from "./providers/RtlLayoutProvide";
 import { I18nProviderWrapper } from "./providers/I18nextProvider";
@@ -99,6 +100,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <GoogleAnalytics />
         <QueryProvider>
           <RootThemeProvider>
             <TooltipProvider>

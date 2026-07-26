@@ -29,6 +29,11 @@ export const siteConfig = {
     reddit: "https://reddit.com/user/AfnoUI",
     instagram: "https://instagram.com/afno.ui",
   },
+  // Google Analytics 4 Measurement ID (e.g. "G-XXXXXXXXXX"). Set
+  // NEXT_PUBLIC_GA_ID to enable; the analytics script renders only when set.
+  analytics: {
+    gaId: process.env.NEXT_PUBLIC_GA_ID ?? "G-RKX60W5B2Q",
+  },
   // Search-engine site verification. Paste the codes as env vars (or inline the
   // strings here). Each renders its <meta> tag only when set — see
   // docs/SEO_CHECKLIST.md for where to get them.
