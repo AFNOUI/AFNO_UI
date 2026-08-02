@@ -18,7 +18,7 @@ export interface TreeOptionalGroup {
   files: TreeRegistryFile[];
 }
 
-export const treeRegistryGeneratedAt = "2026-07-26T15:52:57.890Z";
+export const treeRegistryGeneratedAt = "2026-08-02T12:12:36.605Z";
 
 export const treeInstall = {
   "npmDependencies": [
@@ -1545,7 +1545,7 @@ export type TreeLayout =
 export type NodeShape = "rect" | "rounded" | "pill" | "diamond" | "circle";
 
 /* ----------------------------------------------------------------
- * Render-function node API (shadcn DataTable cell-def style).
+ * Render-function node API (AfnoUI DataTable cell-def style).
  * ----------------------------------------------------------------
  * Two-level resolution at render time:
  *   1. node.meta.render — per-node override   (highest priority)
@@ -1689,7 +1689,7 @@ export interface TreeCanvasConfig {
   /** Show the GraphToolbar (search / sort / filter) above the canvas in Preview. */
   showToolbar?: boolean;
   /**
-   * Flow-wide reusable node renderer (shadcn DataTable column-def style).
+   * Flow-wide reusable node renderer (AfnoUI DataTable column-def style).
    * Every node uses this unless it sets its own \`meta.render\`. When neither
    * is set, the built-in default body (label + description) is used.
    */
@@ -1795,7 +1795,7 @@ const components_graph_indexRaw = `/**
  * src/lib/graph — shared utilities for tree + flow canvases.
  *
  * Provides a search/sort/filter toolbar, a per-node dataset table, and the
- * underlying filter hook. Used by /tree-builder, /flow and /flow-builder.
+ * underlying filter hook. Shipped with tree variants that enable the toolbar.
  */
 export {
   defaultGraphFilter,

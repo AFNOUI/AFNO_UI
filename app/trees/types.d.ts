@@ -17,7 +17,7 @@ export type TreeLayout =
 export type NodeShape = "rect" | "rounded" | "pill" | "diamond" | "circle";
 
 /* ----------------------------------------------------------------
- * Render-function node API (shadcn DataTable cell-def style).
+ * Render-function node API (AfnoUI DataTable cell-def style).
  * ----------------------------------------------------------------
  * Two-level resolution at render time:
  *   1. node.meta.render — per-node override   (highest priority)
@@ -161,7 +161,7 @@ export interface TreeCanvasConfig {
   /** Show the GraphToolbar (search / sort / filter) above the canvas in Preview. */
   showToolbar?: boolean;
   /**
-   * Flow-wide reusable node renderer (shadcn DataTable column-def style).
+   * Flow-wide reusable node renderer (AfnoUI DataTable column-def style).
    * Every node uses this unless it sets its own `meta.render`. When neither
    * is set, the built-in default body (label + description) is used.
    */

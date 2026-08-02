@@ -23,7 +23,7 @@ export function getAfnouiAddCommand(
   }
 }
 
-/** Scaffold `afnoui.json` + base shadcn-style UI the chart snippets assume (`cn`, button, card, …). */
+/** Scaffold `afnoui.json` + base AfnoUI primitives the chart snippets assume (`cn`, button, card, …). */
 export function getAfnouiInitCommand(pm: PackageManager): string {
   switch (pm) {
     case "npm":

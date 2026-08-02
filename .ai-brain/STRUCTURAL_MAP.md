@@ -109,9 +109,9 @@ app/
 ### 2.2 Component layers
 ```
 app/components/
-├── ui/                          ← Owned shadcn/Radix primitives. THIS is the registry surface.
+├── ui/                          ← Owned AfnoUI/Radix primitives. THIS is the registry surface.
 │   ├── button.tsx, card.tsx, dialog.tsx, ...      ← ~51 primitives.
-│   ├── form.tsx, form-primitives.tsx              ← shadcn Form glue.
+│   ├── form.tsx, form-primitives.tsx              ← AfnoUI Form glue.
 │   ├── chart-primitives.tsx                       ← Recharts wrapper (RTL/LTR-aware).
 │   ├── charts/<type>.tsx                          ← Per-chart-type wrappers.
 │   ├── dnd/                                       ← Custom Pointer DnD library.
@@ -545,7 +545,7 @@ tests/
 | Type-only module | `types.ts` (per directory) | `app/kanban/types.ts` |
 | Page route | `page.tsx` (Next App Router rule) | `app/(pages)/kanban/page.tsx` |
 | Layout route | `layout.tsx` | `app/layout.tsx` |
-| shadcn primitive | `kebab-case.tsx` (matching shadcn registry) | `alert-dialog.tsx`, `dropdown-menu.tsx` |
+| AfnoUI primitive | `kebab-case.tsx` (matching the AfnoUI registry) | `alert-dialog.tsx`, `dropdown-menu.tsx` |
 | Variant TSX in `app/registry/` | `kebab-case.tsx` (matches registry slug) | `card-event.tsx`, `forms-contact.tsx` |
 | Build script | `kebab-case.ts` | `build-kanban-registry.ts` |
 | Test file | `<sourceBaseName>.test.ts` | `tableCodeGenerator.test.ts` |

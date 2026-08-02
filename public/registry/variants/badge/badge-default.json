@@ -4,7 +4,7 @@
   "variant": "badge-default",
   "files": [
     {
-      "path": "components/ui/badge/badge-default.tsx",
+      "path": "ui-variants/badge/badge-default.tsx",
       "type": "registry:variant",
       "content": "import React from \"react\";\nimport { Badge } from \"@/components/ui/badge\";\n\nconst data = [\n  {\n    \"text\": \"Default\"\n  }\n];\n\nexport default function BadgeDefaultExample() {\n  return (\n    <div className=\"flex flex-wrap gap-3\">\n      {data.map((item, index) => (\n        <Badge key={index}>{item.text}</Badge>\n      ))}\n    </div>\n  );\n}"
     }

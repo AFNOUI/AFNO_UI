@@ -19,7 +19,7 @@
 
 ## 1. The 30-second model
 
-AfnoUI is a **shadcn-style "copy-in" distributor**: it does not publish a runtime
+AfnoUI is a **"copy-in" distributor**: it does not publish a runtime
 package consumers import from. It *writes source files into the consumer's repo*
 and lets them own the code. Four layers, decoupled on purpose:
 

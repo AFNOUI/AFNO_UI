@@ -57,7 +57,52 @@ type VariantRegistryItem = {
   stacks?: Record<string, VariantRegistryItemFile[]>;
   /** Optional engine feature groups this variant needs (e.g. `["toolbar"]`). */
   features?: string[];
+  /**
+   * Bare npm packages the variant's own files import (e.g. `axios`, `zod`,
+   * `@tanstack/react-query`). The CLI installs these on `afnoui add <cat>/<slug>`;
+   * without them a variant lands with unresolved imports in a project that never
+   * ran the matching engine `init`. React/Next are excluded — they are guaranteed
+   * by the host framework.
+   */
+  npmDependencies?: string[];
 };
+
+/** npm package name grammar (scoped + unscoped), used to reject false positives. */
+const VALID_PACKAGE_NAME = /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
+
+/** Packages every consumer project already has by definition — never emitted as a variant dep. */
+const FRAMEWORK_PROVIDED_PACKAGES = new Set(["react", "react-dom", "next"]);
+
+/**
+ * Collect the bare npm packages a variant's files import. Relative paths and the
+ * `@/…` project alias are skipped; scoped packages keep their first two segments
+ * (`@tanstack/react-query`), unscoped keep the first (`embla-carousel-autoplay`).
+ */
+function detectNpmDependencies(item: VariantRegistryItem): string[] {
+  const files = [...item.files, ...Object.values(item.stacks ?? {}).flat()];
+  const found = new Set<string>();
+  for (const file of files) {
+    // `[^"'\n]` matters: variant content embeds template literals and JSON blobs, so a
+    // greedy match can span lines and yield garbage like `",\n  "` (seen in tree variants).
+    for (const match of file.content.matchAll(/(?:from|import)\s*\(?\s*["']([^"'\n]+)["']/g)) {
+      const spec = match[1].trim();
+      if (spec.startsWith(".") || spec.startsWith("/") || spec.startsWith("@/") || spec.startsWith("~")) continue;
+      const pkg = spec.startsWith("@") ? spec.split("/").slice(0, 2).join("/") : spec.split("/")[0];
+      if (!pkg || FRAMEWORK_PROVIDED_PACKAGES.has(pkg)) continue;
+      // Only real npm package names — anything else is a false positive from embedded content.
+      if (!VALID_PACKAGE_NAME.test(pkg)) continue;
+      found.add(pkg);
+    }
+  }
+  return [...found].sort();
+}
+
+/** Attach detected npm deps (omitting the key when there are none) and write the variant JSON. */
+function writeVariantJson(targetPath: string, item: VariantRegistryItem): void {
+  const npmDependencies = detectNpmDependencies(item);
+  const payload: VariantRegistryItem = npmDependencies.length > 0 ? { ...item, npmDependencies } : item;
+  fs.writeFileSync(targetPath, JSON.stringify(payload, null, 2));
+}
 
 const REGISTRY_ROOT = path.join(process.cwd(), "public", "registry", "variants");
 const APP_REGISTRY_ROOT = path.join(process.cwd(), "app", "registry");
@@ -245,7 +290,12 @@ async function buildVariantsRegistry() {
         continue;
       }
 
-      const singleFilePath = `components/ui/${category}/${variantSlug}.tsx`;
+      // Lab primitive demos are USER-owned files: they must not land inside
+      // `components/ui`, which holds only the managed primitives the CLI refreshes
+      // on every install. `ui-variants/<primitive>/<slug>.tsx` → `aliases.uiVariants`
+      // (e.g. `app/ui-variants/badge/badge-outline.tsx`), mirroring how tables/
+      // kanban/tree/dnd/charts variants sit outside their engines. See R-40.
+      const singleFilePath = `ui-variants/${category}/${variantSlug}.tsx`;
       const files: VariantRegistryItemFile[] = [
         {
           path: singleFilePath,
@@ -268,7 +318,7 @@ async function buildVariantsRegistry() {
     }
 
     const targetPath = path.join(targetDir, `${variantSlug}.json`);
-    fs.writeFileSync(targetPath, JSON.stringify(item, null, 2));
+    writeVariantJson(targetPath, item);
     index.add(variantName);
   }
 
@@ -297,7 +347,7 @@ async function buildVariantsRegistry() {
       })),
     };
     const targetPath = path.join(tablesVariantRoot, `${variantSlug}.json`);
-    fs.writeFileSync(targetPath, JSON.stringify(item, null, 2));
+    writeVariantJson(targetPath, item);
     index.add(variantName);
   }
 
@@ -327,7 +377,7 @@ async function buildVariantsRegistry() {
       })),
     };
     const targetPath = path.join(kanbanVariantRoot, `${variantSlug}.json`);
-    fs.writeFileSync(targetPath, JSON.stringify(item, null, 2));
+    writeVariantJson(targetPath, item);
     index.add(variantName);
   }
 
@@ -367,7 +417,7 @@ async function buildVariantsRegistry() {
       ...(features.length ? { features } : {}),
     };
     const targetPath = path.join(treeVariantRoot, `${variantSlug}.json`);
-    fs.writeFileSync(targetPath, JSON.stringify(item, null, 2));
+    writeVariantJson(targetPath, item);
     index.add(variantName);
   }
 
@@ -398,7 +448,7 @@ async function buildVariantsRegistry() {
       };
 
       const targetPath = path.join(typeDir, `${variant.value}.json`);
-      fs.writeFileSync(targetPath, JSON.stringify(item, null, 2));
+      writeVariantJson(targetPath, item);
       index.add(variantName);
     }
   }
@@ -432,7 +482,7 @@ async function buildVariantsRegistry() {
     };
 
     const targetPath = path.join(dndVariantRoot, `${source.slug}.json`);
-    fs.writeFileSync(targetPath, JSON.stringify(item, null, 2));
+    writeVariantJson(targetPath, item);
     index.add(variantName);
   }
 

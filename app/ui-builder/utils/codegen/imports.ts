@@ -5,7 +5,7 @@
  * `buildImports` then emits the correct `import { … } from "@/…"` lines.
  *
  * Groupings are intentional:
- *   - `shadcn`      : `@/components/ui/<file>` — multiple symbols per file are
+ *   - `ui`          : `@/components/ui/<file>` — multiple symbols per file are
  *                     collapsed into a single import line.
  *   - `charts`      : shared `@/components/ui/charts` barrel — always one line.
  *   - `lucide`      : reserved for future use by renderers that want icons; no
@@ -14,21 +14,21 @@
  */
 
 export interface ImportTracker {
-    shadcn: Set<string>;
+    ui: Set<string>;
     lucide: Set<string>;
     charts: Set<string>;
 }
 
 export function createImportTracker(): ImportTracker {
-    return { shadcn: new Set(), lucide: new Set(), charts: new Set() };
+    return { ui: new Set(), lucide: new Set(), charts: new Set() };
 }
 
 /**
- * Map every shadcn component symbol to the file it re-exports from. This is
- * purely for CLI-shadcn-style alias resolution: each file maps to
+ * Map every AfnoUI component symbol to the file it re-exports from. This is
+ * purely for CLI alias resolution: each file maps to
  * `@/components/ui/<file>`.
  */
-const SHADCN_COMPONENT_FILE_MAP: Record<string, string> = {
+const AFNOUI_COMPONENT_FILE_MAP: Record<string, string> = {
     Button: "button", Card: "card", CardContent: "card", CardHeader: "card", CardTitle: "card",
     Badge: "badge", Separator: "separator", Input: "input", Textarea: "textarea",
     Label: "label", Checkbox: "checkbox", Switch: "switch", Progress: "progress",
@@ -44,13 +44,13 @@ const SHADCN_COMPONENT_FILE_MAP: Record<string, string> = {
 
 export function buildImports(imports: ImportTracker): string {
     const lines: string[] = [];
-    const shadcnGroups: Record<string, string[]> = {};
-    for (const comp of imports.shadcn) {
-        const file = SHADCN_COMPONENT_FILE_MAP[comp] || comp.toLowerCase();
-        if (!shadcnGroups[file]) shadcnGroups[file] = [];
-        shadcnGroups[file].push(comp);
+    const uiGroups: Record<string, string[]> = {};
+    for (const comp of imports.ui) {
+        const file = AFNOUI_COMPONENT_FILE_MAP[comp] || comp.toLowerCase();
+        if (!uiGroups[file]) uiGroups[file] = [];
+        uiGroups[file].push(comp);
     }
-    for (const [file, comps] of Object.entries(shadcnGroups)) {
+    for (const [file, comps] of Object.entries(uiGroups)) {
         lines.push(`import { ${comps.join(", ")} } from "@/components/ui/${file}";`);
     }
     if (imports.charts.size > 0) {

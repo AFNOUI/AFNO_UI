@@ -10,7 +10,7 @@ exports[`generateCleanCode > collapses heading without a level prop to the defau
 }"
 `;
 
-exports[`generateCleanCode > deduplicates and groups shadcn imports by source file (card, button, separator) 1`] = `
+exports[`generateCleanCode > deduplicates and groups AfnoUI component imports by source file (card, button, separator) 1`] = `
 "import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -76,7 +76,7 @@ export default function Page() {
 }"
 `;
 
-exports[`generateCleanCode > renders a simple text-only page without any shadcn imports 1`] = `
+exports[`generateCleanCode > renders a simple text-only page without any AfnoUI component imports 1`] = `
 "export default function Page() {
   return (
     <div className="min-h-screen">

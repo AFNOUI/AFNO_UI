@@ -2,7 +2,7 @@
  * src/lib/graph — shared utilities for tree + flow canvases.
  *
  * Provides a search/sort/filter toolbar, a per-node dataset table, and the
- * underlying filter hook. Used by /tree-builder, /flow and /flow-builder.
+ * underlying filter hook. Shipped with tree variants that enable the toolbar.
  */
 export {
   defaultGraphFilter,
