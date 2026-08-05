@@ -2,6 +2,22 @@ export type PackageManager = "npm" | "pnpm" | "yarn" | "bun";
 
 export const PACKAGE_MANAGERS: PackageManager[] = ["npm", "pnpm", "yarn", "bun"];
 
+/** How each package manager runs a package binary without installing it. */
+const PACKAGE_RUNNERS: Record<PackageManager, string> = {
+  npm: "npx",
+  pnpm: "pnpm dlx",
+  yarn: "yarn dlx",
+  bun: "bunx",
+};
+
+/**
+ * Any `afnoui <args>` command across package managers — the general form the
+ * more specific helpers below are built on.
+ */
+export function getAfnouiCommand(pm: PackageManager, args: string): string {
+  return `${PACKAGE_RUNNERS[pm]} afnoui ${args}`;
+}
+
 /** `afnoui add <category>/<variant>` across package managers (matches ComponentInstall). */
 export function getAfnouiAddCommand(
   pm: PackageManager,
@@ -10,31 +26,12 @@ export function getAfnouiAddCommand(
   installArgs = "",
 ): string {
   const componentPath = `${category}/${variant}`;
-  const tail = `${componentPath}${installArgs}`;
-  switch (pm) {
-    case "npm":
-      return `npx afnoui add ${tail}`;
-    case "pnpm":
-      return `pnpm dlx afnoui add ${tail}`;
-    case "yarn":
-      return `yarn dlx afnoui add ${tail}`;
-    case "bun":
-      return `bunx afnoui add ${tail}`;
-  }
+  return getAfnouiCommand(pm, `add ${componentPath}${installArgs}`);
 }
 
 /** Scaffold `afnoui.json` + base AfnoUI primitives the chart snippets assume (`cn`, button, card, …). */
 export function getAfnouiInitCommand(pm: PackageManager): string {
-  switch (pm) {
-    case "npm":
-      return "npx afnoui init";
-    case "pnpm":
-      return "pnpm dlx afnoui init";
-    case "yarn":
-      return "yarn dlx afnoui init";
-    case "bun":
-      return "bunx afnoui init";
-  }
+  return getAfnouiCommand(pm, "init");
 }
 
 /**
@@ -46,14 +43,5 @@ export function getAfnouiInitCommand(pm: PackageManager): string {
  * tailwind-merge) without having to run `afnoui add dnd/<variant>` first.
  */
 export function getAfnouiDndInitCommand(pm: PackageManager): string {
-  switch (pm) {
-    case "npm":
-      return "npx afnoui init --dnd";
-    case "pnpm":
-      return "pnpm dlx afnoui init --dnd";
-    case "yarn":
-      return "yarn dlx afnoui init --dnd";
-    case "bun":
-      return "bunx afnoui init --dnd";
-  }
+  return getAfnouiCommand(pm, "init --dnd");
 }

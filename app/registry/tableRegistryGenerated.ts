@@ -11,7 +11,7 @@ export interface TableRegistryFile {
   description: string;
 }
 
-export const tableRegistryGeneratedAt = "2026-08-02T12:12:36.208Z";
+export const tableRegistryGeneratedAt = "2026-08-05T09:28:33.029Z";
 
 export const tableInstall = {
   "npmDependencies": [

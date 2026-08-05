@@ -4,32 +4,32 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, type ReactNode } from "react";
 import {
-  Flag, Folder, Trash2, ArrowLeftRight,
-  ChevronRight, ChevronDown, Menu, Home, Search,
+  Layers, ToggleLeft,
+  ChevronsRight, BarChart3,
+  Kanban, Network, Workflow,
+  SlidersHorizontal, PanelTop,
+  ChevronRight, ChevronDown, Home,
+  Menu, Flag, Folder, Trash2, ArrowLeftRight,
   Table2, Table, Database, MoveHorizontal, ListOrdered,
-  ChevronsRight, MousePointer2, CreditCard, List, Globe,
-  AlertCircle, Square, AlertTriangle, PanelLeft, BarChart3,
+  ChevronsLeft, Image as ImageIcon, FileText, CircleDot,
   LayoutDashboard, FormInput, Sparkles, Sun, Moon, ToggleRight,
-  GalleryHorizontal, Layers, Info, TextCursorInput, ToggleLeft,
-  SlidersHorizontal, PanelTop, Command, ListFilter, Navigation,
-  ChevronsLeft, Image as ImageIcon, FileText, CheckSquare, CircleDot,
-  PanelLeftClose, Maximize2, Loader2, ScrollText, Minus, PanelRightOpen, Kanban,
-  Network, Workflow,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
+import { COMPONENT_PAGES } from "@/lib/nav/componentPages";
 
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { AfnoMark } from "@/components/brand/afno-mark";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { TooltipContent, TooltipTrigger, Tooltip, TooltipProvider } from "@/components/ui/tooltip";
+
+import { AfnoMark } from "@/components/brand/afno-mark";
 
 type SidebarItem = { id: string; name: string; icon: ReactNode; path: string };
 
@@ -72,26 +72,43 @@ const NAV_SECTIONS = [
     title: "Lab",
     items: [
       { id: "lab", name: "UI Lab", icon: <Home size={16} />, path: "/lab" },
+    ],
+  },
+  {
+    title: "Builders",
+    items: [
       // { id: "ui-builder", name: "UI Builder", icon: <LayoutPanelTop size={16} />, path: "/ui-builder" },
       { id: "form-builder", name: "Form Builder", icon: <FileText size={16} />, path: "/form-builder" },
       { id: "table-builder", name: "Table Builder", icon: <Table2 size={16} />, path: "/table-builder" },
-      {id:"kanban-builder", name: "Kanban Builder", icon: <Kanban size={16} />, path: "/kanban-builder" },
+      { id: "kanban-builder", name: "Kanban Builder", icon: <Kanban size={16} />, path: "/kanban-builder" },
       { id: "tree-builder", name: "Tree Builder", icon: <Workflow size={16} />, path: "/tree-builder" },
     ],
   },
   {
-    title: "Layouts",
+    title: "Variants",
     items: [
       { id: "forms", name: "Form Variants", icon: <FormInput size={16} />, path: "/forms" },
       { id: "tables", name: "Table Variants", icon: <Table size={16} />, path: "/tables" },
       { id: "kanban", name: "Kanban Variants", icon: <Kanban size={16} />, path: "/kanban" },
       { id: "trees", name: "Tree Variants", icon: <Network size={16} />, path: "/trees" },
-      { id: "schema-engine", name: "Schema Engine", icon: <Database size={16} />, path: "/schema-engine" },
-      // Dashboard page not yet complete — re-enable when implemented.
-      // { id: "dashboard", name: "Dashboard", icon: <LayoutDashboard size={16} />, path: "/dashboard" },
-      { id: "galleries", name: "Galleries", icon: <ImageIcon size={16} />, path: "/galleries" },
     ],
   },
+  {
+    // Structured-data tooling: schema design today, JSON↔CSV/YAML/… converters next.
+    title: "Data Tools",
+    items: [
+      { id: "schema-engine", name: "Schema Engine", icon: <Database size={16} />, path: "/schema-engine" },
+      // { id: "data-studio", name: "Data Converter", icon: <ArrowLeftRight size={16} />, path: "/data-converter" },
+    ],
+  },
+  // Layouts section hidden until Galleries ships — re-enable with the Galleries page.
+  // {
+  //   title: "Layouts",
+  //   items: [
+  //     { id: "galleries", name: "Galleries", icon: <ImageIcon size={16} />, path: "/galleries" },
+  //     { id: "dashboard", name: "Dashboard", icon: <LayoutDashboard size={16} />, path: "/dashboard" },
+  //   ],
+  // },
   {
     title: "DnD Variants",
     items: DND_SIDEBAR_ITEMS,
@@ -102,41 +119,9 @@ const NAV_SECTIONS = [
   },
   {
     title: "Components",
-    items: [
-      { id: "accordion", name: "Accordion", icon: <List size={16} />, path: "/components/accordion" },
-      { id: "alert", name: "Alert", icon: <AlertCircle size={16} />, path: "/components/alert" },
-      { id: "alert-dialog", name: "Alert Dialog", icon: <AlertTriangle size={16} />, path: "/components/alert-dialog" },
-      { id: "async-fields", name: "Async Fields", icon: <Globe size={16} />, path: "/components/async-fields" },
-      { id: "badge", name: "Badge", icon: <Square size={16} />, path: "/components/badge" },
-      { id: "breadcrumb", name: "Breadcrumb", icon: <Navigation size={16} />, path: "/components/breadcrumb" },
-      { id: "button", name: "Button", icon: <MousePointer2 size={16} />, path: "/components/button" },
-      { id: "card", name: "Card", icon: <CreditCard size={16} />, path: "/components/card" },
-      { id: "carousel", name: "Carousel", icon: <GalleryHorizontal size={16} />, path: "/components/carousel" },
-      { id: "checkbox", name: "Checkbox", icon: <CheckSquare size={16} />, path: "/components/checkbox" },
-      { id: "collapsible", name: "Collapsible", icon: <PanelLeftClose size={16} />, path: "/components/collapsible" },
-      { id: "combobox", name: "Combobox", icon: <ListFilter size={16} />, path: "/components/combobox" },
-      { id: "command", name: "Command", icon: <Command size={16} />, path: "/components/command" },
-      { id: "composite-input", name: "Composite Input", icon: <Search size={16} />, path: "/components/composite-input" },
-      { id: "dialog", name: "Dialog", icon: <Layers size={16} />, path: "/components/dialog" },
-      { id: "dropdown", name: "Dropdown", icon: <ChevronDown size={16} />, path: "/components/dropdown" },
-      { id: "form", name: "Form", icon: <FileText size={16} />, path: "/components/form" },
-      { id: "infinite-fields", name: "Infinite Fields", icon: <Loader2 size={16} />, path: "/components/infinite-fields" },
-      { id: "input", name: "Input", icon: <TextCursorInput size={16} />, path: "/components/input" },
-      { id: "menubar", name: "Menubar", icon: <Menu size={16} />, path: "/components/menubar" },
-      { id: "navigation-menu", name: "Navigation Menu", icon: <PanelLeft size={16} />, path: "/components/navigation-menu" },
-      { id: "popover", name: "Popover", icon: <Maximize2 size={16} />, path: "/components/popover" },
-      { id: "progress", name: "Progress", icon: <Loader2 size={16} />, path: "/components/progress" },
-      { id: "radio", name: "Radio Group", icon: <CircleDot size={16} />, path: "/components/radio" },
-      { id: "scroll-area", name: "Scroll Area", icon: <ScrollText size={16} />, path: "/components/scroll-area" },
-      { id: "select", name: "Select", icon: <ChevronDown size={16} />, path: "/components/select" },
-      { id: "separator", name: "Separator", icon: <Minus size={16} />, path: "/components/separator" },
-      { id: "sheet", name: "Sheet", icon: <PanelRightOpen size={16} />, path: "/components/sheet" },
-      { id: "slider", name: "Slider", icon: <SlidersHorizontal size={16} />, path: "/components/slider" },
-      { id: "switch", name: "Switch", icon: <ToggleLeft size={16} />, path: "/components/switch" },
-      { id: "tabs", name: "Tabs", icon: <PanelTop size={16} />, path: "/components/tab" },
-      { id: "toggle", name: "Toggle", icon: <ToggleRight size={16} />, path: "/components/toggle" },
-      { id: "tooltip", name: "Tooltip", icon: <Info size={16} />, path: "/components/tooltip" },
-    ],
+    // Source of truth lives in `app/lib/nav/componentPages.tsx` so the
+    // `/components` index and this sidebar can never list different pages.
+    items: COMPONENT_PAGES,
   },
 ];
 
@@ -153,7 +138,8 @@ function SidebarContent({ collapsed = false, railCollapse }: SidebarContentProps
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [openSections, setOpenSections] = useState<string[]>(["Lab", "Layouts", "DnD Variants", "Charts", "Components"]);
+  // "DnD Variants" and "Charts" are long lists — collapsed by default.
+  const [openSections, setOpenSections] = useState<string[]>(["Lab", "Builders", "Variants", "Data Tools", "Components"]);
 
   useEffect(() => {
     setMounted(true);
@@ -174,19 +160,28 @@ function SidebarContent({ collapsed = false, railCollapse }: SidebarContentProps
           collapsed ? "justify-center px-0" : "gap-3 px-2"
         )}
       >
-        <div className="rounded-xl bg-foreground/[0.04] p-1.5 shadow-lg shrink-0 ring-1 ring-border">
-          <AfnoMark size={collapsed ? 22 : 28} />
-        </div>
-        {!collapsed && (
-          <div className="min-w-0 flex-1 pr-1">
-            <h1 className="truncate text-xl font-black tracking-tight">
-              Afno<span className="text-primary">UI</span>
-            </h1>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-              Component System
-            </p>
+        <Link
+          href="/"
+          aria-label="AfnoUI home"
+          className={cn(
+            "flex min-w-0 items-center rounded-xl transition-opacity hover:opacity-80",
+            collapsed ? "justify-center" : "gap-3 flex-1"
+          )}
+        >
+          <div className="rounded-xl bg-foreground/[0.04] p-1.5 shadow-lg shrink-0 ring-1 ring-border">
+            <AfnoMark size={collapsed ? 22 : 28} />
           </div>
-        )}
+          {!collapsed && (
+            <div className="min-w-0 flex-1 pr-1">
+              <h1 className="truncate text-xl font-black tracking-tight">
+                Afno<span className="text-primary">UI</span>
+              </h1>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                Component System
+              </p>
+            </div>
+          )}
+        </Link>
         {railCollapse && (
           <Tooltip>
             <TooltipTrigger asChild>

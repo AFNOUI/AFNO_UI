@@ -3,8 +3,8 @@
 import { cn } from "@/lib/utils";
 
 import CodePreview from "@/components/lab/CodePreview";
-import { getAfnouiAddCommand } from "@/components/lab/cliInstallCommands";
-import { CliInstallCommandBar } from "@/components/lab/CliInstallCommandBar";
+import { getAfnouiAddCommand } from "@/components/shared/cliInstallCommands";
+import { CliInstallCommandBar } from "@/components/shared/CliInstallCommandBar";
 
 interface ComponentInstallProps {
   code: string;
