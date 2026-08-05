@@ -52,7 +52,7 @@ interface TreeSharedSource {
 interface TreeOptionalGroup {
   /** Feature key a variant opts into (via `config.showToolbar` → `"toolbar"`). */
   feature: string;
-  /** Extra shadcn/ui components this group needs on top of the engine's. */
+  /** Extra AfnoUI components this group needs on top of the engine's. */
   uiComponents: string[];
   /** Extra npm deps this group needs on top of the engine's. */
   npmDependencies: string[];
@@ -75,7 +75,7 @@ const TREE_INSTALL = {
     "tailwind-merge",
   ],
   npmDevDependencies: [] as string[],
-  // TreeCanvas itself needs no shadcn primitive; `badge` is included because the
+  // TreeCanvas itself needs no AfnoUI primitive; `badge` is included because the
   // built-in / template node renderers use it.
   uiComponents: [
     "badge",

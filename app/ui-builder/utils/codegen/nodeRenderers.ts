@@ -26,8 +26,8 @@ export function renderCard(node: BuilderNode, imports: ImportTracker, indent: nu
     const pad = " ".repeat(indent);
     const classes = resolveResponsiveClasses(node.styles);
     const p = node.props;
-    imports.shadcn.add("Card");
-    imports.shadcn.add("CardContent");
+    imports.ui.add("Card");
+    imports.ui.add("CardContent");
     const children = node.children.map((c) => render(c, imports, indent + 4)).join("\n");
     const variantClass = getCardVariantClass(p.variant as string);
     const merged = [variantClass, classes].filter(Boolean).join(" ");
@@ -62,7 +62,7 @@ export function renderButton(node: BuilderNode, imports: ImportTracker, indent: 
     const classes = resolveResponsiveClasses(node.styles);
     const classAttr = classes ? ` className="${classes}"` : "";
     const p = node.props;
-    imports.shadcn.add("Button");
+    imports.ui.add("Button");
     const variant = p.variant !== "default" ? ` variant="${p.variant}"` : "";
     const size = p.size && p.size !== "default" ? ` size="${p.size}"` : "";
     return `${pad}<Button${variant}${size}${classAttr}>${esc(p.text as string)}</Button>`;
@@ -72,7 +72,7 @@ export function renderDivider(node: BuilderNode, imports: ImportTracker, indent:
     const pad = " ".repeat(indent);
     const classes = resolveResponsiveClasses(node.styles);
     const classAttr = classes ? ` className="${classes}"` : "";
-    imports.shadcn.add("Separator");
+    imports.ui.add("Separator");
     return `${pad}<Separator${classAttr} />`;
 }
 
@@ -88,7 +88,7 @@ export function renderBadge(node: BuilderNode, imports: ImportTracker, indent: n
     const classes = resolveResponsiveClasses(node.styles);
     const classAttr = classes ? ` className="${classes}"` : "";
     const p = node.props;
-    imports.shadcn.add("Badge");
+    imports.ui.add("Badge");
     const variant = p.variant !== "default" ? ` variant="${p.variant}"` : "";
     return `${pad}<Badge${variant}${classAttr}>${esc(p.text as string)}</Badge>`;
 }
@@ -117,9 +117,9 @@ export function renderAvatar(node: BuilderNode, imports: ImportTracker, indent: 
     const classes = resolveResponsiveClasses(node.styles);
     const classAttr = classes ? ` className="${classes}"` : "";
     const p = node.props;
-    imports.shadcn.add("Avatar");
-    imports.shadcn.add("AvatarImage");
-    imports.shadcn.add("AvatarFallback");
+    imports.ui.add("Avatar");
+    imports.ui.add("AvatarImage");
+    imports.ui.add("AvatarFallback");
     return `${pad}<Avatar${classAttr}>\n${pad}  <AvatarImage src="${p.src}" />\n${pad}  <AvatarFallback>${esc(p.fallback as string)}</AvatarFallback>\n${pad}</Avatar>`;
 }
 
@@ -128,9 +128,9 @@ export function renderAlert(node: BuilderNode, imports: ImportTracker, indent: n
     const classes = resolveResponsiveClasses(node.styles);
     const classAttr = classes ? ` className="${classes}"` : "";
     const p = node.props;
-    imports.shadcn.add("Alert");
-    imports.shadcn.add("AlertTitle");
-    imports.shadcn.add("AlertDescription");
+    imports.ui.add("Alert");
+    imports.ui.add("AlertTitle");
+    imports.ui.add("AlertDescription");
     const variant = p.variant !== "default" ? ` variant="${p.variant}"` : "";
     return `${pad}<Alert${variant}${classAttr}>\n${pad}  <AlertTitle>${esc(p.title as string)}</AlertTitle>\n${pad}  <AlertDescription>${esc(p.description as string)}</AlertDescription>\n${pad}</Alert>`;
 }
@@ -146,8 +146,8 @@ export function renderProgress(node: BuilderNode, imports: ImportTracker, indent
     const pad = " ".repeat(indent);
     const classes = resolveResponsiveClasses(node.styles);
     const p = node.props;
-    imports.shadcn.add("Progress");
-    imports.shadcn.add("Label");
+    imports.ui.add("Progress");
+    imports.ui.add("Label");
     return `${pad}<div className="space-y-2${classes ? ` ${classes}` : ""}">\n${pad}  <Label>${esc(p.label as string)}</Label>\n${pad}  <Progress value={${p.value}} />\n${pad}</div>`;
 }
 
@@ -164,10 +164,10 @@ export function renderTabsContainer(node: BuilderNode, imports: ImportTracker, i
     const classes = resolveResponsiveClasses(node.styles);
     const classAttr = classes ? ` className="${classes}"` : "";
     const p = node.props;
-    imports.shadcn.add("Tabs");
-    imports.shadcn.add("TabsList");
-    imports.shadcn.add("TabsTrigger");
-    imports.shadcn.add("TabsContent");
+    imports.ui.add("Tabs");
+    imports.ui.add("TabsList");
+    imports.ui.add("TabsTrigger");
+    imports.ui.add("TabsContent");
     const tabs = ((p.tabs as string) || "").split("\n").filter(Boolean);
     return `${pad}<Tabs defaultValue="0"${classAttr}>\n${pad}  <TabsList>\n${tabs.map((t, i) => `${pad}    <TabsTrigger value="${i}">${esc(t)}</TabsTrigger>`).join("\n")}\n${pad}  </TabsList>\n${tabs.map((t, i) => `${pad}  <TabsContent value="${i}">Content for ${esc(t)}</TabsContent>`).join("\n")}\n${pad}</Tabs>`;
 }
@@ -177,10 +177,10 @@ export function renderAccordionContainer(node: BuilderNode, imports: ImportTrack
     const classes = resolveResponsiveClasses(node.styles);
     const classAttr = classes ? ` className="${classes}"` : "";
     const p = node.props;
-    imports.shadcn.add("Accordion");
-    imports.shadcn.add("AccordionItem");
-    imports.shadcn.add("AccordionTrigger");
-    imports.shadcn.add("AccordionContent");
+    imports.ui.add("Accordion");
+    imports.ui.add("AccordionItem");
+    imports.ui.add("AccordionTrigger");
+    imports.ui.add("AccordionContent");
     const lines = ((p.items as string) || "").split("\n").filter(Boolean);
     const pairs: string[] = [];
     for (let i = 0; i < lines.length; i += 2) {
@@ -201,7 +201,7 @@ export function renderPricing(node: BuilderNode, imports: ImportTracker, indent:
     const pad = " ".repeat(indent);
     const classes = resolveResponsiveClasses(node.styles);
     const p = node.props;
-    imports.shadcn.add("Button");
+    imports.ui.add("Button");
     const features = ((p.features as string) || "").split("\n").filter(Boolean);
     const highlightClass = p.highlighted ? " border-primary ring-2 ring-primary/20" : "";
     return `${pad}<div${classes ? ` className="${classes}${highlightClass}"` : ""}>\n${pad}  <div className="text-lg font-semibold mb-1">${esc(p.title as string)}</div>\n${pad}  <div className="text-3xl font-bold mb-1">${esc(p.price as string)}<span className="text-sm font-normal text-muted-foreground">${esc(p.period as string)}</span></div>\n${pad}  <ul className="space-y-2 my-4 text-sm text-muted-foreground">\n${features.map((f) => `${pad}    <li className="flex items-center gap-2">✓ ${esc(f)}</li>`).join("\n")}\n${pad}  </ul>\n${pad}  <Button className="w-full">${esc(p.cta as string)}</Button>\n${pad}</div>`;
@@ -238,10 +238,10 @@ export function renderFaq(node: BuilderNode, imports: ImportTracker, indent: num
     const classes = resolveResponsiveClasses(node.styles);
     const classAttr = classes ? ` className="${classes}"` : "";
     const p = node.props;
-    imports.shadcn.add("Accordion");
-    imports.shadcn.add("AccordionItem");
-    imports.shadcn.add("AccordionTrigger");
-    imports.shadcn.add("AccordionContent");
+    imports.ui.add("Accordion");
+    imports.ui.add("AccordionItem");
+    imports.ui.add("AccordionTrigger");
+    imports.ui.add("AccordionContent");
     const lines = ((p.items as string) || "").split("\n").filter(Boolean);
     const pairs: string[] = [];
     for (let i = 0; i < lines.length; i += 2) {
@@ -255,8 +255,8 @@ export function renderNewsletter(node: BuilderNode, imports: ImportTracker, inde
     const classes = resolveResponsiveClasses(node.styles);
     const classAttr = classes ? ` className="${classes}"` : "";
     const p = node.props;
-    imports.shadcn.add("Button");
-    imports.shadcn.add("Input");
+    imports.ui.add("Button");
+    imports.ui.add("Input");
     return `${pad}<div${classAttr}>\n${pad}  <h3 className="text-xl font-bold mb-2">${esc(p.title as string)}</h3>\n${pad}  <p className="text-sm text-muted-foreground mb-4">${esc(p.description as string)}</p>\n${pad}  <div className="flex gap-2 max-w-md mx-auto">\n${pad}    <Input placeholder="Enter your email" className="flex-1" />\n${pad}    <Button>${esc(p.buttonText as string)}</Button>\n${pad}  </div>\n${pad}</div>`;
 }
 
@@ -265,7 +265,7 @@ export function renderFooter(node: BuilderNode, imports: ImportTracker, indent: 
     const classes = resolveResponsiveClasses(node.styles);
     const classAttr = classes ? ` className="${classes}"` : "";
     const p = node.props;
-    imports.shadcn.add("Separator");
+    imports.ui.add("Separator");
     const links = ((p.links as string) || "").split("\n").filter(Boolean);
     return `${pad}<footer${classAttr}>\n${pad}  <div className="flex flex-wrap items-center justify-between gap-4 mb-6">\n${pad}    <span className="text-lg font-bold">${esc(p.brand as string)}</span>\n${pad}    <div className="flex flex-wrap gap-4">\n${links.map((l) => `${pad}      <a href="#" className="text-sm text-muted-foreground hover:text-foreground">${esc(l)}</a>`).join("\n")}\n${pad}    </div>\n${pad}  </div>\n${pad}  <Separator className="mb-4" />\n${pad}  <p className="text-xs text-muted-foreground">${esc(p.copyright as string)}</p>\n${pad}</footer>`;
 }
@@ -282,12 +282,12 @@ export function renderDataTable(node: BuilderNode, imports: ImportTracker, inden
     const classes = resolveResponsiveClasses(node.styles);
     const classAttr = classes ? ` className="${classes}"` : "";
     const p = node.props;
-    imports.shadcn.add("Table");
-    imports.shadcn.add("TableHeader");
-    imports.shadcn.add("TableRow");
-    imports.shadcn.add("TableHead");
-    imports.shadcn.add("TableBody");
-    imports.shadcn.add("TableCell");
+    imports.ui.add("Table");
+    imports.ui.add("TableHeader");
+    imports.ui.add("TableRow");
+    imports.ui.add("TableHead");
+    imports.ui.add("TableBody");
+    imports.ui.add("TableCell");
     const headers = ((p.headers as string) || "").split("\n").filter(Boolean);
     const cells = ((p.rows as string) || "").split("\n").filter(Boolean);
     const colCount = headers.length || 1;

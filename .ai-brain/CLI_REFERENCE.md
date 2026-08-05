@@ -112,7 +112,29 @@ Pass any number of arguments; mixing kinds is supported.
 | `kanban/<slug>` | `aliases.kanbanVariants` (default `kanban/`) | + kanban engine + Pointer DnD + sandbox helpers |
 | `charts/<type>/<slug>` | `aliases.chartVariants/<type>/<slug>/` | + `chart-primitives` base |
 | `dnd/<slug>` | `aliases.dndVariants` (default `dnd/`) | + Pointer DnD engine (`components/dnd/*`) |
-| `components/<slug>` | `aliases.components` (default `components/`) | (lab primitive variants) |
+| `<primitive>/<slug>` | `aliases.uiVariants` (default `ui-variants/`) | (lab primitive demos, e.g. `badge/badge-outline` → `app/ui-variants/badge/badge-outline.tsx`) |
+
+
+### File ownership & overwrite rules
+
+Every file the CLI writes is hashed into `afnoui.json::fileHashes` (logical path → truncated
+sha256 of the written content). On a later install, when on-disk content differs from the
+registry, that hash says WHO wrote it: `cli-owned` (byte-identical to our last write),
+`user-edited` (diverged), or `unknown` (no record — pre-tracking install or user-created).
+
+| Zone | Content matches registry | `cli-owned` drift | `user-edited` / `unknown` drift |
+|---|---|---|---|
+| Engine (`components/**`, `utils/*`, `hooks/*` — `managed: true`) | skipped, no output | refreshed silently (`🔄 Refreshed …`) | TTY: prompts (default **no**) · non-TTY: **skipped** with a `--force` hint |
+| Variant (`tables/ · kanban/ · tree/ · charts/ · dnd/ · forms/ · ui-variants/`) | `⚠️ already installed. Use --force` | rewritten (form-stack switches, codegen updates) | TTY: prompts (default **no**) · non-TTY: **skipped** with a `--force` hint |
+| Base component (`components/ui/<slug>.tsx`) | `⚠️ already exists. Use --force` | — | `⚠️ already exists. Use --force` |
+| `globals.css` | untouched | — | always prompts before overwriting |
+
+`--force` overwrites everywhere without prompting (prints a line diff first). `--dry-run`
+previews every write without touching disk. Nothing the user wrote is ever replaced without
+either an explicit `--force` or an interactive yes — the only silent writes are new files and
+engine files still byte-identical to what the CLI itself last wrote.
+
+Variant registry entries may carry `npmDependencies` (auto-detected from the variant's own imports, e.g. `axios`, `zod`, `@tanstack/react-query`, embla plugins). `add` installs them before the base-component pass, so a variant works even in a project that never ran the matching engine `init`.
 | `progress/<slug>` | engine + `components/ui/progress-shared.tsx` | — |
 | `<base>` | `aliases.ui` (default `components/ui/`) | + every transitive dep |
 
@@ -310,6 +332,7 @@ The CLI auto-detects sensible defaults at `init`. Override by editing
 | `tableVariants` | `app/tables` | `src/tables` | `tables` | table variant bundles |
 | `kanbanVariants` | `app/kanban` | `src/kanban` | `kanban` | kanban variant bundles |
 | `dndVariants` | `app/dnd` | `src/dnd` | `dnd` | DnD variant bundles |
+| `uiVariants` | `app/ui-variants` | `src/ui-variants` | `ui-variants` | Lab primitive variant demos (kept out of managed `components/ui`) |
 
 ## 13. Variant catalog (319 total)
 

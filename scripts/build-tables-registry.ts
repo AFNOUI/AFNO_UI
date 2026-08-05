@@ -9,7 +9,7 @@
  *   components/tables/TablePreview.tsx   (engine)
  *   components/tables/useTablePreview.ts (derivations hook)
  *   components/tables/types.ts           (config + column types)
- *   components/ui/table.tsx              (shadcn primitives)
+ *   components/ui/table.tsx              (AfnoUI primitives)
  *   components/dnd/*                     (custom pointer DnD — bundled, no @dnd-kit)
  *
  * This script reads them from their canonical source locations, rewrites the two
@@ -141,15 +141,7 @@ const TABLE_SHARED_SOURCES: TableSharedSource[] = [
     targetPath: "components/ui/table.tsx",
     name: "table.tsx",
     language: "tsx",
-    description: "shadcn/ui Table primitives.",
-  },
-  {
-    sourcePath: "app/components/shared/VariantJsonConfigPanel.tsx",
-    targetPath: "components/shared/VariantJsonConfigPanel.tsx",
-    name: "VariantJsonConfigPanel.tsx",
-    language: "tsx",
-    description:
-      "Collapsible JSON config viewer rendered next to TablePreview (shared with form/kanban builder previews).",
+    description: "AfnoUI Table primitives.",
   },
   // ─── Engine renderers (TablePreview imports these unconditionally) ──────────
   {

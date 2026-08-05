@@ -4,8 +4,8 @@ import { Info, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CliInstallCommandBar } from "@/components/lab/CliInstallCommandBar";
-import type { PackageManager } from "@/components/lab/cliInstallCommands";
+import { CliInstallCommandBar } from "@/components/shared/CliInstallCommandBar";
+import type { PackageManager } from "@/components/shared/cliInstallCommands";
 
 /**
  * Shared "prereq" banner shown at the top of every lab section page

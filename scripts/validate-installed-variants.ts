@@ -24,6 +24,13 @@ const ROOT = process.cwd();
 const TEST_DIR = path.join(ROOT, "test");
 const REGISTRY_INDEX = path.join(ROOT, "public", "registry", "variants", "index.json");
 const BATCH_SIZE = 40;
+/**
+ * Always exercise the CLI from THIS working tree, never `npx afnoui` — npx would
+ * silently download the published package and validate a build that has nothing to
+ * do with the local `afnoui-cli/src` changes under test. Requires `pnpm run build:cli`
+ * first (step 1b runs it).
+ */
+const LOCAL_CLI = path.join(ROOT, "afnoui-cli", "dist", "index.js");
 
 function run(cmd: string, cwd: string = ROOT): string {
   // Point CLI subprocesses at the local Next server this script just booted,
@@ -301,8 +308,9 @@ async function main() {
   console.log(`   Found ${variants.length} variants.`);
 
   const pm = getPackageManager();
-  console.log("🛠️ Step 1b: Forms + Tables registry + Next production build (`next start` prerequisite)...");
+  console.log("🛠️ Step 1b: Forms + Tables registry + CLI + Next production build (`next start` prerequisite)...");
   run(pm === "pnpm" ? "pnpm run build:forms-registry" : "npm run build:forms-registry");
+  run(pm === "pnpm" ? "pnpm run build:cli" : "npm run build:cli");
   run(pm === "pnpm" ? "pnpm run build:tables-registry" : "npm run build:tables-registry");
   run(pm === "pnpm" ? "pnpm run build:kanban-registry" : "npm run build:kanban-registry");
   run(pm === "pnpm" ? "pnpm run build:tree-registry" : "npm run build:tree-registry");
@@ -351,7 +359,7 @@ async function main() {
         // --force skips the interactive "override globals.css?" prompt —
         // required because execSync has no TTY, and batches 2+ would hit the
         // prompt once batch 1 has already configured globals.css.
-        run(`npx afnoui add ${list} --force`, TEST_DIR);
+        run(`node "${LOCAL_CLI}" add ${list} --force`, TEST_DIR);
       } catch (e) {
         console.error("❌ CLI install failed for batch:", batch.slice(0, 5).join(" "), "...");
         throw e;

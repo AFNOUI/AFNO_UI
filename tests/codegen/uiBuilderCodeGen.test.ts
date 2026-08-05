@@ -31,7 +31,7 @@ describe("generateCleanCode", () => {
         expect(generateCleanCode([])).toBe("// Empty canvas — drag components to get started");
     });
 
-    it("renders a simple text-only page without any shadcn imports", () => {
+    it("renders a simple text-only page without any AfnoUI component imports", () => {
         const nodes = [
             node({
                 type: "heading",
@@ -52,7 +52,7 @@ describe("generateCleanCode", () => {
         expect(generateCleanCode(nodes)).toMatchSnapshot();
     });
 
-    it("deduplicates and groups shadcn imports by source file (card, button, separator)", () => {
+    it("deduplicates and groups AfnoUI component imports by source file (card, button, separator)", () => {
         const nodes = [
             node({
                 type: "card",

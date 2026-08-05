@@ -213,12 +213,14 @@ This is the contract a consumer sees after `npx afnoui add ...`:
 ```
 <consumer-root>/
 ├── components/
-│   ├── ui/<primitive>.tsx          ← shadcn primitives + chart-primitives, form-primitives, progress-shared
+│   ├── ui/<primitive>.tsx          ← AfnoUI primitives + chart-primitives, form-primitives, progress-shared
 │   ├── ui/charts/<type>.tsx        ← chart engines
 │   ├── ui/table/<file>.tsx         ← table engine wrappers (mirrors ui/charts)
-│   ├── forms/                      ← shadcn form glue + per-stack engines
+│   ├── forms/                      ← AfnoUI form glue + per-stack engines
 │   ├── kanban/                     ← kanban engine
 │   ├── tables/                     ← table engine
+│   ├── tree/                       ← TreeCanvas engine
+│   ├── graph/                      ← graph types (+ toolbar when a variant enables it)
 │   └── dnd/                        ← Pointer DnD primitives (Wave-7)
 ├── lib/
 │   └── utils.ts                    ← cn helper (single file)
@@ -228,8 +230,24 @@ This is the contract a consumer sees after `npx afnoui add ...`:
 ├── tables/<slug>/                  ← table variants
 ├── kanban/<slug>/                  ← kanban variants
 ├── charts/<type>/<slug>/           ← chart variants
+├── tree/<slug>/                    ← tree variants
+├── ui-variants/<primitive>/<slug>.tsx  ← lab primitive demos (NOT inside components/ui)
 └── dnd/<slug>/                     ← DnD variants (Wave-7)
 ```
+
+**Shared vs variant zones.** Everything under `components/**` (plus `lib/`, `hooks/`,
+`utils/`) is ENGINE-OWNED: installed with `managed: true`, so the CLI silently refreshes
+it on every later install — users must never edit those files, and no variant-specific
+file may be written there. Everything under the variant roots
+(`forms/ · tables/ · kanban/ · tree/ · charts/ · dnd/ · ui-variants/`) is USER-OWNED:
+never managed, preserved unless `--force`. A file only belongs in a shared zone if it is
+fully props/config-driven and imported by an engine file.
+
+**Consent rule.** Nothing a user wrote is overwritten without an explicit `--force` or an
+interactive confirmation. `afnoui.json::fileHashes` records what the CLI wrote, so drift is
+classified as `cli-owned` (safe to rewrite), `user-edited`, or `unknown`; the latter two
+prompt on a TTY and skip otherwise. See `helpers/fileProvenance.ts` + CLI_REFERENCE
+"File ownership & overwrite rules". Never add a write path that bypasses this.
 
 Any new top-level directory requires DECISION-LOG approval. Any reshuffle of an
 existing directory requires DECISION-LOG supersede + AI_AGENT_RULES update.
@@ -312,7 +330,7 @@ installed, `pnpm build` in `test/` cleanly emits all static pages.
 
 | If you... | You must also touch |
 |---|---|
-| Add a new shadcn primitive | `scripts/build-registry.ts` ENTRIES + lab demo + variant tsx + `pnpm run build:registry` |
+| Add a new AfnoUI primitive | `scripts/build-registry.ts` ENTRIES + lab demo + variant tsx + `pnpm run build:registry` |
 | Add a new form field type | `app/forms/{rhf,tanstack,action}/fields/*` + `scripts/generate-registry.ts` STACK_INSTALL + form-builder `fieldRegistry.ts` + 3 snapshot files |
 | Add a new variant family (e.g. "modals/") | new build script + new verifier + new CLI alias + new `VARIANT_ROOT_ALIASES` entry + new prefix branch in `installPaths.ts` + new registry JSON shape + parser + `.ai-brain/` updates + `CURRENT_SPRINT.md` step + DECISION entry |
 | Rename / move a consumer-visible directory | build script `targetPath` + verifier `TARGET_TO_SOURCE` + CLI probe (if any) + tip text + `.ai-brain/` updates + DECISION entry + Wave-N sprint entry |

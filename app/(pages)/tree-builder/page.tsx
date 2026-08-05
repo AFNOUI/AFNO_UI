@@ -1239,7 +1239,7 @@ function GuideTab() {
     },
     {
       title: "Custom node renderer",
-      body: "Provide a per-node render function via `meta.render`, or a flow-wide reusable one via `config.renderNode` — like shadcn DataTable column-def `cell`. When neither is set, the built-in label + description body is used.",
+      body: "Provide a per-node render function via `meta.render`, or a flow-wide reusable one via `config.renderNode` — like the AfnoUI DataTable column-def `cell`. When neither is set, the built-in label + description body is used.",
     },
     {
       title: "Position controls",

@@ -29,8 +29,6 @@ const TARGET_TO_SOURCE = {
   "utils/cellJsRunner.ts": "app/utils/cellJsRunner.ts",
   "utils/rowDialogTemplate.ts": "app/utils/rowDialogTemplate.ts",
   "components/ui/table.tsx": "app/components/ui/table.tsx",
-  "components/shared/VariantJsonConfigPanel.tsx":
-    "app/components/shared/VariantJsonConfigPanel.tsx",
   "components/dnd/index.ts": "app/components/ui/dnd/index.ts",
   "components/dnd/DndContext.tsx": "app/components/ui/dnd/DndContext.tsx",
   "components/dnd/useDraggable.ts": "app/components/ui/dnd/useDraggable.ts",

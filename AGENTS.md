@@ -52,7 +52,7 @@ and installed into consumer projects via the `afnoui` CLI under
 
 | Task | Run |
 |---|---|
-| Add a shadcn primitive | edit `app/registry/<name>.tsx` + lab demo → `pnpm run build:registry` |
+| Add an AfnoUI primitive | edit `app/registry/<name>.tsx` + lab demo → `pnpm run build:registry` |
 | Add a form variant | edit under `app/forms/variants/<slug>/` → `pnpm run generate:registry` |
 | Add a table / kanban variant | edit `app/components/tables/...` or `app/kanban/...` → `pnpm run build:tables-registry` / `build:kanban-registry` |
 | Add a DnD variant | edit `app/components/lab/dnd/variants/<slug>.tsx` → `pnpm run build:variants-registry` |

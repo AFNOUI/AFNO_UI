@@ -638,7 +638,7 @@ Rejected because:
 ### 3.2 `getDependencyReport` (table) had an inline duplicate of `tableInstall`
 **Symptom**: Same drift hazard. Same kind of fix.
 
-**Fix landed**: `getDependencyReport(config)` reads from `tableInstall.npmDependencies` + `tableInstall.optionalPeers`, plus an inline list of Radix peers (kept inline because they’re a property of the shadcn primitives the table engine uses, not the table engine itself).
+**Fix landed**: `getDependencyReport(config)` reads from `tableInstall.npmDependencies` + `tableInstall.optionalPeers`, plus an inline list of Radix peers (kept inline because they’re a property of the AfnoUI primitives the table engine uses, not the table engine itself).
 
 ---
 
@@ -808,3 +808,38 @@ Rejected because:
 - Never co-spread a hook's props bundle AND its individual fields. If `useXxx()` returns `{ ref, onClick, onPointerDown, … }` use `<div {...xxxProps}>` — the spread is the API.
 - Watch upstream API renames (`initialFocus` → `autoFocus` in `react-day-picker` v10) during `next build`, not just at lint-time. The lint passes today; the build is the gate.
 - Variant validation MUST run a real `next build` inside `test/`, not just install variants. `validate:variants` does the install + Next start; the build itself is the user-equivalent gate that catches strict-TS regressions in snippet bodies. `package.json::scripts.verify:full` (TODO) should chain `validate:variants` followed by `cd test && pnpm build`.
+
+### 3.15 Shared zone contained user-owned files: lab primitive demos in `components/ui/**` + a dead builder panel in `components/shared/`
+**Symptom**: An audit of the shared-vs-variant boundary (2026-07-31) found two violations of the rule that `components/**` holds only engine-owned, props-driven, `managed: true` files:
+
+1. **Lab primitive variants** (`accordion`, `alert`, `badge`, `button`, `breadcrumb`, `async-field`, … — 174 files) installed to `components/ui/<primitive>/<slug>.tsx`, i.e. per-variant DEMO files the user owns and edits, sitting inside the directory the CLI overwrites on every update. Every other category (`tables/`, `kanban/`, `tree/`, `dnd/`, `charts/`) already keeps variants outside its engine dir.
+2. **`components/shared/VariantJsonConfigPanel.tsx`** was in `tables.json`'s shared list, but nothing in a consumer project imports it — `TablePreview.tsx` does not, and no table variant does. It is a website/builder preview affordance (`app/(pages)/kanban/page.tsx`, `app/form-builder/PreviewTab.tsx`), so it shipped as dead managed weight.
+
+Verified clean in the same audit: all 174 tables/kanban/tree/dnd/charts variant JSONs write exclusively to `<category>/<slug>/` (0 leaks), no shared file imports from a variant dir, no shared file carries demo data, and `tableServices.ts` / the `default*Renderer` files are genuine config-driven engine fallbacks.
+
+**Fix landed**:
+- New user-owned zone `aliases.uiVariants` (default `ui-variants`, e.g. `app/ui-variants`), added to `DEFAULT_CONFIG`, `afnoAliasesForBaseDir`, and `inferMissingAliasFields` (optional in the type, so older `afnoui.json` files still parse and get backfilled).
+- `resolveRegistryOutputPath` routes `components/ui/<primitive>/<slug>.tsx` → `<uiVariants>/<primitive>/<slug>.tsx`. Done CLI-side, NOT in the registry, so the live registry keeps working for already-published CLI versions. The shape is unambiguous: base components target `components/ui/<slug>.tsx` (one segment) and no engine file targets a nested `components/ui/<dir>/<file>` path.
+- `VariantJsonConfigPanel.tsx` removed from `TABLE_SHARED_SOURCES` (`scripts/build-tables-registry.ts`) and from `verify-tables-registry-sync.mjs`; `tables.json` 200.9 KB → 192.9 KB, 20 embedded files. Its Radix deps stay in `tableInstall.uiComponents` because `TablePreview` itself uses collapsible/scroll-area/card.
+- R-40 now documents the shared-vs-variant zone contract and the new `ui-variants/` root.
+
+**Lesson encoded**:
+- `validate:variants` invoked `npx afnoui`, which downloads the PUBLISHED package — the gate was validating registry content against the last-published CLI and silently ignoring every local `afnoui-cli/src` change. It now runs `node afnoui-cli/dist/index.js` (quoted — the repo path contains a space) and builds the CLI in step 1b. Any future CLI-side install-path work is only actually gated because of this.
+- Follow-up (same day, user directive "always keep CLI and public/registry in sync"): the relocation moved INTO the registry — `build-variants-registry.ts` now emits `ui-variants/<primitive>/<slug>.tsx` and the CLI routes that prefix; the nested `components/ui/<dir>/<file>` match is kept purely as back-compat for stale registry caches. **Deploy order matters: publish the CLI before the new registry goes live**, because installed CLIs fetch the live registry and only versions carrying the `ui-variants/` route place those files correctly.
+- Variant registry entries now carry `npmDependencies`, auto-detected from each variant's own imports (`detectNpmDependencies`, package-name-validated — a greedy regex first matched across newlines inside embedded template literals and produced `","` as a "package", which made `npm install` fail with EINVALIDTAGNAME). `installVariant` runs `safeInstall` on them, so `afnoui add async-field/async-field-select` in a bare project now brings its own `axios` + `@tanstack/react-query` instead of landing with unresolved imports.
+- Relative-import rewriting adapts to the new depth automatically (`../../components/ui/label`), so relocating a variant zone needs no content change — but it MUST be re-verified with `VALIDATE_STRICT_TSC=1`.
+- `utils/cellJsRunner.ts` + `utils/rowDialogTemplate.ts` stay in `utils/` (not `components/tables/`): they are framework-free helpers shared by BOTH the table and kanban engines, so nesting them under one engine's dir would make the other engine import across engines. `utils/` is a managed shared zone like `components/**`.
+
+### 3.16 Variant files — user-owned code — were overwritten with no prompt and no `--force`
+**Symptom**: While testing engine-file provenance, an edited variant file was silently replaced. `writeRegistryOutputFile` had an unconditional early branch: `if (kind === "variant") { write; return; }` — any content difference overwrote the file, no `--force`, no prompt. The comment justified it as "always write when switching stack or updating codegen", which is a real requirement, but it applied to *every* variant file including ones the user had edited. Meanwhile `DataTable.tsx` in the same bundle was correctly skipped, because identical-content files hit the earlier "already installed" branch — so the bug only bit files the user had actually changed. Exactly backwards.
+
+**Fix landed**:
+- `helpers/fileProvenance.ts`: after every write, `sha256(content)` (16 hex chars) is recorded in `afnoui.json::fileHashes`. On later drift, `classifyFileDrift` returns `cli-owned` (on-disk bytes are still ours → the registry simply moved on), `user-edited` (diverged → their work is at stake), or `unknown` (no record: pre-tracking install or user-created). Cached in-process so an install reads/writes the config once, and every failure path degrades to `unknown` rather than breaking an install.
+- Variant writes: `cli-owned` drift still rewrites silently (keeps form-stack switching and codegen updates seamless — that was the legitimate need). `user-edited`/`unknown` prompt on a TTY (default **no**) and skip with a `--force` hint when non-interactive.
+- Engine (`managed`) writes: same classification. `cli-owned`/`unknown`+non-TTY refresh silently as before; `user-edited` prompts on a TTY, and **skips** when non-interactive rather than clobbering — a stale engine surfaces as a recoverable typecheck error, silently destroyed edits do not. `unknown` drift prompts once on a TTY (default yes), after which a hash exists and classification is exact.
+- Documented as R-40's "consent rule" + CLI_REFERENCE "File ownership & overwrite rules".
+
+**Lesson encoded**:
+- The consent invariant: **nothing the user wrote is overwritten without `--force` or an interactive yes.** Only two silent writes are allowed — brand-new files, and engine files still byte-identical to what the CLI last wrote. Any new write path must go through `fileProvenance`.
+- "Always overwrite" branches are how consent bugs enter. The requirement behind this one (rewrite untouched generated bundles) is satisfiable with provenance instead of a blanket exemption.
+- Verified per zone with deliberate local edits: engine file, variant config, lab demo, and base component were each edited then re-installed — only the engine file's behavior changed with `--force`, all four survived a plain re-install, and `tsc --noEmit` stayed clean.

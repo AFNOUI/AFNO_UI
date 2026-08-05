@@ -67,14 +67,14 @@ const steps = [
   {
     icon: Code2,
     title: "5. Export production code",
-    description: "The Export tab generates clean, copy-pasteable React + shadcn/ui code.",
+    description: "The Export tab generates clean, copy-pasteable React + AfnoUI code.",
     details: [
       "**Static** — pass data as props, client-side everything",
       "**API** — includes a fetch hook with loading + pagination",
       "**Config file** — separate `tableConfig.ts` with all settings",
       "**Type definitions** — full TypeScript types",
     ],
-    tip: "Generated files use the same shadcn primitives — your theme, your colors, your radius.",
+    tip: "Generated files use the same AfnoUI primitives — your theme, your colors, your radius.",
   },
 ];
 

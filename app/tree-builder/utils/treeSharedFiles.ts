@@ -58,7 +58,7 @@ export const TREE_DEPENDENCIES = {
   runtime: treeInstall.npmDependencies,
   uiComponents: treeInstall.uiComponents,
   notes: [
-    `Requires shadcn/ui components: ${treeInstall.uiComponents.join(", ")}.`,
+    `Requires AfnoUI components: ${treeInstall.uiComponents.join(", ")}.`,
     "Bring `cn` from your `@/lib/utils` (clsx + tailwind-merge).",
     "Zero graph-library dependency — TreeCanvas computes layouts + drag itself.",
     "The GraphToolbar (search / sort / filter) installs only for variants with `showToolbar: true`.",

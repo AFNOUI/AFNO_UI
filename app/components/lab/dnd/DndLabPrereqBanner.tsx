@@ -1,7 +1,7 @@
 "use client";
 
 import { LabPrereqBanner } from "@/components/shared/LabPrereqBanner";
-import { getAfnouiDndInitCommand } from "@/components/lab/cliInstallCommands";
+import { getAfnouiDndInitCommand } from "@/components/shared/cliInstallCommands";
 
 /**
  * Shown at the top of every `/dnd/*` lab page.

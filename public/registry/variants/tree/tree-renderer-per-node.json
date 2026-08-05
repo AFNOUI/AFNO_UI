@@ -31,5 +31,8 @@
   ],
   "features": [
     "toolbar"
+  ],
+  "npmDependencies": [
+    "lucide-react"
   ]
 }

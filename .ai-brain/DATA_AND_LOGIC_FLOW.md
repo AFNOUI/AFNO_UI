@@ -187,7 +187,7 @@ $ npx afnoui add forms/forms-contact --stack=rhf
 
 ──────────────────────────────────────────────────────────────────────────────
 USER OUTCOME (in their repo):
-  src/components/ui/{button,input,form,…}.tsx        ← shadcn primitives
+  src/components/ui/{button,input,form,…}.tsx        ← AfnoUI primitives
   src/components/forms/react-hook-form/...           ← engine
   src/components/forms/react-hook-form/fields/…      ← only required fields
   src/forms/forms-contact/                           ← variant bundle
@@ -196,7 +196,7 @@ USER OUTCOME (in their repo):
 ──────────────────────────────────────────────────────────────────────────────
 
 Equivalent for `npx afnoui add kanban/kanban-personal-tasks`:
-  src/components/ui/{button,badge,scroll-area,…}.tsx ← shadcn primitives
+  src/components/ui/{button,badge,scroll-area,…}.tsx ← AfnoUI primitives
   src/components/kanban/{KanbanBoard,KanbanCard,…}.tsx  ← engine
   src/components/dnd/{DndContext,useDraggable,…}.tsx + dnd.css ← custom DnD library
                                                          (Wave-7: was `src/lib/dnd/*`)

@@ -41,7 +41,7 @@ export const KANBAN_DEPENDENCIES = {
   dev: kanbanInstall.npmDevDependencies,
   uiComponents: kanbanInstall.uiComponents,
   notes: [
-    `Requires shadcn/ui components: ${kanbanInstall.uiComponents.join(", ")}.`,
+    `Requires AfnoUI components: ${kanbanInstall.uiComponents.join(", ")}.`,
     "Bring `cn` from your `@/lib/utils` (clsx + tailwind-merge).",
     "DnD library is bundled — no @dnd-kit dependency.",
     "Import components/dnd/dnd.css once at app entry (e.g. in your global stylesheet).",
