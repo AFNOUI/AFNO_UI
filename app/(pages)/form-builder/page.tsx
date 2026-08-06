@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { TextCursorInput, Eye, Code2, BookOpen, Sparkles, Undo2, Redo2, HelpCircle } from "lucide-react";
+import { TextCursorInput, Eye, Code2, BookOpen, Sparkles, HelpCircle } from "lucide-react";
 
 import { toast } from "@/hooks/use-toast";
 import type { FormConfig, FormFieldConfig } from "@/forms/react-hook-form";
@@ -9,15 +9,18 @@ import type { FormConfig, FormFieldConfig } from "@/forms/react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  BuilderHeader,
+  useBuilderHistory,
+  useTemplateOptions,
+  BuilderTemplatePicker,
+} from "@/components/shared/builder-header";
 
 // Form Builder Components
-import { useBuilderHistory } from "@/hooks/useBuilderHistory";
 import { formTemplates } from "@/form-builder/data/formBuilderTemplates";
 import { createField, initialConfig } from "@/form-builder/config/constants";
 
@@ -37,7 +40,8 @@ export default function FormBuilder() {
   const [submittedData, setSubmittedData] = useState<Record<string, unknown> | null>(null);
   const [selectedTemplateKey, setSelectedTemplateKey] = useState<string | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<"builder" | "preview" | "code" | "guide">("builder");
-  const { state: formConfig, set: setFormConfig, undo, redo, reset: resetHistory, canUndo, canRedo } = useBuilderHistory<FormConfig>(initialConfig);
+  const { state: formConfig, set: setFormConfig, reset: resetHistory, history } = useBuilderHistory<FormConfig>(initialConfig);
+  const templateOptions = useTemplateOptions(formTemplates);
 
   const currentSection = formConfig.sections[selectedSectionIndex];
   const selectedField = selectedFieldIndex !== null ? currentSection?.fields[selectedFieldIndex] : null;
@@ -223,53 +227,30 @@ export default function FormBuilder() {
         <div className="container mx-auto py-6 px-4">
           <PageBreadcrumb items={[{ label: "Form Builder" }]} />
 
-          {/* Header */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold">Form Builder</h1>
-                  <p className="text-sm text-muted-foreground">Build forms visually, export production-ready code</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <JsonImportDialog
-                  onImport={(config) => {
-                    setSelectedTemplateKey(undefined);
-                    resetHistory(config);
-                    setSelectedFieldIndex(null);
-                    setSelectedSectionIndex(0);
-                  }}
-                  currentConfig={formConfig}
-                />
-                <Select value={selectedTemplateKey} onValueChange={loadTemplate}>
-                  <SelectTrigger className="w-[170px] h-9">
-                    <SelectValue placeholder="Load template…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(formTemplates).map(([key, template]) => (
-                      <SelectItem key={key} value={key}>{template.title}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-9 w-9 cursor-pointer" onClick={undo} disabled={!canUndo}><Undo2 className="h-4 w-4" /></Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Undo</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-9 w-9 cursor-pointer" onClick={redo} disabled={!canRedo}><Redo2 className="h-4 w-4" /></Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Redo</TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-          </div>
+          <BuilderHeader
+            icon={Sparkles}
+            title="Form Builder"
+            description="Build forms visually, export production-ready code"
+            templatePicker={
+              <BuilderTemplatePicker
+                options={templateOptions}
+                value={selectedTemplateKey}
+                onSelect={loadTemplate}
+              />
+            }
+            jsonActions={
+              <JsonImportDialog
+                onImport={(config) => {
+                  setSelectedTemplateKey(undefined);
+                  resetHistory(config);
+                  setSelectedFieldIndex(null);
+                  setSelectedSectionIndex(0);
+                }}
+                currentConfig={formConfig}
+              />
+            }
+            history={history}
+          />
 
           {/* Layout Picker */}
           <div className="mb-4">

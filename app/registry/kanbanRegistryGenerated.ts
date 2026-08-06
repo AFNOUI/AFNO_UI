@@ -11,7 +11,7 @@ export interface KanbanRegistryFile {
   description: string;
 }
 
-export const kanbanRegistryGeneratedAt = "2026-08-05T09:28:33.908Z";
+export const kanbanRegistryGeneratedAt = "2026-08-06T04:45:52.561Z";
 
 export const kanbanInstall = {
   "npmDependencies": [
@@ -2214,6 +2214,11 @@ const DndCtx = createContext<DndContextValue | null>(null);
 const AUTOSCROLL_EDGE = 56;
 const AUTOSCROLL_MAX_SPEED = 18;
 
+/** Shared listener identity so add/removeEventListener actually pair up. */
+function preventBrowserDefault(event: Event) {
+  event.preventDefault();
+}
+
 function findScrollableAncestor(
   el: HTMLElement | null,
   axis: "x" | "y" | "both",
@@ -2514,6 +2519,13 @@ export function DndProvider({ children, onDragStart, onDragEnd, reduceMotion = f
     if (typeof document !== "undefined") {
       document.body.style.cursor = "grabbing";
       document.body.style.userSelect = "none";
+      document.body.style.setProperty("-webkit-user-select", "none");
+
+      window.getSelection?.()?.removeAllRanges();
+      document.addEventListener("selectstart", preventBrowserDefault);
+      // Blocks the native HTML5 drag that images/links inside a card would
+      // otherwise start, which fights the pointer-based drag.
+      document.addEventListener("dragstart", preventBrowserDefault);
     }
     onDragStart?.(snap);
 
@@ -2592,6 +2604,9 @@ export function DndProvider({ children, onDragStart, onDragEnd, reduceMotion = f
       if (typeof document !== "undefined") {
         document.body.style.cursor = "";
         document.body.style.userSelect = "";
+        document.body.style.removeProperty("-webkit-user-select");
+        document.removeEventListener("selectstart", preventBrowserDefault);
+        document.removeEventListener("dragstart", preventBrowserDefault);
       }
       onDragEnd?.(snap, dropped);
     };
@@ -2739,6 +2754,13 @@ export function useDraggable<T extends DragData = DragData>(options: UseDraggabl
     if (disabled) return;
     // Only primary pointer (left mouse / single touch / pen tip).
     if (event.pointerType === "mouse" && event.button !== 0) return;
+
+    const target = event.target as HTMLElement | null;
+    const isInteractive = !!target?.closest(
+      'input, textarea, select, button, a, [role="button"], [contenteditable="true"], [data-dnd-no-drag]',
+    );
+    if (!isInteractive) event.preventDefault();
+
     // Snapshot the source element on PointerDown so we can pass its size to
     // the provider when the activation distance is crossed.
     elementRef.current = event.currentTarget;

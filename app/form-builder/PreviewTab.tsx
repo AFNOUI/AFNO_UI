@@ -9,7 +9,6 @@ import { extractFields, buildZodSchema } from "@/forms/utils/zodSchemaBuilder";
 
 import { SubmittedDataView } from "@/form-builder/SubmittedDataView";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { VariantJsonConfigPanel } from "@/components/shared/VariantJsonConfigPanel";
 
 import { ActionForm } from "@/forms/action-forms/ActionForm";
 import { TanstackForm } from "@/forms/tanstack-forms/TanstackForm";
@@ -101,15 +100,6 @@ export function PreviewTab({ formConfig, onSubmit, submittedData, onClearSubmitt
           )}
         </CardContent>
       </Card>
-
-      <VariantJsonConfigPanel
-        blocks={[
-          {
-            value: formConfig,
-            copySuccessDescription: "Form configuration JSON copied to clipboard",
-          },
-        ]}
-      />
     </div>
   );
 }

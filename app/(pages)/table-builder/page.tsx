@@ -3,8 +3,6 @@
 import {
   Eye,
   Code2,
-  Undo2,
-  Redo2,
   Table2,
   Loader2,
   Database,
@@ -20,24 +18,20 @@ import {
   defaultSampleData,
   TableBuilderConfig,
   defaultTableConfig,
+  defaultTableTemplateKey,
+  defaultTableRendererSources,
 } from "@/table-builder/data/tableBuilderTemplates";
-import { useBuilderHistory } from "@/hooks/useBuilderHistory";
 
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import {
-  Select,
-  SelectItem,
-  SelectValue,
-  SelectContent,
-  SelectTrigger,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+  BuilderHeader,
+  ToolbarButton,
+  useBuilderHistory,
+  useTemplateOptions,
+  BuilderTemplatePicker,
+} from "@/components/shared/builder-header";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -49,25 +43,23 @@ import { TableExportTab } from "@/table-builder/TableExportTab";
 import { TableBuilderGuide } from "@/table-builder/TableBuilderGuide";
 import { TableJsonImportDialog } from "@/table-builder/TableJsonImportDialog";
 
-const complexityColors: Record<string, string> = {
-  basic: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-  intermediate: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-  advanced: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
-  expert: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-};
-
 export default function DataTableBuilder() {
-  const { state: config, set: setConfig, undo, redo, reset: resetHistory, canUndo, canRedo } = useBuilderHistory<TableBuilderConfig>(defaultTableConfig);
+  const { state: config, set: setConfig, reset: resetHistory, history } = useBuilderHistory<TableBuilderConfig>(defaultTableConfig);
+  const templateOptions = useTemplateOptions(tableTemplates);
+  // Seeded with the template the builder boots with, so the header picker
+  // shows what is actually on screen instead of an empty placeholder.
+  const [selectedTemplateKey, setSelectedTemplateKey] = useState<string | undefined>(defaultTableTemplateKey);
   const [sampleData, setSampleData] = useState<Record<string, unknown>[]>(defaultSampleData);
   const [activeTab, setActiveTab] = useState<"builder" | "preview" | "code" | "guide">("builder");
   const [isLoading, setIsLoading] = useState(false);
   const [rendererSources, setRendererSources] = useState<
     import("@/table-builder/data/tableBuilderTemplates").TableTemplate["rendererSources"]
-  >(undefined);
+  >(defaultTableRendererSources);
 
   const loadTemplate = useCallback((templateKey: string) => {
     const template = tableTemplates[templateKey];
     if (template) {
+      setSelectedTemplateKey(templateKey);
       resetHistory(template.config);
       setSampleData(template.sampleData);
       setRendererSources(template.rendererSources);
@@ -83,11 +75,23 @@ export default function DataTableBuilder() {
     setConfig(newConfig);
   }, [setConfig]);
 
-  const handleJsonImport = useCallback((newConfig: TableBuilderConfig, newSample?: Record<string, unknown>[]) => {
+  const handleJsonImport = useCallback((
+    newConfig: TableBuilderConfig,
+    newSample?: Record<string, unknown>[],
+    newRendererSources?: import("@/table-builder/utils/tableCodeGenerator").TableRendererSources,
+  ) => {
+    setSelectedTemplateKey(undefined);
     resetHistory(newConfig);
-    setRendererSources(undefined);
+    // Restored from the payload — an exported table pastes back complete,
+    // custom cell renderers included.
+    setRendererSources(newRendererSources);
     if (newSample && Array.isArray(newSample)) setSampleData(newSample);
   }, [resetHistory]);
+
+  /** Rows-only import from the JSON dialog's "Sample data" tab. */
+  const handleSampleDataImport = useCallback((rows: Record<string, unknown>[]) => {
+    setSampleData(rows);
+  }, []);
 
   const handleSimulateLoading = useCallback(() => {
     setIsLoading(true);
@@ -150,76 +154,52 @@ export default function DataTableBuilder() {
         <div className="container mx-auto py-4 sm:py-6 px-3 sm:px-4 max-w-[1600px]">
           <PageBreadcrumb items={[{ label: "Table Builder" }]} />
 
-          {/* Header */}
-          <div className="mb-4 sm:mb-6">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-2 gap-3">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Table2 className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h1 className="text-xl sm:text-2xl font-bold">Data Table Builder</h1>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Build advanced, production-ready tables visually</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto">
-                <Select value="" onValueChange={loadTemplate}>
-                  <SelectTrigger className="w-full sm:w-[260px] h-9">
-                    <SelectValue placeholder="Load Template…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(tableTemplates).map(([key, template]) => (
-                      <SelectItem key={key} value={key}>
-                        <div className="flex items-center gap-2">
-                          <span className="truncate">{template.title}</span>
-                          <Badge variant="outline" className={cn("text-[9px] h-4 px-1 capitalize border", complexityColors[template.complexity])}>
-                            {template.complexity}
-                          </Badge>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-9 gap-1.5" onClick={handleGenerateStressData}>
-                      <Database className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline">Generate 1k rows</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Stress-test virtualization with 1,000 generated rows</TooltipContent>
-                </Tooltip>
+          <BuilderHeader
+            icon={Table2}
+            title="Data Table Builder"
+            description="Build advanced, production-ready tables visually"
+            templatePicker={
+              <BuilderTemplatePicker
+                options={templateOptions}
+                value={selectedTemplateKey}
+                onSelect={loadTemplate}
+              />
+            }
+            actions={
+              <>
+                <ToolbarButton
+                  icon={Database}
+                  onClick={handleGenerateStressData}
+                  tip="Stress-test virtualization with 1,000 generated rows"
+                  collapseLabel
+                >
+                  Generate 1k rows
+                </ToolbarButton>
                 {(config.sortMode === "api" || config.paginationMode === "api") && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-9 gap-1.5" onClick={handleSimulateLoading} disabled={isLoading}>
-                        <Loader2 className={cn("h-3.5 w-3.5", isLoading && "animate-spin")} />
-                        <span className="hidden sm:inline">{isLoading ? "Loading…" : "Simulate API"}</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Simulate API loading state</TooltipContent>
-                  </Tooltip>
+                  <ToolbarButton
+                    icon={Loader2}
+                    onClick={handleSimulateLoading}
+                    disabled={isLoading}
+                    tip="Simulate API loading state"
+                    className={cn(isLoading && "[&_svg]:animate-spin")}
+                    collapseLabel
+                  >
+                    {isLoading ? "Loading…" : "Simulate API"}
+                  </ToolbarButton>
                 )}
-                <TableJsonImportDialog
-                  onImport={handleJsonImport}
-                  currentConfig={config}
-                  currentSampleData={sampleData as { id: string; [k: string]: unknown }[]}
-                />
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-9 w-9" onClick={undo} disabled={!canUndo}><Undo2 className="h-4 w-4" /></Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Undo</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-9 w-9" onClick={redo} disabled={!canRedo}><Redo2 className="h-4 w-4" /></Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Redo</TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-          </div>
+              </>
+            }
+            jsonActions={
+              <TableJsonImportDialog
+                onImport={handleJsonImport}
+                onImportSampleData={handleSampleDataImport}
+                currentConfig={config}
+                currentSampleData={sampleData as { id: string; [k: string]: unknown }[]}
+                currentRendererSources={rendererSources}
+              />
+            }
+            history={history}
+          />
 
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "builder" | "preview" | "code" | "guide")} className="space-y-4">
             <TabsList className="h-10">

@@ -7,39 +7,25 @@
 import {
   Eye,
   Code2,
-  Undo2,
-  Redo2,
   Kanban,
-  FileJson,
   BookOpen,
-  ChevronUp,
-  ChevronDown,
   TextCursorInput,
 } from "lucide-react";
 import { useState, useCallback } from "react";
 
-import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { useBuilderHistory } from "@/hooks/useBuilderHistory";
 
 import {
-  Select,
-  SelectItem,
-  SelectValue,
-  SelectContent,
-  SelectTrigger,
-} from "@/components/ui/select";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
   TooltipProvider,
 } from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import {
+  BuilderHeader,
+  useBuilderHistory,
+  useTemplateOptions,
+  BuilderTemplatePicker,
+} from "@/components/shared/builder-header";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
 
@@ -47,6 +33,8 @@ import {
   kanbanTemplates,
   defaultKanbanCards,
   defaultKanbanConfig,
+  defaultKanbanTemplateKey,
+  defaultKanbanRendererSources,
   type KanbanCardData,
   type KanbanBuilderConfig,
 } from "@/kanban-builder/data/kanbanBuilderTemplates";
@@ -57,36 +45,40 @@ import { KanbanBuilderGuide } from "@/kanban-builder/KanbanBuilderGuide";
 import { KanbanSettingsPanel } from "@/kanban-builder/KanbanSettingsPanel";
 import { KanbanJsonImportDialog } from "@/kanban-builder/KanbanJsonImportDialog";
 
-const complexityColors: Record<string, string> = {
-  basic: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-  intermediate: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-  advanced: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
-  expert: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-};
-
 export default function KanbanBuilder() {
-  const { state: config, set: setConfig, undo, redo, reset, canUndo, canRedo } =
+  const { state: config, set: setConfig, reset, history } =
     useBuilderHistory<KanbanBuilderConfig>(defaultKanbanConfig);
+  const templateOptions = useTemplateOptions(kanbanTemplates);
+  // Seeded with the template the builder boots with, so the header picker
+  // shows what is actually on screen instead of an empty placeholder.
+  const [selectedTemplateKey, setSelectedTemplateKey] = useState<string | undefined>(defaultKanbanTemplateKey);
   const [cards, setCards] = useState<KanbanCardData[]>(defaultKanbanCards);
   const [activeTab, setActiveTab] = useState<"builder" | "preview" | "code" | "guide">("builder");
-  const [showJson, setShowJson] = useState(false);
   const [rendererSources, setRendererSources] = useState<
     import("@/kanban/types").KanbanRendererSources | undefined
-  >(undefined);
+  >(defaultKanbanRendererSources);
 
   const loadTemplate = useCallback((key: string) => {
     const tpl = kanbanTemplates[key];
     if (!tpl) return;
+    setSelectedTemplateKey(key);
     reset(tpl.config);
     setCards(tpl.cards);
     setRendererSources(tpl.rendererSources);
     toast({ title: "Template loaded", description: tpl.title });
   }, [reset]);
 
-  const handleImport = useCallback((newConfig: KanbanBuilderConfig, newCards: KanbanCardData[]) => {
+  const handleImport = useCallback((
+    newConfig: KanbanBuilderConfig,
+    newCards: KanbanCardData[],
+    newRendererSources?: import("@/kanban/types").KanbanRendererSources,
+  ) => {
+    setSelectedTemplateKey(undefined);
     reset(newConfig);
     setCards(newCards);
-    setRendererSources(undefined);
+    // Restored from the payload — an exported board pastes back complete,
+    // custom card renderers included.
+    setRendererSources(newRendererSources);
   }, [reset]);
 
   const handleAddCard = useCallback(
@@ -125,56 +117,27 @@ export default function KanbanBuilder() {
         <div className="container mx-auto py-4 sm:py-6 px-3 sm:px-4 max-w-[1600px]">
           <PageBreadcrumb items={[{ label: "Kanban Builder" }]} />
 
-          {/* Header */}
-          <div className="mb-4 sm:mb-6">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-2 gap-3">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Kanban className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h1 className="text-xl sm:text-2xl font-bold">Kanban Builder</h1>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Build production-ready kanban boards visually</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto">
-                <Select value="" onValueChange={loadTemplate}>
-                  <SelectTrigger className="w-full sm:w-[260px] h-9">
-                    <SelectValue placeholder="Load Template…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(kanbanTemplates).map(([key, tpl]) => (
-                      <SelectItem key={key} value={key}>
-                        <div className="flex items-center gap-2">
-                          <span className="truncate">{tpl.title}</span>
-                          <Badge variant="outline" className={cn("text-[9px] h-4 px-1 capitalize border", complexityColors[tpl.complexity])}>
-                            {tpl.complexity}
-                          </Badge>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <KanbanJsonImportDialog config={config} cards={cards} onImport={handleImport} />
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-9 w-9" onClick={undo} disabled={!canUndo}>
-                      <Undo2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Undo</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-9 w-9" onClick={redo} disabled={!canRedo}>
-                      <Redo2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Redo</TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-          </div>
+          <BuilderHeader
+            icon={Kanban}
+            title="Kanban Builder"
+            description="Build production-ready kanban boards visually"
+            templatePicker={
+              <BuilderTemplatePicker
+                options={templateOptions}
+                value={selectedTemplateKey}
+                onSelect={loadTemplate}
+              />
+            }
+            jsonActions={
+              <KanbanJsonImportDialog
+                config={config}
+                cards={cards}
+                rendererSources={rendererSources}
+                onImport={handleImport}
+              />
+            }
+            history={history}
+          />
 
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="space-y-4">
             <TabsList className="h-10">
@@ -213,32 +176,6 @@ export default function KanbanBuilder() {
                   </div>
                   <KanbanBoard config={config} cards={cards} onCardsChange={setCards} onColumnsChange={(cols) => setConfig({ ...config, columns: cols })} onAddCard={handleAddCard} onLoadMore={handleLoadMore} />
                 </div>
-
-                <Card className="border-border">
-                  <CardHeader
-                    className="pb-0 pt-3 px-4 cursor-pointer"
-                    onClick={() => setShowJson(!showJson)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <FileJson className="h-4 w-4 text-primary" />
-                        <CardTitle className="text-sm">JSON Configuration</CardTitle>
-                      </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7">
-                        {showJson ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  {showJson && (
-                    <CardContent className="pt-3 px-4 pb-4">
-                      <ScrollArea className="max-h-[400px]">
-                        <pre className="text-xs font-mono p-3 rounded-lg bg-muted/50 border border-border overflow-x-auto leading-relaxed">
-                          {JSON.stringify({ config, cards }, null, 2)}
-                        </pre>
-                      </ScrollArea>
-                    </CardContent>
-                  )}
-                </Card>
               </div>
             </TabsContent>
 
