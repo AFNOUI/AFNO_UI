@@ -161,6 +161,23 @@ app/components/
 │       ├── utils.ts             ← complexityTone, toTemplateOptions, snapshot.
 │       ├── constants.ts         ← Badge tones, control height, MAX_HISTORY.
 │       └── types.ts             ← Contracts only (no runtime cost).
+│   └── builder-insights/        ← "Build health" panel shared by all four builders (site-only).
+│       ├── BuilderInsightsPanel.tsx ← Assembled panel; header row is the toggle.
+│       ├── primitives/          ← Issue icon/row, stat chip, issue-count chip.
+│       ├── controls/            ← Stats strip, issue list, health status verdict.
+│       ├── hooks.ts             ← useBuilderInsights (memoized rules runner).
+│       ├── utils.ts             ← summarizeIssues, sortIssues, findDuplicates, isUnsafeIdentifier.
+│       ├── constants.ts         ← Issue level classes/labels/order.
+│       └── types.ts             ← BuilderIssue / BuilderStat / BuilderInsights.
+│       ⓘ Rules live BESIDE each builder, not here — the shared layer never
+│         learns what a column or a card is:
+│           app/form-builder/utils/formInsights.ts
+│           app/table-builder/utils/tableInsights.ts
+│           app/kanban-builder/utils/kanbanInsights.ts
+│           app/tree-builder/utils/treeInsights.ts
+│         Covered by tests/utils/builderInsights.test.ts, which asserts every
+│         builder's DEFAULT template reports zero issues (this caught two
+│         mis-levelled rules when the panel was written).
 └── forms/                       ← Page-level form wrappers (FormsCodePanel, FormsVariantsSwitcher).
 ```
 
