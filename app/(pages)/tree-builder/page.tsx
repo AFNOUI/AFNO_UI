@@ -66,6 +66,10 @@ import {
   complexityTone,
   BuilderTemplatePicker,
 } from "@/components/shared/builder-header";
+import {
+  BuilderInsightsPanel,
+  useBuilderInsights,
+} from "@/components/shared/builder-insights";
 
 import {
   GraphToolbar,
@@ -83,6 +87,7 @@ import type {
 } from "@/trees/types";
 import { TreeCanvas } from "@/trees/TreeCanvas";
 import { NodeDataTable } from "@/tree-builder/NodeDataTable";
+import { getTreeInsights } from "@/tree-builder/utils/treeInsights";
 import { TreeJsonImportDialog, type TreeFlowPayload } from "@/tree-builder/TreeJsonImportDialog";
 import { generateTreeFiles } from "@/tree-builder/utils/treeCodeGenerator";
 import { treeTemplates, defaultTreeKey, type TreeTemplate } from "@/tree-builder/data/treeBuilderTemplates";
@@ -1391,6 +1396,11 @@ export default function FlowBuilder() {
     layout,
   };
 
+  const insights = useBuilderInsights(
+    () => getTreeInsights(tree, mergedConfig),
+    [tree, mergedConfig],
+  );
+
   /** Apply a payload validated by `<TreeJsonImportDialog />`. */
   const applyImport = ({ variant, config, tree: importedTree }: TreeFlowPayload) => {
     if (variant && variant !== activeKey) {
@@ -1475,13 +1485,19 @@ export default function FlowBuilder() {
           </TabsContent>
 
           <TabsContent value="preview" className="mt-0">
-            <PreviewTab
-              template={active}
-              tree={tree}
-              setTree={setTreeWithHistory}
-              layout={layout}
-              config={mergedConfig}
-            />
+            <div className="space-y-4">
+              <PreviewTab
+                template={active}
+                tree={tree}
+                setTree={setTreeWithHistory}
+                layout={layout}
+                config={mergedConfig}
+              />
+              <BuilderInsightsPanel
+                insights={insights}
+                emptyMessage="No issues found — this flow is ready to export."
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="code" className="mt-0">

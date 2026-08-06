@@ -32,6 +32,11 @@ import {
   useTemplateOptions,
   BuilderTemplatePicker,
 } from "@/components/shared/builder-header";
+import {
+  BuilderInsightsPanel,
+  useBuilderInsights,
+} from "@/components/shared/builder-insights";
+import { getTableInsights } from "@/table-builder/utils/tableInsights";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -55,6 +60,11 @@ export default function DataTableBuilder() {
   const [rendererSources, setRendererSources] = useState<
     import("@/table-builder/data/tableBuilderTemplates").TableTemplate["rendererSources"]
   >(defaultTableRendererSources);
+
+  const insights = useBuilderInsights(
+    () => getTableInsights(config, sampleData as { id: string; [k: string]: unknown }[]),
+    [config, sampleData],
+  );
 
   const loadTemplate = useCallback((templateKey: string) => {
     const template = tableTemplates[templateKey];
@@ -228,7 +238,13 @@ export default function DataTableBuilder() {
             </TabsContent>
 
             <TabsContent value="preview" className="mt-0">
-              <TablePreview config={config} data={sampleData} isLoading={isLoading} />
+              <div className="space-y-4">
+                <TablePreview config={config} data={sampleData} isLoading={isLoading} />
+                <BuilderInsightsPanel
+                  insights={insights}
+                  emptyMessage="No issues found — this table is ready to export."
+                />
+              </div>
             </TabsContent>
 
             <TabsContent value="code" className="mt-0">

@@ -24,6 +24,11 @@ import {
   useTemplateOptions,
   BuilderTemplatePicker,
 } from "@/components/shared/builder-header";
+import {
+  BuilderInsightsPanel,
+  useBuilderInsights,
+} from "@/components/shared/builder-insights";
+import { getKanbanInsights } from "@/kanban-builder/utils/kanbanInsights";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -57,6 +62,8 @@ export default function KanbanBuilder() {
   const [rendererSources, setRendererSources] = useState<
     import("@/kanban/types").KanbanRendererSources | undefined
   >(defaultKanbanRendererSources);
+
+  const insights = useBuilderInsights(() => getKanbanInsights(config, cards), [config, cards]);
 
   const loadTemplate = useCallback((key: string) => {
     const tpl = kanbanTemplates[key];
@@ -176,6 +183,11 @@ export default function KanbanBuilder() {
                   </div>
                   <KanbanBoard config={config} cards={cards} onCardsChange={setCards} onColumnsChange={(cols) => setConfig({ ...config, columns: cols })} onAddCard={handleAddCard} onLoadMore={handleLoadMore} />
                 </div>
+
+                <BuilderInsightsPanel
+                  insights={insights}
+                  emptyMessage="No issues found — this board is ready to export."
+                />
               </div>
             </TabsContent>
 

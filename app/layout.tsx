@@ -98,6 +98,19 @@ export default function RootLayout({
           // JSON-LD must be a raw script tag; content is static and trusted.
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        {/*
+          Advertise the plain-text corpus to AI agents. The builders are
+          client-rendered, so a crawler that does not execute JavaScript sees
+          almost nothing on those routes; these two files carry the same facts
+          in a form any agent can read in one fetch.
+        */}
+        <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+        <link
+          rel="alternate"
+          type="text/plain"
+          href="/llms-full.txt"
+          title="llms-full.txt — full reference for AI agents"
+        />
       </head>
       <body>
         <GoogleAnalytics />

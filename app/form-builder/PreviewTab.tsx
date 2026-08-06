@@ -8,7 +8,9 @@ import { FormConfig } from "@/forms/react-hook-form";
 import { extractFields, buildZodSchema } from "@/forms/utils/zodSchemaBuilder";
 
 import { SubmittedDataView } from "@/form-builder/SubmittedDataView";
+import { getFormInsights } from "@/form-builder/utils/formInsights";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BuilderInsightsPanel, useBuilderInsights } from "@/components/shared/builder-insights";
 
 import { ActionForm } from "@/forms/action-forms/ActionForm";
 import { TanstackForm } from "@/forms/tanstack-forms/TanstackForm";
@@ -32,6 +34,7 @@ interface PreviewTabProps {
 export function PreviewTab({ formConfig, onSubmit, submittedData, onClearSubmittedData }: PreviewTabProps) {
   const [library, setLibrary] = useState<FormLibrary>("rhf");
   const hasFields = formConfig.sections.some(s => s.fields.length > 0);
+  const insights = useBuilderInsights(() => getFormInsights(formConfig), [formConfig]);
 
   const schema = useMemo(() => buildZodSchema(extractFields(formConfig)), [formConfig]);
   const formKey = `${JSON.stringify(formConfig)}-${library}`;
@@ -100,6 +103,11 @@ export function PreviewTab({ formConfig, onSubmit, submittedData, onClearSubmitt
           )}
         </CardContent>
       </Card>
+
+      <BuilderInsightsPanel
+        insights={insights}
+        emptyMessage="No issues found — this form is ready to export."
+      />
     </div>
   );
 }
