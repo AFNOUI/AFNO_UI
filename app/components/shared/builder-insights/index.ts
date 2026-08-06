@@ -23,6 +23,10 @@ export {
 // ── Controls ──────────────────────────────────────────────────────────────
 export { BuilderIssueList, type BuilderIssueListProps } from "./controls/BuilderIssueList";
 export { BuilderStatsStrip, type BuilderStatsStripProps } from "./controls/BuilderStatsStrip";
+export {
+  BuilderHealthStatus,
+  type BuilderHealthStatusProps,
+} from "./controls/BuilderHealthStatus";
 
 // ── Primitives ────────────────────────────────────────────────────────────
 export { IssueRow, type IssueRowProps } from "./primitives/IssueRow";

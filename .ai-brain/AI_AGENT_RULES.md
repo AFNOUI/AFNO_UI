@@ -30,6 +30,7 @@ registry generator(s) in the same commit:
 | `app/kanban/**` | `pnpm run build:kanban-registry` |
 | `app/components/ui/dnd/**` | `pnpm run build:dnd-registry` (AND tables + kanban because both also embed DnD) |
 | `app/components/lab/dnd/variants/**`, `app/kanban-builder/data/kanbanBuilderTemplates.ts`, `app/table-builder/data/*Templates.ts`, chart variant configs | `pnpm run build:variants-registry` |
+| `app/components/ui/charts/**`, `app/components/ui/chart-primitives.tsx` | `pnpm run build:registry` (each chart is its own `charts-<name>` entry, not one bundle; `verify:charts-registry` fails on drift, on a new chart that was never registered, and on an orphan entry) |
 | `app/components/lab/<primitive>/*`, `app/registry/<primitive>/<variant>.tsx` | `pnpm run build:registry` |
 | `app/utils/themeExport.ts`, theme tokens | `pnpm run verify:theme-export-sync` (auto-fail if not regenerated) |
 

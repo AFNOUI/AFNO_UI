@@ -14,16 +14,19 @@ export interface StatChipProps {
 /**
  * PRIMITIVE — one `value label` pair in the stats strip.
  *
- * Reuses the header's `ToolbarTip` so a hint reads identically to a toolbar
- * tooltip rather than inventing a second tooltip treatment.
+ * Deliberately borderless. Four bordered chips floating in a wide header read
+ * as four competing controls; as plain text separated by dots they read as one
+ * quiet caption, which is all a stat line should be.
+ *
+ * Reuses the header's `ToolbarTip` so a hint behaves like a toolbar tooltip
+ * rather than inventing a second treatment.
  */
 export function StatChip({ label, value, hint, className }: StatChipProps) {
   return (
     <ToolbarTip tip={hint}>
       <span
         className={cn(
-          "inline-flex items-baseline gap-1.5 rounded-(--radius) border border-border/60",
-          "bg-muted/40 px-2 py-1 text-xs",
+          "inline-flex items-baseline gap-1 whitespace-nowrap text-xs",
           hint && "cursor-help",
           className,
         )}
