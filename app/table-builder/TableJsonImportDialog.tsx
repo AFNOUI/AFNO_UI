@@ -1,27 +1,40 @@
-import { useState, useCallback } from "react";
-import { Upload, FileJson, Copy, Check } from "lucide-react";
+"use client";
+
+import { useCallback, useMemo } from "react";
+import { Database } from "lucide-react";
 
 import { toast } from "@/hooks/use-toast";
 
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  DialogHeader, DialogTitle, DialogTrigger,
-  Dialog, DialogContent, DialogDescription, DialogFooter,
-} from "@/components/ui/dialog";
+import { BuilderJsonDialog } from "@/components/shared/builder-header";
 
 import { TableBuilderConfig, TableRow } from "@/table-builder/data/tableBuilderTemplates";
+import type { TableRendererSources } from "@/table-builder/utils/tableCodeGenerator";
 
 interface TableJsonImportDialogProps {
   currentSampleData: TableRow[];
   currentConfig: TableBuilderConfig;
-  onImport: (config: TableBuilderConfig, sampleData?: TableRow[]) => void;
+  /**
+   * Custom cell-renderer sources of the loaded template. Plain strings, so they
+   * ride along in the export and the exported JSON restores the *whole*
+   * variant — generated renderer code included — after a refresh.
+   */
+  currentRendererSources?: TableRendererSources;
+  onImport: (
+    config: TableBuilderConfig,
+    sampleData?: TableRow[],
+    rendererSources?: TableRendererSources,
+  ) => void;
+  /**
+   * Replace only the rows, leaving columns and settings alone — the common case
+   * when you have real data to drop into a table you already shaped.
+   */
+  onImportSampleData: (sampleData: TableRow[]) => void;
 }
 
 interface ImportPayload {
   sampleData?: TableRow[];
   config: TableBuilderConfig;
+  rendererSources?: TableRendererSources;
 }
 
 function isImportPayload(value: unknown): value is ImportPayload {
@@ -38,137 +51,179 @@ function isBareConfig(value: unknown): value is TableBuilderConfig {
   return Array.isArray(v.columns);
 }
 
+/** Structural checks that a pasted table config must pass before it is applied. */
+function validateConfig(cfg: TableBuilderConfig): string | null {
+  const ids = new Set<string>();
+  for (const col of cfg.columns) {
+    if (!col || typeof col !== "object" || !("id" in col) || !("key" in col) || !("type" in col)) {
+      return "Each column must have 'id', 'key', and 'type'.";
+    }
+    if (typeof col.id !== "string" || !col.id.trim()) return "Every column 'id' must be a non-empty string.";
+    if (ids.has(col.id)) return `Duplicate column id "${col.id}". Column ids must be unique.`;
+    ids.add(col.id);
+    if (col.pinned !== undefined && col.pinned !== null && col.pinned !== "start" && col.pinned !== "end") {
+      return `Column "${col.id}" has invalid pinned value. Use "start", "end", or null.`;
+    }
+  }
+
+  if (cfg.columnGroups !== undefined) {
+    if (!Array.isArray(cfg.columnGroups)) return "'columnGroups' must be an array when provided.";
+    const groupIds = new Set<string>();
+    const seenColRefs = new Set<string>();
+    for (const grp of cfg.columnGroups) {
+      if (!grp || typeof grp !== "object") return "Each column group must be an object.";
+      if (typeof grp.id !== "string" || !grp.id.trim()) return "Each column group needs a non-empty 'id'.";
+      if (groupIds.has(grp.id)) return `Duplicate columnGroups id "${grp.id}".`;
+      groupIds.add(grp.id);
+      if (typeof grp.label !== "string") return `Column group "${grp.id}" needs a 'label' string.`;
+      if (!Array.isArray(grp.columns)) return `Column group "${grp.id}" must have a 'columns' string array.`;
+      for (const cid of grp.columns) {
+        if (typeof cid !== "string") return `Column group "${grp.id}" has a non-string column reference.`;
+        if (!ids.has(cid)) return `Column group "${grp.id}" references unknown column id "${cid}".`;
+        if (seenColRefs.has(cid)) return `Column id "${cid}" appears in more than one columnGroups entry.`;
+        seenColRefs.add(cid);
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Normalize a pasted rows array.
+ *
+ * `TableRow` requires a unique string `id` — the table keys rows by it and row
+ * selection/expansion break on collisions. Hand-written or CSV-converted data
+ * routinely lacks ids, so fill and de-duplicate rather than rejecting.
+ */
+function normalizeRows(rows: Record<string, unknown>[]): { rows: TableRow[]; repaired: number } {
+  const used = new Set<string>();
+  let repaired = 0;
+
+  const normalized = rows.map((row, index) => {
+    const raw = row.id;
+    let id = typeof raw === "string" || typeof raw === "number" ? String(raw) : "";
+    if (!id) {
+      id = `row-${index + 1}`;
+      repaired += 1;
+    }
+    if (used.has(id)) {
+      let suffix = 2;
+      while (used.has(`${id}-${suffix}`)) suffix += 1;
+      id = `${id}-${suffix}`;
+      repaired += 1;
+    }
+    used.add(id);
+    return { ...row, id } as TableRow;
+  });
+
+  return { rows: normalized, repaired };
+}
+
+/**
+ * Table-builder JSON import/export.
+ *
+ * Chrome comes from the shared `<BuilderJsonDialog />`; this file owns only the
+ * table-specific payload and validation. A third "Sample data" tab lets rows be
+ * swapped on their own — it replaces the read-only JSON panel that used to sit
+ * in the Builder and Preview tabs, and unlike that panel it round-trips.
+ */
 export function TableJsonImportDialog({
-  onImport, currentConfig, currentSampleData,
+  onImport, onImportSampleData, currentConfig, currentSampleData, currentRendererSources,
 }: TableJsonImportDialogProps) {
-  const [open, setOpen] = useState(false);
-  const [jsonText, setJsonText] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const exportJson = useMemo(
+    () =>
+      JSON.stringify(
+        { config: currentConfig, sampleData: currentSampleData, rendererSources: currentRendererSources },
+        null,
+        2,
+      ),
+    [currentConfig, currentSampleData, currentRendererSources],
+  );
 
-  const handleImport = useCallback(() => {
-    setError(null);
-    try {
-      const parsed: unknown = JSON.parse(jsonText);
-
-      const validateConfig = (cfg: TableBuilderConfig): string | null => {
-        const ids = new Set<string>();
-        for (const col of cfg.columns) {
-          if (!col || typeof col !== "object" || !("id" in col) || !("key" in col) || !("type" in col)) {
-            return "Each column must have 'id', 'key', and 'type'.";
-          }
-          if (typeof col.id !== "string" || !col.id.trim()) return "Every column 'id' must be a non-empty string.";
-          if (ids.has(col.id)) return `Duplicate column id "${col.id}". Column ids must be unique.`;
-          ids.add(col.id);
-          if (col.pinned !== undefined && col.pinned !== null && col.pinned !== "start" && col.pinned !== "end") {
-            return `Column "${col.id}" has invalid pinned value. Use "start", "end", or null.`;
-          }
-        }
-
-        if (cfg.columnGroups !== undefined) {
-          if (!Array.isArray(cfg.columnGroups)) return "'columnGroups' must be an array when provided.";
-          const groupIds = new Set<string>();
-          const seenColRefs = new Set<string>();
-          for (const grp of cfg.columnGroups) {
-            if (!grp || typeof grp !== "object") return "Each column group must be an object.";
-            if (typeof grp.id !== "string" || !grp.id.trim()) return "Each column group needs a non-empty 'id'.";
-            if (groupIds.has(grp.id)) return `Duplicate columnGroups id "${grp.id}".`;
-            groupIds.add(grp.id);
-            if (typeof grp.label !== "string") return `Column group "${grp.id}" needs a 'label' string.`;
-            if (!Array.isArray(grp.columns)) return `Column group "${grp.id}" must have a 'columns' string array.`;
-            for (const cid of grp.columns) {
-              if (typeof cid !== "string") return `Column group "${grp.id}" has a non-string column reference.`;
-              if (!ids.has(cid)) return `Column group "${grp.id}" references unknown column id "${cid}".`;
-              if (seenColRefs.has(cid)) return `Column id "${cid}" appears in more than one columnGroups entry.`;
-              seenColRefs.add(cid);
-            }
-          }
-        }
-        return null;
-      };
+  const handleImport = useCallback(
+    (text: string): string | null => {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(text);
+      } catch (e) {
+        return "Invalid JSON: " + (e instanceof Error ? e.message : "Parse error");
+      }
 
       if (isImportPayload(parsed)) {
         const err = validateConfig(parsed.config);
-        if (err) { setError(err); return; }
-        onImport(parsed.config, parsed.sampleData);
-        setOpen(false);
-        setJsonText("");
+        if (err) return err;
+        onImport(parsed.config, parsed.sampleData, parsed.rendererSources);
         toast({ title: "Table imported", description: `Loaded "${parsed.config.title || "Untitled"}"` });
-        return;
+        return null;
       }
 
       if (isBareConfig(parsed)) {
         const err = validateConfig(parsed);
-        if (err) { setError(err); return; }
+        if (err) return err;
         onImport(parsed);
-        setOpen(false);
-        setJsonText("");
         toast({ title: "Table imported", description: `Loaded "${parsed.title || "Untitled"}"` });
-        return;
+        return null;
       }
 
-      setError("Invalid JSON: expected { config, sampleData? } or a TableBuilderConfig object.");
-    } catch (e) {
-      setError("Invalid JSON: " + (e instanceof Error ? e.message : "Parse error"));
-    }
-  }, [jsonText, onImport]);
+      return "Invalid JSON: expected { config, sampleData?, rendererSources? } or a TableBuilderConfig object.";
+    },
+    [onImport],
+  );
 
-  const handleExport = useCallback(() => {
-    const json = JSON.stringify({ config: currentConfig, sampleData: currentSampleData }, null, 2);
-    navigator.clipboard.writeText(json);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    toast({ title: "JSON copied", description: "Table config + sample data copied to clipboard" });
-  }, [currentConfig, currentSampleData]);
+  const sampleDataJson = useMemo(
+    () => JSON.stringify(currentSampleData, null, 2),
+    [currentSampleData],
+  );
+
+  const handleSampleDataImport = useCallback(
+    (text: string): string | null => {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(text);
+      } catch (e) {
+        return "Invalid JSON: " + (e instanceof Error ? e.message : "Parse error");
+      }
+
+      if (!Array.isArray(parsed)) {
+        return "Sample data must be an array of row objects.";
+      }
+      const bad = parsed.findIndex((row) => !row || typeof row !== "object" || Array.isArray(row));
+      if (bad !== -1) {
+        return `Row ${bad + 1} is not an object. Every entry must be a plain row object.`;
+      }
+
+      const { rows, repaired } = normalizeRows(parsed as Record<string, unknown>[]);
+      onImportSampleData(rows);
+      toast({
+        title: "Sample data loaded",
+        description:
+          repaired > 0
+            ? `${rows.length} rows — auto-assigned ${repaired} missing or duplicate id${repaired === 1 ? "" : "s"}.`
+            : `${rows.length} rows loaded.`,
+      });
+      return null;
+    },
+    [onImportSampleData],
+  );
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="h-9 gap-2">
-          <FileJson className="h-4 w-4" />
-          JSON
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Import / Export Table JSON</DialogTitle>
-          <DialogDescription>
-            Paste a table config JSON to load it, or export the current table to share.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30">
-            <div>
-              <p className="text-sm font-medium">Export current table</p>
-              <p className="text-xs text-muted-foreground">Includes config + sample data</p>
-            </div>
-            <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5">
-              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-              {copied ? "Copied!" : "Copy JSON"}
-            </Button>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-sm">Import JSON</Label>
-            <Textarea
-              value={jsonText}
-              onChange={(e) => { setJsonText(e.target.value); setError(null); }}
-              placeholder={`{\n  "config": {\n    "title": "My Table",\n    "columns": [{ "id": "c1", "key": "name", "label": "Name", "type": "text", "sortable": true, "filterable": true, "visible": true }]\n  },\n  "sampleData": [{ "id": "1", "name": "Alice" }]\n}`}
-              className="min-h-[200px] font-mono text-xs"
-            />
-            {error && <p className="text-xs text-destructive">{error}</p>}
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={handleImport} disabled={!jsonText.trim()} className="gap-1.5">
-            <Upload className="h-4 w-4" />
-            Import
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <BuilderJsonDialog
+      title="Table JSON"
+      description="Import or export the full table — config, sample data and custom renderers."
+      exportJson={exportJson}
+      onImport={handleImport}
+      extraTabs={[
+        {
+          id: "data",
+          label: "Sample data",
+          icon: Database,
+          description:
+            "Rows only — paste an array of row objects to swap the data without touching your columns or settings. Missing ids are filled in automatically.",
+          placeholder: '[\n  { "id": "1", "name": "Ada Lovelace" }\n]',
+          json: sampleDataJson,
+          onImport: handleSampleDataImport,
+        },
+      ]}
+    />
   );
 }

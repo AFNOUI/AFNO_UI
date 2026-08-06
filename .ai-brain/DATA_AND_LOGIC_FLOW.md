@@ -35,7 +35,7 @@ Tracing one piece of data: **a new "email" field added in the form-builder, then
                                  ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
 │  STATE                                                                   │
-│  app/hooks/useBuilderHistory.ts  (undo/redo stack of FormConfig)         │
+│  app/components/shared/builder-header/hooks.ts  (undo/redo of FormConfig)│
 │  ─ FormConfig is a single immutable object: { sections: [{ fields }] }  │
 │  ─ history.push(nextConfig)  ← O(1), no merge logic                     │
 └────────────────────────────────┬─────────────────────────────────────────┘

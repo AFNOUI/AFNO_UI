@@ -1087,5 +1087,8 @@ export const tableTemplates: Record<string, TableTemplate> = {
 // Default to the Sandbox JS Demo so first-time users immediately see what
 // "Run custom JS (sandboxed)" means, the per-cell handler behaviour, and the
 // row-click vs cell-click separation.
-export const defaultTableConfig: TableBuilderConfig = tableTemplates.sandboxJsDemo.config;
-export const defaultSampleData = tableTemplates.sandboxJsDemo.sampleData;
+/** Key of the template the builder boots with — keeps the header picker in sync. */
+export const defaultTableTemplateKey = "sandboxJsDemo";
+export const defaultTableConfig: TableBuilderConfig = tableTemplates[defaultTableTemplateKey].config;
+export const defaultSampleData = tableTemplates[defaultTableTemplateKey].sampleData;
+export const defaultTableRendererSources = tableTemplates[defaultTableTemplateKey].rendererSources;

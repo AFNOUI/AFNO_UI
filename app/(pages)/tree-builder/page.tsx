@@ -4,11 +4,7 @@ import {
   Eye,
   Info,
   Code2,
-  Undo2,
-  Redo2,
-  Upload,
   Package,
-  Download,
   BookOpen,
   FileCode,
   GitBranch,
@@ -17,7 +13,6 @@ import {
   ArrowRight,
   HelpCircle,
   ArrowUpDown,
-  ChevronDown,
   ExternalLink,
   ArrowLeftRight,
   TextCursorInput,
@@ -56,23 +51,21 @@ import {
   TooltipContent,
   TooltipProvider,
 } from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
+import {
+  BuilderHeader,
+  complexityTone,
+  BuilderTemplatePicker,
+} from "@/components/shared/builder-header";
 
 import {
   GraphToolbar,
@@ -90,6 +83,7 @@ import type {
 } from "@/trees/types";
 import { TreeCanvas } from "@/trees/TreeCanvas";
 import { NodeDataTable } from "@/tree-builder/NodeDataTable";
+import { TreeJsonImportDialog, type TreeFlowPayload } from "@/tree-builder/TreeJsonImportDialog";
 import { generateTreeFiles } from "@/tree-builder/utils/treeCodeGenerator";
 import { treeTemplates, defaultTreeKey, type TreeTemplate } from "@/tree-builder/data/treeBuilderTemplates";
 import { SHARED_TREE_FILES, OPTIONAL_TREE_FILES, TREE_DEPENDENCIES } from "@/tree-builder/utils/treeSharedFiles";
@@ -1283,6 +1277,15 @@ export default function FlowBuilder() {
     () => Object.entries(treeTemplates).map(([key, t]) => ({ key, ...t })),
     [],
   );
+  const templateOptions = useMemo(
+    () =>
+      variants.map((v) => ({
+        value: v.key,
+        label: v.title,
+        badge: { label: v.complexity, tone: complexityTone(v.complexity) },
+      })),
+    [variants],
+  );
   const [activeKey, setActiveKey] = useState(
     defaultTreeKey in treeTemplates ? defaultTreeKey : variants[0].key,
   );
@@ -1356,14 +1359,25 @@ export default function FlowBuilder() {
     syncHistoryFlags();
   };
 
-  const [ioOpen, setIoOpen] = useState<null | "import" | "export">(null);
-  const [ioText, setIoText] = useState("");
+  /**
+   * An import that also switches variant cannot apply its tree/config
+   * immediately — changing `activeKey` runs the reset effect below, which would
+   * clobber it with the template defaults. Park the payload here instead; the
+   * effect applies it on the way in.
+   */
+  const pendingImportRef = useRef<{
+    tree?: TreeNode;
+    config?: TreeCanvasConfig;
+  } | null>(null);
 
-  // Reset when variant changes
+  // Reset when variant changes — unless an import parked a payload for us.
   useEffect(() => {
-    setTree(active.tree);
-    setLayout(active.config.layout);
-    setConfigPatch({});
+    const pending = pendingImportRef.current;
+    pendingImportRef.current = null;
+
+    setTree(pending?.tree ?? active.tree);
+    setLayout(pending?.config?.layout ?? active.config.layout);
+    setConfigPatch(pending?.config ? { ...pending.config } : {});
     setSelectedId(null);
     pastRef.current = [];
     futureRef.current = [];
@@ -1376,33 +1390,19 @@ export default function FlowBuilder() {
     ...configPatch,
     layout,
   };
-  const handleExport = () => {
-    setIoText(JSON.stringify({ config: mergedConfig, tree }, null, 2));
-    setIoOpen("export");
-  };
-  const handleImport = () => {
-    setIoText("");
-    setIoOpen("import");
-  };
-  const applyImport = () => {
-    try {
-      const parsed = JSON.parse(ioText) as {
-        config?: TreeCanvasConfig;
-        tree?: TreeNode;
-      };
-      if (parsed.tree) setTreeWithHistory(parsed.tree);
-      if (parsed.config) {
-        setConfigWithHistory({ ...parsed.config });
-        if (parsed.config.layout) setLayoutWithHistory(parsed.config.layout);
-      }
-      setIoOpen(null);
-      toast({ title: "Imported", description: "Flow loaded from JSON." });
-    } catch (e) {
-      toast({
-        title: "Invalid JSON",
-        description: (e as Error).message,
-        variant: "destructive",
-      });
+
+  /** Apply a payload validated by `<TreeJsonImportDialog />`. */
+  const applyImport = ({ variant, config, tree: importedTree }: TreeFlowPayload) => {
+    if (variant && variant !== activeKey) {
+      // Park it: switching variant runs the reset effect, which applies this.
+      pendingImportRef.current = { tree: importedTree, config };
+      setActiveKey(variant);
+      return;
+    }
+    if (importedTree) setTreeWithHistory(importedTree);
+    if (config) {
+      setConfigWithHistory({ ...config });
+      if (config.layout) setLayoutWithHistory(config.layout);
     }
   };
 
@@ -1411,31 +1411,27 @@ export default function FlowBuilder() {
       <div className="container mx-auto py-4 sm:py-6 px-3 sm:px-4 max-w-[1600px] space-y-4">
         <PageBreadcrumb items={[{ label: "Flow Builder" }]} />
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <GitBranch className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold">Flow Builder</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                {variants.length} workflow templates — edit nodes, set edge
-                labels, configure click actions, export code.
-              </p>
-            </div>
-          </div>
-          <BuilderShellBar
-            variants={variants}
-            activeKey={activeKey}
-            onPick={setActiveKey}
-            onUndo={undo}
-            onRedo={redo}
-            canUndo={canUndo}
-            canRedo={canRedo}
-            onImport={handleImport}
-            onExport={handleExport}
-          />
-        </div>
+        <BuilderHeader
+          icon={GitBranch}
+          title="Flow Builder"
+          description={`${variants.length} workflow templates — edit nodes, set edge labels, configure click actions, export code.`}
+          templatePicker={
+            <BuilderTemplatePicker
+              options={templateOptions}
+              value={activeKey}
+              onSelect={setActiveKey}
+            />
+          }
+          jsonActions={
+            <TreeJsonImportDialog
+              variant={activeKey}
+              config={mergedConfig}
+              tree={tree}
+              onImport={applyImport}
+            />
+          }
+          history={{ undo, redo, canUndo, canRedo }}
+        />
 
         <Tabs
           value={activeTab}
@@ -1497,141 +1493,7 @@ export default function FlowBuilder() {
           </TabsContent>
         </Tabs>
 
-        <Dialog
-          open={ioOpen !== null}
-          onOpenChange={(o) => !o && setIoOpen(null)}
-        >
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>
-                {ioOpen === "export" ? "Export flow JSON" : "Import flow JSON"}
-              </DialogTitle>
-              <DialogDescription>
-                {ioOpen === "export"
-                  ? "Copy this JSON to save your flow — paste it back via Import to restore."
-                  : "Paste a previously-exported flow JSON to load it."}
-              </DialogDescription>
-            </DialogHeader>
-            <Textarea
-              value={ioText}
-              onChange={(e) => setIoText(e.target.value)}
-              className="font-mono text-xs h-80"
-            />
-            <div className="flex justify-end gap-2">
-              {ioOpen === "export" ? (
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    navigator.clipboard?.writeText(ioText);
-                    toast({ title: "Copied" });
-                  }}
-                >
-                  Copy
-                </Button>
-              ) : (
-                <Button size="sm" onClick={applyImport}>
-                  Apply
-                </Button>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
-    </div>
-  );
-}
-
-function BuilderShellBar({
-  variants,
-  activeKey,
-  onPick,
-  onUndo,
-  onRedo,
-  canUndo,
-  canRedo,
-  onImport,
-  onExport,
-}: {
-  variants: (TreeTemplate & { key: string })[];
-  activeKey: string;
-  onPick: (k: string) => void;
-  onUndo: () => void;
-  onRedo: () => void;
-  canUndo: boolean;
-  canRedo: boolean;
-  onImport: () => void;
-  onExport: () => void;
-}) {
-  const active = variants.find((v) => v.key === activeKey);
-  return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-2 min-w-[180px] justify-between"
-          >
-            <span className="truncate text-xs">
-              {active?.title ?? "Load Template…"}
-            </span>
-            <ChevronDown className="h-3 w-3 opacity-60" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="max-h-[60vh] overflow-y-auto w-[240px]"
-        >
-          {variants.map((v) => (
-            <DropdownMenuItem
-              key={v.key}
-              onClick={() => onPick(v.key)}
-              className={cn(
-                "text-xs",
-                v.key === activeKey && "bg-primary/10 text-primary font-medium",
-              )}
-            >
-              {v.title}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-8 gap-1.5"
-        onClick={onImport}
-      >
-        <Upload className="h-3 w-3" /> Import
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-8 gap-1.5"
-        onClick={onExport}
-      >
-        <Download className="h-3 w-3" /> Export
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        className="h-8 w-8"
-        onClick={onUndo}
-        disabled={!canUndo}
-        title="Undo"
-      >
-        <Undo2 className="h-3 w-3" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        className="h-8 w-8"
-        onClick={onRedo}
-        disabled={!canRedo}
-        title="Redo"
-      >
-        <Redo2 className="h-3 w-3" />
-      </Button>
     </div>
   );
 }

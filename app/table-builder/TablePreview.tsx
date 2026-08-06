@@ -17,13 +17,11 @@ import {
   Loader2,
   Columns3,
   Download,
-  FileJson,
   ChevronUp,
   ArrowRight,
   ChevronDown,
   ChevronRight,
   GripVertical,
-  ExternalLink,
   ChevronsUpDown,
 } from "lucide-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -54,11 +52,6 @@ import {
   DialogContent,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -911,7 +904,6 @@ export function TablePreview({
   const [dialogRow, setDialogRow] = useState<Record<string, unknown> | null>(
     null,
   );
-  const [showJson, setShowJson] = useState(false);
   const openRowDialog = useCallback(
     (r: Record<string, unknown>) => setDialogRow(r),
     [],
@@ -1697,92 +1689,6 @@ export function TablePreview({
         action={config.rowClickAction}
         onClose={() => setDialogRow(null)}
       />
-
-      {/* JSON Configuration Panel — mirrors Form Builder UX */}
-      <Card className="border-border">
-        <Collapsible open={showJson} onOpenChange={setShowJson}>
-          <CollapsibleTrigger asChild>
-            <CardHeader className="pb-3 pt-3 px-4 cursor-pointer hover:bg-muted/30 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <FileJson className="h-4 w-4 text-primary" />
-                  <CardTitle className="text-sm">JSON Configuration</CardTitle>
-                  <span className="text-[10px] text-muted-foreground font-normal">
-                    {config.columns.length} columns · {data.length} rows
-                  </span>
-                </div>
-                <Button variant="ghost" size="icon" className="h-7 w-7">
-                  {showJson ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </CardHeader>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <CardContent className="pt-0 px-4 pb-4 space-y-3">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                    Table config
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 text-[10px] gap-1"
-                    onClick={() => {
-                      void navigator.clipboard.writeText(
-                        JSON.stringify(config, null, 2),
-                      );
-                      toast({
-                        title: "Copied",
-                        description: "Config JSON copied to clipboard",
-                      });
-                    }}
-                  >
-                    <ExternalLink className="h-3 w-3" /> Copy
-                  </Button>
-                </div>
-                <ScrollArea className="max-h-[320px]">
-                  <pre className="text-[11px] font-mono p-3 rounded-lg bg-muted/50 border border-border overflow-x-auto leading-relaxed">
-                    {JSON.stringify(config, null, 2)}
-                  </pre>
-                </ScrollArea>
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                    Sample data
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 text-[10px] gap-1"
-                    onClick={() => {
-                      void navigator.clipboard.writeText(
-                        JSON.stringify(data, null, 2),
-                      );
-                      toast({
-                        title: "Copied",
-                        description: "Sample data copied to clipboard",
-                      });
-                    }}
-                  >
-                    <ExternalLink className="h-3 w-3" /> Copy
-                  </Button>
-                </div>
-                <ScrollArea className="max-h-[260px]">
-                  <pre className="text-[11px] font-mono p-3 rounded-lg bg-muted/50 border border-border overflow-x-auto leading-relaxed">
-                    {JSON.stringify(data, null, 2)}
-                  </pre>
-                </ScrollArea>
-              </div>
-            </CardContent>
-          </CollapsibleContent>
-        </Collapsible>
-      </Card>
     </div>
   );
 }

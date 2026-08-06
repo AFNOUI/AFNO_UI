@@ -153,6 +153,14 @@ app/components/
 │   │   └── …                                      ← Per-variant lab demos.
 │   └── …
 ├── shared/                      ← Reused across pages: CodeBlock, InstallCommand, etc.
+│   └── builder-header/          ← The header shared by all four builders (site-only, never shipped).
+│       ├── BuilderHeader.tsx    ← Assembled header; fixes toolbar slot ORDER across builders.
+│       ├── primitives/          ← Icon tile, title, description, badge, toolbar buttons/groups/tooltip.
+│       ├── controls/            ← Identity, toolbar, template picker, history controls, JSON dialog.
+│       ├── hooks.ts             ← useBuilderHistory (undo/redo), useTemplateOptions.
+│       ├── utils.ts             ← complexityTone, toTemplateOptions, snapshot.
+│       ├── constants.ts         ← Badge tones, control height, MAX_HISTORY.
+│       └── types.ts             ← Contracts only (no runtime cost).
 └── forms/                       ← Page-level form wrappers (FormsCodePanel, FormsVariantsSwitcher).
 ```
 
@@ -281,7 +289,6 @@ app/providers/                   ← Mounted in app/layout.tsx — order matters
 │   ├── I18nextProvider.tsx      ← i18next instance + language detection.
 │   └── RtlLayoutProvide.tsx     ← Sets dir="rtl" on <html> when locale is RTL (e.g. ar).
 app/hooks/
-│   ├── useBuilderHistory.ts     ← Undo/redo stack used by form/table/kanban/ui builders.
 │   ├── use-toast.ts             ← Sonner-backed toast hook.
 │   └── use-mobile.tsx           ← Reactive viewport-width hook.
 app/lib/

@@ -37,6 +37,13 @@ export function useDraggable<T extends DragData = DragData>(options: UseDraggabl
     if (disabled) return;
     // Only primary pointer (left mouse / single touch / pen tip).
     if (event.pointerType === "mouse" && event.button !== 0) return;
+
+    const target = event.target as HTMLElement | null;
+    const isInteractive = !!target?.closest(
+      'input, textarea, select, button, a, [role="button"], [contenteditable="true"], [data-dnd-no-drag]',
+    );
+    if (!isInteractive) event.preventDefault();
+
     // Snapshot the source element on PointerDown so we can pass its size to
     // the provider when the activation distance is crossed.
     elementRef.current = event.currentTarget;

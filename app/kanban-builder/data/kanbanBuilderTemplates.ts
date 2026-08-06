@@ -595,8 +595,11 @@ Object.assign(kanbanTemplates, {
   jsxCardDialog,
 });
 
+/** Key of the template the builder boots with — keeps the header picker in sync. */
+export const defaultKanbanTemplateKey = "personalTasks";
 export const defaultKanbanConfig: KanbanBuilderConfig = personalTasks.config;
 export const defaultKanbanCards: KanbanCardData[] = personalTasks.cards;
+export const defaultKanbanRendererSources = personalTasks.rendererSources;
 
 export const ALL_FIELDS: { key: KanbanCardField; label: string }[] = [
   { key: "description", label: "Description" },

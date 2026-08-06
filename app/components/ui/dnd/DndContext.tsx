@@ -38,6 +38,11 @@ const DndCtx = createContext<DndContextValue | null>(null);
 const AUTOSCROLL_EDGE = 56;
 const AUTOSCROLL_MAX_SPEED = 18;
 
+/** Shared listener identity so add/removeEventListener actually pair up. */
+function preventBrowserDefault(event: Event) {
+  event.preventDefault();
+}
+
 function findScrollableAncestor(
   el: HTMLElement | null,
   axis: "x" | "y" | "both",
@@ -338,6 +343,13 @@ export function DndProvider({ children, onDragStart, onDragEnd, reduceMotion = f
     if (typeof document !== "undefined") {
       document.body.style.cursor = "grabbing";
       document.body.style.userSelect = "none";
+      document.body.style.setProperty("-webkit-user-select", "none");
+
+      window.getSelection?.()?.removeAllRanges();
+      document.addEventListener("selectstart", preventBrowserDefault);
+      // Blocks the native HTML5 drag that images/links inside a card would
+      // otherwise start, which fights the pointer-based drag.
+      document.addEventListener("dragstart", preventBrowserDefault);
     }
     onDragStart?.(snap);
 
@@ -416,6 +428,9 @@ export function DndProvider({ children, onDragStart, onDragEnd, reduceMotion = f
       if (typeof document !== "undefined") {
         document.body.style.cursor = "";
         document.body.style.userSelect = "";
+        document.body.style.removeProperty("-webkit-user-select");
+        document.removeEventListener("selectstart", preventBrowserDefault);
+        document.removeEventListener("dragstart", preventBrowserDefault);
       }
       onDragEnd?.(snap, dropped);
     };
