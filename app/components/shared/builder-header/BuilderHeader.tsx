@@ -6,6 +6,12 @@ import { cn } from "@/lib/utils";
 
 import { Separator } from "@/components/ui/separator";
 
+import {
+  BuilderDraftPrompt,
+  DraftSavedIndicator,
+  type BuilderDraftHeaderState,
+} from "@/components/shared/builder-draft";
+
 import { BuilderToolbar } from "./controls/BuilderToolbar";
 import { BuilderIdentity } from "./controls/BuilderIdentity";
 import { BuilderHistoryControls } from "./controls/BuilderHistoryControls";
@@ -27,6 +33,14 @@ export interface BuilderHeaderProps {
   /** Slot 4 — undo / redo. Spread `useBuilderHistory()` in directly. */
   history?: BuilderHistoryState;
 
+  /**
+   * Autosave. Pass `useBuilderDraft(...).header`; the header places both of its
+   * surfaces — the "Saved 2m ago" caption beside the title, and the "Restore
+   * last session" strip below — so all four builders report autosave the same
+   * way, same as they do templates and undo.
+   */
+  draft?: BuilderDraftHeaderState;
+
   className?: string;
 }
 
@@ -47,6 +61,7 @@ export function BuilderHeader({
   actions,
   jsonActions,
   history,
+  draft,
   className,
 }: BuilderHeaderProps) {
   const hasToolbar = Boolean(templatePicker || actions || jsonActions || history);
@@ -59,7 +74,19 @@ export function BuilderHeader({
       )}
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
-        <BuilderIdentity icon={icon} title={title} description={description} meta={meta} />
+        <BuilderIdentity
+          icon={icon}
+          title={title}
+          description={description}
+          meta={
+            <>
+              {meta}
+              {draft ? (
+                <DraftSavedIndicator status={draft.status} savedAt={draft.savedAt} />
+              ) : null}
+            </>
+          }
+        />
 
         {hasToolbar ? (
           <BuilderToolbar>
@@ -79,6 +106,11 @@ export function BuilderHeader({
           </BuilderToolbar>
         ) : null}
       </div>
+
+      {/* Full width, below the identity/toolbar row — a restore offer concerns
+          the whole build, so it should not have to compete with the toolbar for
+          horizontal space. Renders nothing when there is no draft to offer. */}
+      {draft ? <BuilderDraftPrompt draft={draft} /> : null}
     </header>
   );
 }

@@ -213,4 +213,103 @@ export const siteFaq = [
     q: "Can I build forms without writing code?",
     a: "Yes. The Visual Form Builder lets you drag and drop 25+ field types, add conditional logic and dependent dropdowns, and export production-ready React + TypeScript with runtime or compile-time Zod validation.",
   },
+  {
+    q: "Can I save a build and come back to it later?",
+    a: "Yes. Every builder has a JSON button that exports the complete build as a single JSON document — configuration, data, and any custom cell or card renderers. Paste that JSON back into the Import tab and you get the exact same build, including the template variant it started from. Nothing is stored on a server, so the JSON is yours to keep in a repo, a ticket, or a gist.",
+  },
+  {
+    q: "Does AfnoUI check my build for mistakes before I export?",
+    a: "Yes. Each builder runs a Build health check over your configuration and lists real problems with the exact fix: duplicate field names or column ids, conditional fields watching a field that no longer exists, columns whose data key is missing from the rows, kanban cards pointing at a deleted column, columns over their WIP limit, and flow nodes with a route action but no href. These are the mistakes that would otherwise surface as broken generated code in your project.",
+  },
 ] as const;
+
+/**
+ * Per-tool guides — the steps for using each builder plus questions specific to
+ * it. Emitted as a page-level `HowTo` and `FAQPage` on that tool's route, so
+ * each builder can rank and be quoted on its own terms rather than relying on
+ * the homepage graph. Keyed by route.
+ */
+export const toolGuides = {
+  "/form-builder": {
+    howToName: "How to build a React form with the AfnoUI Form Builder",
+    steps: [
+      "Pick a starting point — choose a template from the header dropdown, or start from the blank form.",
+      "Drag field types from the palette onto the canvas. 25+ types are available, including async selects, infinite-scroll comboboxes, and dependent dropdowns.",
+      "Select any field to edit its label, name, validation, conditional visibility, and watch bindings in the properties panel.",
+      "Open the Preview tab to fill the form in with React Hook Form, TanStack Form, or Action Form, and read the Build health panel for anything that needs fixing.",
+      "Open the Export Code tab and copy the generated React + TypeScript, or install the engine with `npx afnoui form init`.",
+    ],
+    faq: [
+      {
+        q: "Which form libraries can the AfnoUI Form Builder export to?",
+        a: "The same form config exports to React Hook Form, TanStack Form, and React's useActionState (Action Form). You can switch libraries in the Preview tab and compare before exporting; the Zod schema is shared across all three.",
+      },
+      {
+        q: "How does conditional field logic work in the AfnoUI Form Builder?",
+        a: "Each field can declare a condition naming another field, an operator (equals, notEquals, contains, notEmpty, empty, in, isTrue, isFalse) and a value. The field renders only when the condition passes. The Build health panel flags any condition that points at a field which no longer exists, so a broken rule cannot ship silently.",
+      },
+    ],
+  },
+  "/table-builder": {
+    howToName: "How to build a React data table with the AfnoUI Table Builder",
+    steps: [
+      "Choose a template from the header dropdown to start from a realistic table, or begin with the default.",
+      "Define your columns in the Columns editor — key, type, sorting, filtering, pinning, aggregation, and per-column cell renderers.",
+      "Toggle table features in the Settings panel: search, pagination, virtualization, row selection, expandable rows, inline edit, grouping, and nested headers.",
+      "Load your own rows via JSON → Sample data, or press Generate 1k rows to stress-test virtualization.",
+      "Check the Build health panel, then export from the Export tab or install the engine with `npx afnoui table init`.",
+    ],
+    faq: [
+      {
+        q: "Can I load my own data into the AfnoUI Table Builder?",
+        a: "Yes. The JSON dialog has a Sample data tab that takes a plain array of row objects and swaps the rows without touching your column definitions or settings. Rows missing an id, or sharing one, are repaired automatically and reported.",
+      },
+      {
+        q: "How does the AfnoUI table handle very large datasets?",
+        a: "Enable virtualization to render only the visible rows using TanStack Virtual, or enable pagination to page through them. The Build health panel warns when both are on at once (a page is small enough that virtualizing adds cost without benefit) and when hundreds of rows are rendering with neither enabled.",
+      },
+    ],
+  },
+  "/kanban-builder": {
+    howToName: "How to build a React kanban board with the AfnoUI Kanban Builder",
+    steps: [
+      "Pick a board template from the header dropdown — sprint board, bug tracker, CRM pipeline, hiring pipeline, and more.",
+      "Edit columns in the settings panel: title, accent colour, and an optional WIP limit.",
+      "Choose a layout — classic board, compact grid, swimlanes, timeline, or calendar — and select which optional card fields to surface.",
+      "Add and edit cards in the Cards editor, or drag them between columns on the board itself.",
+      "Read the Build health panel, then export from the Export tab or install the engine with `npx afnoui kanban init`.",
+    ],
+    faq: [
+      {
+        q: "Does the AfnoUI kanban board use @dnd-kit or react-beautiful-dnd?",
+        a: "Neither. Drag and drop is built directly on pointer events, so it works with mouse, touch, and pen with no third-party drag library in your dependency tree. It includes axis-aware autoscroll, an activation distance so plain clicks still fire, and Escape to cancel a drag.",
+      },
+      {
+        q: "What are WIP limits in the AfnoUI Kanban Builder?",
+        a: "A WIP (work-in-progress) limit caps how many cards a column should hold. Turn on WIP limits in settings and set a limit per column; the board renders an over-limit column in its warning state, and the Build health panel lists exactly which columns are over and by how much.",
+      },
+    ],
+  },
+  "/tree-builder": {
+    howToName: "How to build a React flow diagram with the AfnoUI Flow Builder",
+    steps: [
+      "Choose one of 30+ workflow templates from the searchable header dropdown.",
+      "Select any node to edit its label, badge, icon, colour, edge label, and per-node dataset.",
+      "Set what each node does when clicked — open a dialog, drawer, or panel, navigate to a route, or show a data table.",
+      "Pick a layout and connector style, and enable pan and zoom for larger flows.",
+      "Review the Build health panel, then export the generated files from the Export Code tab or install the engine with `npx afnoui tree init`.",
+    ],
+    faq: [
+      {
+        q: "What can a node do when clicked in the AfnoUI Flow Builder?",
+        a: "Each node declares a click action: none, a dialog, a drawer, a side panel, a route navigation, or a data table rendered in a dialog or panel. Dialog, drawer, and panel actions carry their own title and body. The Build health panel flags route actions with no href and dialogs with neither a title nor a body.",
+      },
+      {
+        q: "Can the AfnoUI Flow Builder attach data to individual nodes?",
+        a: "Yes. Every node can carry its own dataset, surfaced through the node data table, alongside tags used by the graph toolbar's chip filters and a sort key for custom ordering.",
+      },
+    ],
+  },
+} as const;
+
+export type ToolGuidePath = keyof typeof toolGuides;

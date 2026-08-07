@@ -2,9 +2,10 @@
 
 import { Undo2, Redo2 } from "lucide-react";
 
+import type { BuilderHistoryState } from "../types";
+
 import { ToolbarGroup } from "../primitives/ToolbarGroup";
 import { ToolbarIconButton } from "../primitives/ToolbarIconButton";
-import type { BuilderHistoryState } from "../types";
 
 export interface BuilderHistoryControlsProps extends BuilderHistoryState {
   className?: string;

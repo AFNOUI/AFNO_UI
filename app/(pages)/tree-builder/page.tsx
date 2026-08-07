@@ -66,6 +66,17 @@ import {
   complexityTone,
   BuilderTemplatePicker,
 } from "@/components/shared/builder-header";
+import {
+  BuilderInsightsPanel,
+  useBuilderInsights,
+} from "@/components/shared/builder-insights";
+import { useBuilderDraft } from "@/components/shared/builder-draft";
+import {
+  BuilderDiffPanel,
+  useBuilderDiff,
+  deleteAtPath,
+  type BuilderDiffEntry,
+} from "@/components/shared/builder-diff";
 
 import {
   GraphToolbar,
@@ -83,6 +94,8 @@ import type {
 } from "@/trees/types";
 import { TreeCanvas } from "@/trees/TreeCanvas";
 import { NodeDataTable } from "@/tree-builder/NodeDataTable";
+import { getTreeInsights } from "@/tree-builder/utils/treeInsights";
+import { isTreeDraft, type TreeDraft } from "@/tree-builder/utils/treeDraft";
 import { TreeJsonImportDialog, type TreeFlowPayload } from "@/tree-builder/TreeJsonImportDialog";
 import { generateTreeFiles } from "@/tree-builder/utils/treeCodeGenerator";
 import { treeTemplates, defaultTreeKey, type TreeTemplate } from "@/tree-builder/data/treeBuilderTemplates";
@@ -1385,10 +1398,74 @@ export default function FlowBuilder() {
     setCanRedo(false);
   }, [active.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const draft = useBuilderDraft<TreeDraft>({
+    id: "tree",
+    deps: [activeKey, tree, configPatch, layout],
+    snapshot: () => ({ variant: activeKey, tree, configPatch, layout }),
+    label: active.title,
+    validate: isTreeDraft,
+    onRestore: (saved) => {
+      const known = saved.variant in treeTemplates;
+
+      // Switching variant runs the reset effect above, which would clobber
+      // whatever we set here. Park the payload instead and let the effect
+      // apply it on the way in — the same route `applyImport()` takes.
+      if (known && saved.variant !== activeKey) {
+        pendingImportRef.current = {
+          tree: saved.tree,
+          config: { ...saved.configPatch, layout: saved.layout } as TreeCanvasConfig,
+        };
+        setActiveKey(saved.variant);
+      } else {
+        setTree(saved.tree);
+        setConfigPatch(saved.configPatch);
+        setLayout(saved.layout);
+        setSelectedId(null);
+        // A restore is a new starting point, not an edit — the undo stack from
+        // this session does not describe the tree that is now on screen.
+        pastRef.current = [];
+        futureRef.current = [];
+        setCanUndo(false);
+        setCanRedo(false);
+      }
+
+      toast({ title: "Draft restored", description: "Picked up where you left off." });
+    },
+  });
+
   const mergedConfig: TreeCanvasConfig = {
     ...active.config,
     ...configPatch,
     layout,
+  };
+
+  const insights = useBuilderInsights(
+    () => getTreeInsights(tree, mergedConfig),
+    [tree, mergedConfig],
+  );
+
+  const diff = useBuilderDiff({
+    current: mergedConfig,
+    template: active.config,
+    templateName: active.title,
+  });
+
+  /**
+   * Resetting here *removes the override* rather than writing the template's
+   * value back. This builder keeps a `configPatch` layered over the template,
+   * so deleting the key is what actually returns the setting to the template —
+   * and keeps it following that template if its defaults ever change.
+   */
+  const resetSettings = (entries: BuilderDiffEntry[]) => {
+    let nextPatch = configPatch;
+    let nextLayout = layout;
+    for (const entry of entries) {
+      nextPatch = deleteAtPath(nextPatch, entry.path);
+      // `layout` is hoisted into its own state and applied after the patch, so
+      // dropping it from the patch alone would leave the canvas unchanged.
+      if (entry.path === "layout") nextLayout = active.config.layout;
+    }
+    recordHistory({ tree, configPatch: nextPatch, layout: nextLayout });
   };
 
   /** Apply a payload validated by `<TreeJsonImportDialog />`. */
@@ -1431,6 +1508,7 @@ export default function FlowBuilder() {
             />
           }
           history={{ undo, redo, canUndo, canRedo }}
+          draft={draft.header}
         />
 
         <Tabs
@@ -1475,13 +1553,24 @@ export default function FlowBuilder() {
           </TabsContent>
 
           <TabsContent value="preview" className="mt-0">
-            <PreviewTab
-              template={active}
-              tree={tree}
-              setTree={setTreeWithHistory}
-              layout={layout}
-              config={mergedConfig}
-            />
+            <div className="space-y-4">
+              <PreviewTab
+                template={active}
+                tree={tree}
+                setTree={setTreeWithHistory}
+                layout={layout}
+                config={mergedConfig}
+              />
+              <BuilderInsightsPanel
+                insights={insights}
+                emptyMessage="No issues found — this flow is ready to export."
+              />
+              <BuilderDiffPanel
+                diff={diff}
+                onReset={(entry) => resetSettings([entry])}
+                onResetAll={resetSettings}
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="code" className="mt-0">

@@ -161,6 +161,75 @@ app/components/
 │       ├── utils.ts             ← complexityTone, toTemplateOptions, snapshot.
 │       ├── constants.ts         ← Badge tones, control height, MAX_HISTORY.
 │       └── types.ts             ← Contracts only (no runtime cost).
+│   └── builder-insights/        ← "Build health" panel shared by all four builders (site-only).
+│       ├── BuilderInsightsPanel.tsx ← Assembled panel; header row is the toggle.
+│       ├── primitives/          ← Issue icon/row, stat chip, issue-count chip.
+│       ├── controls/            ← Stats strip, issue list, health status verdict.
+│       ├── hooks.ts             ← useBuilderInsights (memoized rules runner).
+│       ├── utils.ts             ← summarizeIssues, sortIssues, findDuplicates, isUnsafeIdentifier.
+│       ├── constants.ts         ← Issue level classes/labels/order.
+│       └── types.ts             ← BuilderIssue / BuilderStat / BuilderInsights.
+│       ⓘ Rules live BESIDE each builder, not here — the shared layer never
+│         learns what a column or a card is:
+│           app/form-builder/utils/formInsights.ts
+│           app/table-builder/utils/tableInsights.ts
+│           app/kanban-builder/utils/kanbanInsights.ts
+│           app/tree-builder/utils/treeInsights.ts
+│         Covered by tests/utils/builderInsights.test.ts, which asserts every
+│         builder's DEFAULT template reports zero issues (this caught two
+│         mis-levelled rules when the panel was written).
+│   └── builder-draft/           ← Autosave + "Restore last session" (site-only).
+│       ├── primitives/          ← DraftSavedIndicator ("Saved 2m ago" caption).
+│       ├── controls/            ← BuilderDraftPrompt (the restore strip).
+│       ├── hooks.ts             ← useBuilderDraft (debounced write, mount-time offer).
+│       ├── utils.ts             ← readDraft/writeDraft/clearDraft, formatSavedAgo.
+│       ├── constants.ts         ← localStorage key prefix, schema version, debounce, size cap.
+│       └── types.ts             ← BuilderDraftApi / BuilderDraftHeaderState / envelope.
+│       ⓘ NO assembled component at the root — BOTH surfaces are placed by
+│         <BuilderHeader draft={…} />, so the header keeps owning where builder
+│         chrome lands (same bargain as `history`).
+│       ⓘ Persists to localStorage, one slot per builder:
+│         `afnoui:builder-draft:{form|table|kanban|tree}`. Bump
+│         DRAFT_SCHEMA_VERSION to retire every stored draft at once.
+│       ⓘ Draft SHAPES live BESIDE each builder, same seam as the insights
+│         rules — the shared layer never learns what a column or a card is:
+│           app/form-builder/utils/formDraft.ts
+│           app/table-builder/utils/tableDraft.ts
+│           app/kanban-builder/utils/kanbanDraft.ts
+│           app/tree-builder/utils/treeDraft.ts
+│         Covered by tests/utils/builderDraft.test.ts.
+│   └── builder-preview/         ← Responsive preview frame (site-only).
+│       ├── BuilderPreviewFrame.tsx ← Assembled canvas: toolbar + constrained, centred child.
+│       ├── primitives/          ← PreviewWidthButton, PreviewResizeHandle.
+│       ├── controls/            ← BuilderPreviewToolbar (presets + live width readout).
+│       ├── hooks.ts             ← useBuilderPreviewWidth (ResizeObserver, pointer + key resize).
+│       ├── utils.ts             ← clampPreviewWidth, snapPreviewWidth, matchPreset, availablePresets.
+│       ├── constants.ts         ← 375 / 768 / 1280 / full presets, MIN_PREVIEW_WIDTH, snap distance.
+│       └── types.ts             ← PreviewPreset / BuilderPreviewApi.
+│       ⓘ CONSTRAINS, never scales — no transform, no iframe — so the preview
+│         is the real component at a real width and its media queries resolve
+│         as they will in the consumer's project.
+│       ⓘ Used by form / table / kanban. The TREE builder deliberately OPTS
+│         OUT: <TreeCanvas /> owns its own pan/zoom viewport, and nesting one
+│         viewport in another gives two ways to change the same thing.
+│         Covered by tests/utils/builderPreview.test.ts.
+│   └── builder-diff/            ← "Changes from template" panel (site-only).
+│       ├── BuilderDiffPanel.tsx ← Assembled panel; collapsed by default (drift ≠ a problem).
+│       ├── primitives/          ← DiffValuePill, DiffRow (per-row reset-to-template).
+│       ├── controls/            ← BuilderDiffList, BuilderDiffSummary verdict chip.
+│       ├── hooks.ts             ← useBuilderDiff (memoized on config identity).
+│       ├── utils.ts             ← diffConfigs walker, getAtPath/setAtPath/deleteAtPath, resetDiffEntry.
+│       ├── constants.ts         ← Kind classes/labels, DIFF_MAX_DEPTH.
+│       └── types.ts             ← BuilderDiffEntry / BuilderDiffResult / BuilderDiffOptions.
+│       ⓘ The walker treats ARRAYS as leaves, plus any `atomic` path a builder
+│         declares. One "the columns changed" row beats forty `columns.3.width`
+│         rows, and a per-column reset would not leave a coherent config.
+│       ⓘ Renders NOTHING without a template — a JSON import has nothing to
+│         have drifted from.
+│       ⓘ The TREE builder resets by DELETING the key from its `configPatch`,
+│         not by writing the template value: it layers a patch over the
+│         template, so removing the override is what returns the setting.
+│         Covered by tests/utils/builderDiff.test.ts.
 └── forms/                       ← Page-level form wrappers (FormsCodePanel, FormsVariantsSwitcher).
 ```
 
