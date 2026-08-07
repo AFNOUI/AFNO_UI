@@ -36,7 +36,17 @@ import {
   BuilderInsightsPanel,
   useBuilderInsights,
 } from "@/components/shared/builder-insights";
+import { useBuilderDraft } from "@/components/shared/builder-draft";
+import { BuilderPreviewFrame } from "@/components/shared/builder-preview";
+import {
+  BuilderDiffPanel,
+  useBuilderDiff,
+  resetDiffEntry,
+  resetAllDiffEntries,
+  type BuilderDiffEntry,
+} from "@/components/shared/builder-diff";
 import { getTableInsights } from "@/table-builder/utils/tableInsights";
+import { isTableDraft, type TableDraft } from "@/table-builder/utils/tableDraft";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -65,6 +75,40 @@ export default function DataTableBuilder() {
     () => getTableInsights(config, sampleData as { id: string; [k: string]: unknown }[]),
     [config, sampleData],
   );
+
+  const activeTemplate = selectedTemplateKey ? tableTemplates[selectedTemplateKey] : undefined;
+  const diff = useBuilderDiff({
+    current: config,
+    template: activeTemplate?.config,
+    templateName: activeTemplate?.title,
+    // Columns and their groups are edited as a unit in the Columns editor, so
+    // a per-column row here would be both unreadable and un-resettable.
+    options: { atomic: ["columns", "columnGroups"] },
+  });
+
+  const handleResetSetting = useCallback((entry: BuilderDiffEntry) => {
+    setConfig((prev) => resetDiffEntry(prev, entry));
+  }, [setConfig]);
+
+  const handleResetAllSettings = useCallback((entries: BuilderDiffEntry[]) => {
+    setConfig((prev) => resetAllDiffEntries(prev, entries));
+    toast({ title: "Reset to template", description: `${entries.length} settings restored.` });
+  }, [setConfig]);
+
+  const draft = useBuilderDraft<TableDraft>({
+    id: "table",
+    deps: [config, sampleData, rendererSources, selectedTemplateKey],
+    snapshot: () => ({ config, sampleData, rendererSources, templateKey: selectedTemplateKey }),
+    label: selectedTemplateKey ? tableTemplates[selectedTemplateKey]?.title : undefined,
+    validate: isTableDraft,
+    onRestore: (saved) => {
+      setSelectedTemplateKey(saved.templateKey);
+      resetHistory(saved.config);
+      setSampleData(saved.sampleData);
+      setRendererSources(saved.rendererSources);
+      toast({ title: "Draft restored", description: "Picked up where you left off." });
+    },
+  });
 
   const loadTemplate = useCallback((templateKey: string) => {
     const template = tableTemplates[templateKey];
@@ -209,6 +253,7 @@ export default function DataTableBuilder() {
               />
             }
             history={history}
+            draft={draft.header}
           />
 
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "builder" | "preview" | "code" | "guide")} className="space-y-4">
@@ -239,10 +284,17 @@ export default function DataTableBuilder() {
 
             <TabsContent value="preview" className="mt-0">
               <div className="space-y-4">
-                <TablePreview config={config} data={sampleData} isLoading={isLoading} />
+                <BuilderPreviewFrame>
+                  <TablePreview config={config} data={sampleData} isLoading={isLoading} />
+                </BuilderPreviewFrame>
                 <BuilderInsightsPanel
                   insights={insights}
                   emptyMessage="No issues found — this table is ready to export."
+                />
+                <BuilderDiffPanel
+                  diff={diff}
+                  onReset={handleResetSetting}
+                  onResetAll={handleResetAllSettings}
                 />
               </div>
             </TabsContent>

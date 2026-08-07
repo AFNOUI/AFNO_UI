@@ -19,8 +19,17 @@ import {
   useTemplateOptions,
   BuilderTemplatePicker,
 } from "@/components/shared/builder-header";
+import { useBuilderDraft } from "@/components/shared/builder-draft";
+import {
+  BuilderDiffPanel,
+  useBuilderDiff,
+  resetDiffEntry,
+  resetAllDiffEntries,
+  type BuilderDiffEntry,
+} from "@/components/shared/builder-diff";
 
 // Form Builder Components
+import { isFormDraft, type FormDraft } from "@/form-builder/utils/formDraft";
 import { formTemplates } from "@/form-builder/data/formBuilderTemplates";
 import { createField, initialConfig } from "@/form-builder/config/constants";
 
@@ -42,6 +51,44 @@ export default function FormBuilder() {
   const [activeTab, setActiveTab] = useState<"builder" | "preview" | "code" | "guide">("builder");
   const { state: formConfig, set: setFormConfig, reset: resetHistory, history } = useBuilderHistory<FormConfig>(initialConfig);
   const templateOptions = useTemplateOptions(formTemplates);
+
+  const activeTemplate = selectedTemplateKey ? formTemplates[selectedTemplateKey] : undefined;
+  const diff = useBuilderDiff({
+    current: formConfig,
+    template: activeTemplate,
+    templateName: activeTemplate?.title,
+    // Sections hold every field. Walking them would drown the form-level
+    // settings this panel exists to surface, and "reset section 2's third
+    // field" is the Builder tab's job, not a diff row's.
+    options: { atomic: ["sections"] },
+  });
+
+  const handleResetSetting = useCallback((entry: BuilderDiffEntry) => {
+    setFormConfig((prev) => resetDiffEntry(prev, entry));
+  }, [setFormConfig]);
+
+  const handleResetAllSettings = useCallback((entries: BuilderDiffEntry[]) => {
+    setFormConfig((prev) => resetAllDiffEntries(prev, entries));
+    toast({ title: "Reset to template", description: `${entries.length} settings restored.` });
+  }, [setFormConfig]);
+
+  const draft = useBuilderDraft<FormDraft>({
+    id: "form",
+    deps: [formConfig, currentLayout, selectedTemplateKey],
+    snapshot: () => ({ config: formConfig, layout: currentLayout, templateKey: selectedTemplateKey }),
+    label: selectedTemplateKey ? formTemplates[selectedTemplateKey]?.title : undefined,
+    validate: isFormDraft,
+    onRestore: (saved) => {
+      setSelectedTemplateKey(saved.templateKey);
+      setCurrentLayout(saved.layout);
+      resetHistory(saved.config);
+      // The restored form may have fewer sections than the one on screen, so
+      // reset both cursors rather than leaving them pointing past the end.
+      setSelectedFieldIndex(null);
+      setSelectedSectionIndex(0);
+      toast({ title: "Draft restored", description: "Picked up where you left off." });
+    },
+  });
 
   const currentSection = formConfig.sections[selectedSectionIndex];
   const selectedField = selectedFieldIndex !== null ? currentSection?.fields[selectedFieldIndex] : null;
@@ -250,6 +297,7 @@ export default function FormBuilder() {
               />
             }
             history={history}
+            draft={draft.header}
           />
 
           {/* Layout Picker */}
@@ -324,12 +372,19 @@ export default function FormBuilder() {
 
             {/* PREVIEW TAB */}
             <TabsContent value="preview" className="mt-0">
-              <PreviewTab
-                formConfig={formConfig}
-                onSubmit={handleSubmit}
-                submittedData={submittedData}
-                onClearSubmittedData={() => setSubmittedData(null)}
-              />
+              <div className="space-y-4">
+                <PreviewTab
+                  formConfig={formConfig}
+                  onSubmit={handleSubmit}
+                  submittedData={submittedData}
+                  onClearSubmittedData={() => setSubmittedData(null)}
+                />
+                <BuilderDiffPanel
+                  diff={diff}
+                  onReset={handleResetSetting}
+                  onResetAll={handleResetAllSettings}
+                />
+              </div>
             </TabsContent>
 
             {/* CODE EXPORT TAB */}

@@ -10,6 +10,7 @@ import { extractFields, buildZodSchema } from "@/forms/utils/zodSchemaBuilder";
 import { SubmittedDataView } from "@/form-builder/SubmittedDataView";
 import { getFormInsights } from "@/form-builder/utils/formInsights";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BuilderPreviewFrame } from "@/components/shared/builder-preview";
 import { BuilderInsightsPanel, useBuilderInsights } from "@/components/shared/builder-insights";
 
 import { ActionForm } from "@/forms/action-forms/ActionForm";
@@ -71,38 +72,40 @@ export function PreviewTab({ formConfig, onSubmit, submittedData, onClearSubmitt
         </CardContent>
       </Card>
 
-      <Card className="border-border">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <Eye className="h-5 w-5 text-primary" />
-            <CardTitle>Live Preview</CardTitle>
-            <span className="text-xs text-muted-foreground">({libraryMeta[library].label})</span>
-          </div>
-          <CardDescription>Interactive preview — fill it out and submit to test validation</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {hasFields ? (
-            <>
-              {library === "action" && (
-                <ActionForm key={formKey} config={formConfig} schema={schema} onSubmit={onSubmit} />
-              )}
-              {library === "tanstack" && (
-                <TanstackForm key={formKey} config={formConfig} schema={schema} onSubmit={onSubmit} />
-              )}
-              {library === "rhf" && (
-                <ReactHookForm key={formKey} config={formConfig} schema={schema} onSubmit={onSubmit} />
-              )}
-              <SubmittedDataView data={submittedData} onClear={onClearSubmittedData} />
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <Plus className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium text-muted-foreground">No fields yet</p>
-              <p className="text-sm text-muted-foreground">Add fields in the Builder tab</p>
+      <BuilderPreviewFrame>
+        <Card className="border-border">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-primary" />
+              <CardTitle>Live Preview</CardTitle>
+              <span className="text-xs text-muted-foreground">({libraryMeta[library].label})</span>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <CardDescription>Interactive preview — fill it out and submit to test validation</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {hasFields ? (
+              <>
+                {library === "action" && (
+                  <ActionForm key={formKey} config={formConfig} schema={schema} onSubmit={onSubmit} />
+                )}
+                {library === "tanstack" && (
+                  <TanstackForm key={formKey} config={formConfig} schema={schema} onSubmit={onSubmit} />
+                )}
+                {library === "rhf" && (
+                  <ReactHookForm key={formKey} config={formConfig} schema={schema} onSubmit={onSubmit} />
+                )}
+                <SubmittedDataView data={submittedData} onClear={onClearSubmittedData} />
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <Plus className="h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-lg font-medium text-muted-foreground">No fields yet</p>
+                <p className="text-sm text-muted-foreground">Add fields in the Builder tab</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </BuilderPreviewFrame>
 
       <BuilderInsightsPanel
         insights={insights}

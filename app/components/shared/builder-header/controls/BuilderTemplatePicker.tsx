@@ -16,13 +16,13 @@ import {
   CommandInput,
 } from "@/components/ui/command";
 
-import { BuilderBadge } from "../primitives/BuilderBadge";
-import type { BuilderTemplateOption } from "../types";
 import {
   TEMPLATE_PICKER_WIDTH,
   TOOLBAR_CONTROL_HEIGHT,
   TEMPLATE_SEARCH_THRESHOLD,
 } from "../constants";
+import type { BuilderTemplateOption } from "../types";
+import { BuilderBadge } from "../primitives/BuilderBadge";
 
 export interface BuilderTemplatePickerProps {
   options: BuilderTemplateOption[];

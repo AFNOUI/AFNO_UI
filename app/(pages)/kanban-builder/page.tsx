@@ -28,7 +28,17 @@ import {
   BuilderInsightsPanel,
   useBuilderInsights,
 } from "@/components/shared/builder-insights";
+import { useBuilderDraft } from "@/components/shared/builder-draft";
+import { BuilderPreviewFrame } from "@/components/shared/builder-preview";
+import {
+  BuilderDiffPanel,
+  useBuilderDiff,
+  resetDiffEntry,
+  resetAllDiffEntries,
+  type BuilderDiffEntry,
+} from "@/components/shared/builder-diff";
 import { getKanbanInsights } from "@/kanban-builder/utils/kanbanInsights";
+import { isKanbanDraft, type KanbanDraft } from "@/kanban-builder/utils/kanbanDraft";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -64,6 +74,40 @@ export default function KanbanBuilder() {
   >(defaultKanbanRendererSources);
 
   const insights = useBuilderInsights(() => getKanbanInsights(config, cards), [config, cards]);
+
+  const activeTemplate = selectedTemplateKey ? kanbanTemplates[selectedTemplateKey] : undefined;
+  const diff = useBuilderDiff({
+    current: config,
+    template: activeTemplate?.config,
+    templateName: activeTemplate?.title,
+    // Columns and swimlanes are edited as a unit on the board itself, so a
+    // per-column row here would be both unreadable and un-resettable.
+    options: { atomic: ["columns", "swimlanes"] },
+  });
+
+  const handleResetSetting = useCallback((entry: BuilderDiffEntry) => {
+    setConfig((prev) => resetDiffEntry(prev, entry));
+  }, [setConfig]);
+
+  const handleResetAllSettings = useCallback((entries: BuilderDiffEntry[]) => {
+    setConfig((prev) => resetAllDiffEntries(prev, entries));
+    toast({ title: "Reset to template", description: `${entries.length} settings restored.` });
+  }, [setConfig]);
+
+  const draft = useBuilderDraft<KanbanDraft>({
+    id: "kanban",
+    deps: [config, cards, rendererSources, selectedTemplateKey],
+    snapshot: () => ({ config, cards, rendererSources, templateKey: selectedTemplateKey }),
+    label: selectedTemplateKey ? kanbanTemplates[selectedTemplateKey]?.title : undefined,
+    validate: isKanbanDraft,
+    onRestore: (saved) => {
+      setSelectedTemplateKey(saved.templateKey);
+      reset(saved.config);
+      setCards(saved.cards);
+      setRendererSources(saved.rendererSources);
+      toast({ title: "Draft restored", description: "Picked up where you left off." });
+    },
+  });
 
   const loadTemplate = useCallback((key: string) => {
     const tpl = kanbanTemplates[key];
@@ -144,6 +188,7 @@ export default function KanbanBuilder() {
               />
             }
             history={history}
+            draft={draft.header}
           />
 
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="space-y-4">
@@ -176,17 +221,24 @@ export default function KanbanBuilder() {
 
             <TabsContent value="preview" className="mt-0">
               <div className="space-y-4">
-                <div className="rounded-lg border border-border bg-card p-4 sm:p-6">
-                  <div className="mb-4">
-                    <h2 className="text-xl font-bold">{config.title}</h2>
-                    {config.subtitle && <p className="text-sm text-muted-foreground">{config.subtitle}</p>}
+                <BuilderPreviewFrame>
+                  <div className="rounded-lg border border-border bg-card p-4 sm:p-6">
+                    <div className="mb-4">
+                      <h2 className="text-xl font-bold">{config.title}</h2>
+                      {config.subtitle && <p className="text-sm text-muted-foreground">{config.subtitle}</p>}
+                    </div>
+                    <KanbanBoard config={config} cards={cards} onCardsChange={setCards} onColumnsChange={(cols) => setConfig({ ...config, columns: cols })} onAddCard={handleAddCard} onLoadMore={handleLoadMore} />
                   </div>
-                  <KanbanBoard config={config} cards={cards} onCardsChange={setCards} onColumnsChange={(cols) => setConfig({ ...config, columns: cols })} onAddCard={handleAddCard} onLoadMore={handleLoadMore} />
-                </div>
+                </BuilderPreviewFrame>
 
                 <BuilderInsightsPanel
                   insights={insights}
                   emptyMessage="No issues found — this board is ready to export."
+                />
+                <BuilderDiffPanel
+                  diff={diff}
+                  onReset={handleResetSetting}
+                  onResetAll={handleResetAllSettings}
                 />
               </div>
             </TabsContent>
