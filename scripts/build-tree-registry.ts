@@ -102,7 +102,7 @@ const TREE_SHARED_SOURCES: TreeSharedSource[] = [
   },
   {
     // NOTE: source is a `.d.ts` in the lab; it ships as `types.ts` (type-only, no runtime).
-    sourcePath: "app/trees/types.d.ts",
+    sourcePath: "app/trees/types.ts",
     targetPath: "components/tree/types.ts",
     name: "types.ts",
     language: "typescript",

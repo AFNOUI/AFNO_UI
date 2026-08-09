@@ -65,7 +65,80 @@ type VariantRegistryItem = {
    * by the host framework.
    */
   npmDependencies?: string[];
+  /**
+   * CLI-gated transport opt-ins (AI_AGENT_RULES § R-56).
+   *
+   * The two axes are INDEPENDENT: `--axios` swaps only `services.ts`, and
+   * `--tanstack` swaps only `hooks` + `constants.ts`. So there is no combined
+   * key — passing both flags applies both override sets. Files listed here
+   * REPLACE the same paths in `files` when the flag is present.
+   */
+  transport?: {
+    axios?: { files: VariantRegistryItemFile[]; npmDependencies: string[] };
+    tanstack?: { files: VariantRegistryItemFile[]; npmDependencies: string[] };
+  };
 };
+
+/**
+ * Generic `transport` override builder.
+ *
+ * Diffs each flavored generation against the default and keeps only the files
+ * that actually changed, so the registry carries ~2 extra files per variant
+ * instead of a full duplicate bundle for every combo.
+ */
+function buildTransportBlock(
+  defaultFiles: VariantRegistryItemFile[],
+  generate: (choice: { http: "fetch" | "axios"; query: "local" | "tanstack" }) => VariantRegistryItemFile[],
+): VariantRegistryItem["transport"] | undefined {
+  const byPath = new Map(defaultFiles.map((f) => [f.path, f.content]));
+  const diff = (choice: { http: "fetch" | "axios"; query: "local" | "tanstack" }) =>
+    generate(choice).filter((f) => byPath.get(f.path) !== f.content);
+
+  const axiosFiles = diff({ http: "axios", query: "local" });
+  const tanstackFiles = diff({ http: "fetch", query: "tanstack" });
+
+  const block: NonNullable<VariantRegistryItem["transport"]> = {};
+  if (axiosFiles.length > 0) block.axios = { files: axiosFiles, npmDependencies: ["axios"] };
+  if (tanstackFiles.length > 0) {
+    block.tanstack = { files: tanstackFiles, npmDependencies: ["@tanstack/react-query"] };
+  }
+  return Object.keys(block).length > 0 ? block : undefined;
+}
+
+/**
+ * Builds the `transport` override block for a table variant.
+ *
+ * Diffs each flavored generation against the default one and keeps only the
+ * files that actually changed — so the registry payload carries ~2 extra files
+ * per variant instead of a full duplicate bundle.
+ */
+function buildTableTransportBlock(
+  config: Parameters<typeof buildTableVariantFiles>[0],
+  dataMode: DataMode,
+  variantSlug: string,
+  defaultFiles: VariantRegistryItemFile[],
+): VariantRegistryItem["transport"] | undefined {
+  const byPath = new Map(defaultFiles.map((f) => [f.path, f.content]));
+
+  const diff = (choice: { http: "fetch" | "axios"; query: "local" | "tanstack" }) =>
+    buildTableVariantFiles(config, dataMode, variantSlug, choice)
+      .filter((f) => byPath.get(f.path) !== f.content)
+      .map((f) => ({
+        path: f.path,
+        type: "registry:table-variant" as const,
+        content: f.content,
+      }));
+
+  const axiosFiles = diff({ http: "axios", query: "local" });
+  const tanstackFiles = diff({ http: "fetch", query: "tanstack" });
+
+  const block: NonNullable<VariantRegistryItem["transport"]> = {};
+  if (axiosFiles.length > 0) block.axios = { files: axiosFiles, npmDependencies: ["axios"] };
+  if (tanstackFiles.length > 0) {
+    block.tanstack = { files: tanstackFiles, npmDependencies: ["@tanstack/react-query"] };
+  }
+  return Object.keys(block).length > 0 ? block : undefined;
+}
 
 /** npm package name grammar (scoped + unscoped), used to reject false positives. */
 const VALID_PACKAGE_NAME = /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
@@ -260,12 +333,22 @@ async function buildVariantsRegistry() {
             content: f.content,
           }));
         }
+        // `constants.ts` / `hooks.ts` / `services.ts` are stack-independent, so
+        // one override set covers all three stacks (the CLI matches by path).
+        const formTransport = buildTransportBlock(stacks.rhf, (choice) =>
+          buildFormVariantStackFiles(mod.formConfig, "rhf", variantSlug, choice).map((f) => ({
+            path: f.path,
+            type: "registry:form-variant" as const,
+            content: f.content,
+          })),
+        );
         item = {
           name: variantName,
           category,
           variant: variantSlug,
           files: [],
           stacks,
+          ...(formTransport ? { transport: formTransport } : {}),
         };
       } catch (err) {
         errors.push(
@@ -336,15 +419,23 @@ async function buildVariantsRegistry() {
         ? "api"
         : "static";
     const files = buildTableVariantFiles(template.config, dataMode, variantSlug);
+    const defaultFiles = files.map((f) => ({
+      path: f.path,
+      type: "registry:table-variant" as const,
+      content: f.content,
+    }));
+    const transport = buildTableTransportBlock(
+      template.config,
+      dataMode,
+      variantSlug,
+      defaultFiles,
+    );
     const item: VariantRegistryItem = {
       name: variantName,
       category: "tables",
       variant: variantSlug,
-      files: files.map((f) => ({
-        path: f.path,
-        type: "registry:table-variant",
-        content: f.content,
-      })),
+      files: defaultFiles,
+      ...(transport ? { transport } : {}),
     };
     const targetPath = path.join(tablesVariantRoot, `${variantSlug}.json`);
     writeVariantJson(targetPath, item);
@@ -366,15 +457,26 @@ async function buildVariantsRegistry() {
     const variantSlug = kanbanTemplateKeyToVariantSlug(templateKey);
     const variantName = `kanban/${variantSlug}`;
     const files = buildKanbanVariantFiles(template.config, template.cards, variantSlug, template.rendererSources);
+    const kanbanDefaults = files.map((f) => ({
+      path: f.path,
+      type: "registry:kanban-variant" as const,
+      content: f.content,
+    }));
+    const kanbanTransport = buildTransportBlock(kanbanDefaults, (choice) =>
+      buildKanbanVariantFiles(
+        template.config,
+        template.cards,
+        variantSlug,
+        template.rendererSources,
+        choice,
+      ).map((f) => ({ path: f.path, type: "registry:kanban-variant" as const, content: f.content })),
+    );
     const item: VariantRegistryItem = {
       name: variantName,
       category: "kanban",
       variant: variantSlug,
-      files: files.map((f) => ({
-        path: f.path,
-        type: "registry:kanban-variant",
-        content: f.content,
-      })),
+      files: kanbanDefaults,
+      ...(kanbanTransport ? { transport: kanbanTransport } : {}),
     };
     const targetPath = path.join(kanbanVariantRoot, `${variantSlug}.json`);
     writeVariantJson(targetPath, item);
@@ -405,16 +507,27 @@ async function buildVariantsRegistry() {
       template.rendererSources,
     );
     const features = treeVariantFeatures(template.config);
+    const treeDefaults = files.map((f) => ({
+      path: f.path,
+      type: "registry:tree-variant" as const,
+      content: f.content,
+    }));
+    const treeTransport = buildTransportBlock(treeDefaults, (choice) =>
+      buildTreeVariantFiles(
+        template.config,
+        template.tree,
+        variantSlug,
+        template.rendererSources,
+        choice,
+      ).map((f) => ({ path: f.path, type: "registry:tree-variant" as const, content: f.content })),
+    );
     const item: VariantRegistryItem = {
       name: variantName,
       category: "tree",
       variant: variantSlug,
-      files: files.map((f) => ({
-        path: f.path,
-        type: "registry:tree-variant",
-        content: f.content,
-      })),
+      files: treeDefaults,
       ...(features.length ? { features } : {}),
+      ...(treeTransport ? { transport: treeTransport } : {}),
     };
     const targetPath = path.join(treeVariantRoot, `${variantSlug}.json`);
     writeVariantJson(targetPath, item);
