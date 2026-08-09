@@ -65,9 +65,18 @@ type FormRegistryOutput = {
   };
 };
 
+/**
+ * Engine install deps per stack.
+ *
+ * `axios` and `@tanstack/react-query` are deliberately ABSENT: since Wave-9 no
+ * forms engine file imports either one (§ R-53), and they are CLI-gated
+ * opt-ins selected per variant with `--axios` / `--tanstack-query` (§ R-56).
+ * Listing them here would make every `afnoui form init` install a transport
+ * the generated code never imports — which is what it used to do.
+ */
 const STACK_INSTALL: Record<FormStackKind, StackInstallSpec> = {
   rhf: {
-    npmDependencies: ['zod', 'react-hook-form', '@hookform/resolvers', 'axios', 'date-fns', '@tanstack/react-query'],
+    npmDependencies: ['zod', 'react-hook-form', '@hookform/resolvers', 'date-fns'],
     npmDevDependencies: [],
     uiComponents: [
       'form',
@@ -92,7 +101,7 @@ const STACK_INSTALL: Record<FormStackKind, StackInstallSpec> = {
     ],
   },
   tanstack: {
-    npmDependencies: ['zod', '@tanstack/react-form', 'axios', 'date-fns', '@tanstack/react-query'],
+    npmDependencies: ['zod', '@tanstack/react-form', 'date-fns'],
     npmDevDependencies: [],
     uiComponents: [
       'label',
@@ -116,7 +125,7 @@ const STACK_INSTALL: Record<FormStackKind, StackInstallSpec> = {
     ],
   },
   action: {
-    npmDependencies: ['zod', 'axios', 'date-fns', '@tanstack/react-query'],
+    npmDependencies: ['zod', 'date-fns'],
     npmDevDependencies: [],
     uiComponents: [
       'label',

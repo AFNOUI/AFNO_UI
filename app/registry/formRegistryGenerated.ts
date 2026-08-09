@@ -13,7 +13,7 @@ export interface RegistryFile {
   category: 'core' | 'hook' | 'util' | 'field';
 }
 
-export const formRegistryGeneratedAt = '2026-08-09T12:47:16.920Z';
+export const formRegistryGeneratedAt = '2026-08-09T15:26:01.456Z';
 
 /**
  * Single source of truth for per-stack install metadata.
@@ -29,9 +29,7 @@ export const formStackInstall = {
       "zod",
       "react-hook-form",
       "@hookform/resolvers",
-      "axios",
-      "date-fns",
-      "@tanstack/react-query"
+      "date-fns"
     ],
     "npmDevDependencies": [],
     "uiComponents": [
@@ -60,9 +58,7 @@ export const formStackInstall = {
     "npmDependencies": [
       "zod",
       "@tanstack/react-form",
-      "axios",
-      "date-fns",
-      "@tanstack/react-query"
+      "date-fns"
     ],
     "npmDevDependencies": [],
     "uiComponents": [
@@ -89,9 +85,7 @@ export const formStackInstall = {
   "action": {
     "npmDependencies": [
       "zod",
-      "axios",
-      "date-fns",
-      "@tanstack/react-query"
+      "date-fns"
     ],
     "npmDevDependencies": [],
     "uiComponents": [
