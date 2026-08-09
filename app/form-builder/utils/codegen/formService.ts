@@ -1,8 +1,87 @@
-export function generateFormServiceCode(): string {
-  return `import axios from "axios";
-import { BackendErrorResponse, BackendFieldError } from "@/hooks/useBackendErrors";
+import {
+  DEFAULT_TRANSPORT,
+  cliGatedNote,
+  type TransportChoice,
+} from "@/lib/codegen/transport";
 
-const API_BASE = "/api";
+export function generateFormServiceCode(
+  transport: TransportChoice = DEFAULT_TRANSPORT,
+): string {
+  const requestHelper =
+    transport.http === "axios"
+      ? `import axios from "axios";
+
+/**
+ * Single place the HTTP client is named, so swapping clients (or adding
+ * interceptors / auth refresh) is a one-spot change.
+ */
+async function request(url: string, data: Record<string, unknown>): Promise<void> {
+  await axios.post(url, data, { headers: { "Content-Type": "application/json", ...BASE_HEADERS } });
+}`
+      : `/**
+ * Single place the HTTP client is named, so swapping \`fetch\` for axios (or
+ * adding interceptors / auth refresh) is a one-spot change.
+ */
+async function request(url: string, data: Record<string, unknown>): Promise<void> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...BASE_HEADERS },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => undefined);
+    throw normalizeBackendError(payload);
+  }
+}`;
+
+  const errorAdapter =
+    transport.http === "axios"
+      ? `    if (axios.isAxiosError(error) && error.response?.data !== undefined) {
+      throw normalizeBackendError(error.response.data);
+    }
+    throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;`
+      : `    if (error && typeof error === "object" && "success" in error) throw error;
+    throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;`;
+
+  // When axios is chosen the ENGINE must use it too: the async/infinite field
+  // components load options through their own transport context, which defaults
+  // to fetch. Exporting an adapter here (and mounting the provider on the page)
+  // keeps option-loading and form submit on the same client (R-56).
+  const engineTransport =
+    transport.http === "axios"
+      ? `
+/**
+ * Adapter that lets the ENGINE's option-loading use axios as well.
+ * The page mounts this via \`FormTransportProvider\`; without it the async /
+ * infinite fields would keep using their built-in fetch default.
+ */
+export const optionsTransport: OptionsTransport = async (request, signal) => {
+  const res = await axios.request({
+    url: request.url,
+    method: request.method,
+    headers: { ...BASE_HEADERS, ...request.headers },
+    params: request.params,
+    data: request.body,
+    signal,
+  });
+  return res.data;
+};
+`
+      : "";
+
+  return `import { BackendErrorResponse, BackendFieldError } from "@/hooks/useBackendErrors";${
+    transport.http === "axios"
+      ? `\nimport type { OptionsTransport } from "@/components/forms/transport/types";`
+      : ""
+  }
+import { API_BASE, SUBMIT_PATH, BASE_HEADERS } from "./constants";
+
+/**
+ * Network layer for this form — the ONLY file here that talks to your backend
+ * (AI_AGENT_RULES § R-55: component → hooks.ts → services.ts).
+ *
+${cliGatedNote("http", transport)}
+ */
 
 /**
  * Normalize any backend payload to AfnoUI's expected shape:
@@ -53,15 +132,18 @@ function normalizeBackendError(data: unknown): BackendErrorResponse {
   return { success: false, message, errors };
 }
 
-export const formService = {
+${requestHelper}
+
+${engineTransport}export const formService = {
+  /**
+   * Throws a normalized \`BackendErrorResponse\` on failure so the hook layer can
+   * map it onto field errors. Nothing is swallowed here.
+   */
   async submitForm(data: Record<string, unknown>): Promise<void> {
     try {
-      await axios.post(\`\${API_BASE}/forms/submit\`, data);
+      await request(\`\${API_BASE}\${SUBMIT_PATH}\`, data);
     } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response?.data !== undefined) {
-        throw normalizeBackendError(error.response.data);
-      }
-      throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
+${errorAdapter}
     }
   },
 };

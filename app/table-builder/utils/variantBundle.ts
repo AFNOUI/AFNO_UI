@@ -13,6 +13,7 @@
 
 import type { TableBuilderConfig } from "@/tables/types";
 
+import { DEFAULT_TRANSPORT, type TransportChoice } from "@/lib/codegen/transport";
 import { generateAllFiles, type DataMode } from "./tableCodeGenerator";
 
 export interface TableVariantFile {
@@ -58,8 +59,10 @@ export function buildTableVariantFiles(
   config: TableBuilderConfig,
   dataMode: DataMode,
   variantSlug: string,
+  /** Which HTTP client / query strategy to generate against (R-56). */
+  transport: TransportChoice = DEFAULT_TRANSPORT,
 ): TableVariantFile[] {
-  const generated = generateAllFiles(config, dataMode);
+  const generated = generateAllFiles(config, dataMode, { transport });
   const componentName = variantPageComponentName(variantSlug);
 
   return generated.map((file) => {

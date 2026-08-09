@@ -63,11 +63,9 @@ function CodePanel({ variantKey }: { variantKey: string }) {
 
   // Plain derivation — the React Compiler memoizes this; a manual useMemo here
   // could not be preserved (the body reads `t.rendererSources`, not in the deps).
-  const generatedFiles = generateAllFiles(
-    t.config,
-    dataMode,
-    t.rendererSources,
-  ).map((f) => ({ ...f, isFixed: false }));
+  const generatedFiles = generateAllFiles(t.config, dataMode, {
+    rendererSources: t.rendererSources,
+  }).map((f) => ({ ...f, isFixed: false }));
   const sharedFiles = [
     ...SHARED_TABLE_FILES,
     ...getOptionalEngineFiles(t.config),

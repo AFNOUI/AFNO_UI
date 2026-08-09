@@ -135,14 +135,11 @@ describe("formCodeGenerator / generateAllFiles (per stack × per mode)", () => {
   for (const lib of STACKS) {
     for (const mode of MODES) {
       it(`${lib} / ${mode} — file shape locked`, () => {
-        const files = generateAllFiles(
-          RICH_CONFIG,
-          mode === "static" ? "compile-time" : "runtime",
-          [],
-          lib,
-          mode,
-          "relative",
-        );
+        const files = generateAllFiles(RICH_CONFIG, mode === "static" ? "compile-time" : "runtime", {
+          library: lib,
+          implementationMode: mode,
+          importStyle: "relative",
+        });
         expect(snapshotShape(files)).toMatchSnapshot();
       });
     }

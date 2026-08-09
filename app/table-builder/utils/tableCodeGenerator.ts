@@ -16,6 +16,9 @@
  */
 
 import type { TableBuilderConfig, TableColumnConfig } from "@/tables/types";
+import { generateDataFiles } from "./codegen/dataFiles";
+import { resolveSource, type DataMode, type GeneratedFile } from "./codegen/types";
+import { DEFAULT_TRANSPORT, type TransportChoice } from "@/lib/codegen/transport";
 
 /**
  * Source strings used to emit a real `renderers.tsx` file alongside
@@ -48,29 +51,14 @@ export interface TableRendererSources {
   pagination?: string;
 }
 
-export type DataMode = "static" | "api";
 
-export interface GeneratedFile {
-  name: string;
-  path: string;
-  description: string;
-  isFixed: boolean;
-  language: "tsx" | "ts" | "json";
-  code: string;
-}
+// Re-exported so existing importers of this module keep working; the
+// definitions live in ./codegen/types.ts to avoid a cycle with ./codegen/dataFiles.
+export type { GeneratedFile, DataMode } from "./codegen/types";
 
 const json = (v: unknown) => JSON.stringify(v, null, 2);
 
-function resolveSource(
-  config: TableBuilderConfig,
-  key: "search" | "filter" | "sort" | "pagination",
-): "client" | "api" {
-  const explicit = config.sources?.[key];
-  if (explicit) return explicit;
-  if (key === "sort") return config.sortMode;
-  if (key === "pagination") return config.paginationMode;
-  return config.sortMode;
-}
+
 
 function pickRowType(cols: TableColumnConfig[]): string {
   const fieldLines = cols
@@ -149,296 +137,28 @@ function cleanedConfig(config: TableBuilderConfig): Partial<TableBuilderConfig> 
 
 // ─────────────── Hook generation (per-feature API source) ───────────────
 
-function generateHook(config: TableBuilderConfig): GeneratedFile {
-  const apiSearch = resolveSource(config, "search") === "api" && config.enableSearch;
-  const apiFilter = resolveSource(config, "filter") === "api" && config.enableColumnFilters;
-  const apiSort = resolveSource(config, "sort") === "api";
-  const apiPage = resolveSource(config, "pagination") === "api" && config.enablePagination;
-  const hasMultiSort = config.enableMultiSort;
-  const hasInlineEdit = config.enableInlineEdit;
-  const hasSelection = config.enableRowSelection;
-  const hasBulk = config.enableBulkActions;
-  const hasDnD = config.enableDnD;
-  const apiConfig = config.apiConfig;
-  const listMethod = apiConfig?.listMethod ?? "GET";
-  const isPostLike = listMethod !== "GET";
-  const rowActions = apiConfig?.rowActions ?? [];
-
-  const sortType = hasMultiSort
-    ? `Array<{ key: string; dir: "asc" | "desc" }>`
-    : `{ key: string; dir: "asc" | "desc" } | null`;
-
-  const queryFields: string[] = [];
-  if (apiPage) queryFields.push("page: number;", "pageSize: number;");
-  if (apiSearch) queryFields.push("search: string;");
-  if (apiFilter) queryFields.push("filters: Record<string, string>;");
-  if (apiSort) queryFields.push(`${hasMultiSort ? "sorts: " + sortType : "sort: " + sortType};`);
-
-  const headersLine = apiConfig?.headers && Object.keys(apiConfig.headers).length > 0
-    ? `const baseHeaders: Record<string, string> = ${JSON.stringify(apiConfig.headers)};`
-    : `const baseHeaders: Record<string, string> = {};`;
-
-  const staticQueryLine = apiConfig?.listQuery && Object.keys(apiConfig.listQuery).length > 0
-    ? `Object.entries(${JSON.stringify(apiConfig.listQuery)}).forEach(([k, v]) => params.set(k, v));`
-    : "";
-
-  // Build query-param assembly
-  const paramLines: string[] = [`const params = new URLSearchParams();`];
-  if (staticQueryLine) paramLines.push(staticQueryLine);
-  if (apiPage) {
-    paramLines.push(`params.set("page", String(query.page));`);
-    paramLines.push(`params.set("size", String(query.pageSize));`);
-  }
-  if (apiSearch) paramLines.push(`if (query.search) params.set("q", query.search);`);
-  if (apiFilter) {
-    paramLines.push(`for (const [k, v] of Object.entries(query.filters)) {`);
-    paramLines.push(`  if (v) params.set(\`filter[\${k}]\`, v);`);
-    paramLines.push(`}`);
-  }
-  if (apiSort) {
-    if (hasMultiSort) {
-      paramLines.push(`query.sorts.forEach((s, i) => params.append(\`sort[\${i}]\`, \`\${s.key}:\${s.dir}\`));`);
-    } else {
-      paramLines.push(`if (query.sort) params.set("sort", \`\${query.sort.key}:\${query.sort.dir}\`);`);
-    }
-  }
-
-  // Body interpolation for non-GET list requests
-  const bodyTemplate = apiConfig?.listBody?.trim();
-  const bodyBlock = isPostLike && bodyTemplate
-    ? `
-      const interpolated = ${JSON.stringify(bodyTemplate)}
-        .replace(/{{search}}/g, JSON.stringify(${apiSearch ? "query.search ?? \"\"" : "\"\""}))
-        .replace(/{{page}}/g, String(${apiPage ? "query.page" : "0"}))
-        .replace(/{{pageSize}}/g, String(${apiPage ? "query.pageSize" : "0"}))
-        .replace(/{{filters}}/g, JSON.stringify(${apiFilter ? "query.filters" : "{}"}))
-        .replace(/{{sort}}/g, JSON.stringify(${apiSort ? (hasMultiSort ? "query.sorts" : "query.sort") : "null"}));`
-    : "";
-
-  const listPath = apiConfig?.listPath ?? "";
-  const fetchInit = isPostLike
-    ? `{
-        method: "${listMethod}",
-        headers: { "Content-Type": "application/json", ...baseHeaders },
-        ${bodyTemplate ? "body: interpolated," : ""}
-        signal: ctrl.signal,
-      }`
-    : `{ method: "GET", headers: baseHeaders, signal: ctrl.signal }`;
-
-  const fetchUrl = isPostLike
-    ? `\`\${endpoint}${listPath}?\${params}\``
-    : `\`\${endpoint}${listPath}?\${params}\``;
-
-  // ── Row-action handlers ──
-  const actionHandlers: string[] = [];
-  const actionTypeFields: string[] = [];
-  for (const a of rowActions) {
-    const fnName = toFnName(a.id, a.columnKey, a.trigger);
-    const tokens = (s: string) => s
-      .replace(/:id\b/g, "${row.id}")
-      .replace(/:(\w+)/g, (_, k) => "${String(row." + k + ")}");
-    const pathInterp = tokens(a.path);
-    const queryInterp = a.query && Object.keys(a.query).length > 0
-      ? `\n    const aParams = new URLSearchParams(${JSON.stringify(a.query)});`
-      : "";
-    const sigParams = a.trigger === "button" ? "row: TRow" : "row: TRow, value: unknown";
-    const optimistic = a.optimistic !== false && a.trigger !== "button"
-      ? `
-    setData(prev => prev.map(r => r.id === row.id ? ({ ...r, [${JSON.stringify(a.columnKey)}]: value } as TRow) : r));
-    const rollback = () => setData(prev => prev.map(r => r.id === row.id ? row : r));`
-      : "";
-    const bodyExpr = a.method === "GET" || a.method === "DELETE"
-      ? ""
-      : a.body
-        ? `body: ${JSON.stringify(a.body)}.replace(/{{value}}/g, JSON.stringify(${a.trigger === "button" ? "null" : "value"})).replace(/{{rowId}}/g, JSON.stringify(row.id)).replace(/{{row\\.(\\w+)}}/g, (_, k) => JSON.stringify((row as Record<string, unknown>)[k])),`
-        : `body: JSON.stringify(${a.trigger === "button" ? "{ id: row.id }" : `{ ${JSON.stringify(a.columnKey)}: value }`}),`;
-    actionHandlers.push(`
-  /**
-   * ${a.method} \`\${endpoint}${a.path}\` — ${a.trigger} action for column "${a.columnKey}".
-   * Fired from the cell renderer whenever the user changes the value (or
-   * clicks, for trigger="button"). This is a per-row mutation and is
-   * INDEPENDENT from the table list endpoint.
-   */
-  const ${fnName} = useCallback(async (${sigParams}): Promise<void> => {${queryInterp}${optimistic}
-    try {
-      const res = await fetch(\`\${endpoint}${pathInterp}${a.query ? "?${aParams}" : ""}\`, {
-        method: ${JSON.stringify(a.method)},
-        headers: { "Content-Type": "application/json", ...baseHeaders },
-        ${bodyExpr}
-      });
-      if (!res.ok) throw new Error(\`${fnName} failed: \${res.status}\`);
-    } catch (e) {${a.optimistic !== false && a.trigger !== "button" ? "\n      rollback();" : ""}
-      throw e;
-    }
-  }, [endpoint]);
-`);
-    actionTypeFields.push(`  ${fnName}: (${sigParams}) => Promise<void>;`);
-  }
-
-  const mutators: string[] = [];
-  if (hasInlineEdit) {
-    mutators.push(`
-  /** PATCH \`\${endpoint}/:rowId\` — update a single cell value. */
-  const updateCell = useCallback(async (rowId: string, key: keyof TRow, value: unknown): Promise<void> => {
-    const res = await fetch(\`\${endpoint}/\${rowId}\`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...baseHeaders },
-      body: JSON.stringify({ [key]: value }),
-    });
-    if (!res.ok) throw new Error(\`updateCell failed: \${res.status}\`);
-    setData(prev => prev.map(r => (r.id === rowId ? ({ ...r, [key]: value } as TRow) : r)));
-  }, [endpoint]);
-`);
-  }
-  if (hasSelection || hasBulk) {
-    mutators.push(`
-  /** POST \`\${endpoint}/bulk-delete\` — delete N rows in a single request. */
-  const deleteRows = useCallback(async (ids: ReadonlyArray<string>): Promise<void> => {
-    const res = await fetch(\`\${endpoint}/bulk-delete\`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...baseHeaders },
-      body: JSON.stringify({ ids }),
-    });
-    if (!res.ok) throw new Error(\`deleteRows failed: \${res.status}\`);
-    setData(prev => prev.filter(r => !ids.includes(r.id)));
-    setTotal(t => Math.max(0, t - ids.length));
-  }, [endpoint]);
-`);
-  }
-  if (hasDnD) {
-    mutators.push(`
-  /** POST \`\${endpoint}/reorder\` — persist a new row order. */
-  const reorderRows = useCallback(async (orderedIds: ReadonlyArray<string>): Promise<void> => {
-    const res = await fetch(\`\${endpoint}/reorder\`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...baseHeaders },
-      body: JSON.stringify({ order: orderedIds }),
-    });
-    if (!res.ok) throw new Error(\`reorderRows failed: \${res.status}\`);
-  }, [endpoint]);
-`);
-  }
-
-  const refetchDeps = [
-    "endpoint",
-    apiPage && "query.page", apiPage && "query.pageSize",
-    apiSearch && "query.search",
-    apiFilter && "query.filters",
-    apiSort && (hasMultiSort ? "query.sorts" : "query.sort"),
-  ].filter(Boolean).join(", ");
-
-  const returnFields = [
-    "data", "total", "loading", "error", "refetch",
-    hasInlineEdit && "updateCell",
-    (hasSelection || hasBulk) && "deleteRows",
-    hasDnD && "reorderRows",
-    ...rowActions.map(a => toFnName(a.id, a.columnKey, a.trigger)),
-  ].filter(Boolean).join(", ");
-
-  const rowActionDocs = rowActions.length === 0
-    ? " (none)"
-    : "\n *   " + rowActions.map(a => `${a.method} \`\${endpoint}${a.path}\`  ← ${a.trigger} on column "${a.columnKey}"`).join("\n *   ");
-
-  const interfaceExtras = [
-    hasInlineEdit && "  updateCell: (rowId: string, key: keyof TRow, value: unknown) => Promise<void>;",
-    (hasSelection || hasBulk) && "  deleteRows: (ids: ReadonlyArray<string>) => Promise<void>;",
-    hasDnD && "  reorderRows: (orderedIds: ReadonlyArray<string>) => Promise<void>;",
-    ...actionTypeFields,
-  ].filter(Boolean).join("\n");
-
-  const code = `import { useCallback, useEffect, useState } from "react";
-import type { Row } from "./tableConfig";
-
 /**
- * Server-driven data hook for this DataTable.
+ * Emits the API data layer as TWO files, per AI_AGENT_RULES § R-55:
  *
- * List endpoint (table-wide search / sort / filter / pagination):
- *   ${listMethod} \`${apiConfig?.baseUrl ?? config.apiEndpoint}${listPath}\`
+ *   services.ts     — every `fetch`. The only file that talks to the network.
+ *   useTableData.ts — React state, optimistic updates and rollback. The only
+ *                     caller of services.ts.
  *
- * Row-action endpoints (per-row mutations from interactive cells like
- * dropdown / switch / radio / checkbox / rating / button — INDEPENDENT
- * of the list endpoint and target a single row at a time):${rowActionDocs}
- *
- * Only the inputs, mutators and handlers your enabled features need are
- * emitted — no dead state, no unused destructures.
+ * `DataTable.tsx` imports the hook and never imports services directly.
  */
-export interface TableQuery {
-${queryFields.map(f => "  " + f).join("\n")}
-}
-
-export interface UseTableData<TRow extends { id: string }> {
-  data: TRow[];
-  total: number;
-  loading: boolean;
-  error: Error | null;
-  refetch: () => Promise<void>;
-${interfaceExtras}
-}
-
-${headersLine}
-
-export function useTableData<TRow extends { id: string } = Row>(
-  endpoint: string,
-  query: TableQuery,
-): UseTableData<TRow> {
-  const [data, setData] = useState<TRow[]>([]);
-  const [total, setTotal] = useState<number>(0);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const refetch = useCallback(async (): Promise<void> => {
-    setLoading(true);
-    setError(null);
-    const ctrl = new AbortController();
-    try {
-      ${paramLines.join("\n      ")}${bodyBlock}
-      const res = await fetch(${fetchUrl}, ${fetchInit});
-      if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
-      const json = (await res.json()) as { data: TRow[]; total: number } | TRow[];
-      const list = Array.isArray(json) ? json : json.data;
-      setData(list);
-      setTotal(Array.isArray(json) ? list.length : (json.total ?? list.length));
-    } catch (e) {
-      if ((e as Error).name !== "AbortError") {
-        setError(e instanceof Error ? e : new Error("Unknown error"));
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [${refetchDeps}]);
-
-  useEffect(() => { void refetch(); }, [refetch]);
-${mutators.join("")}${actionHandlers.join("\n")}
-
-  return { ${returnFields} };
-}
-`;
-
-  return {
-    name: "useTableData.ts",
-    path: "src/components/tables/useTableData.ts",
-    description: "Server-side data hook. Inputs, mutators, and row-action handlers are emitted per-feature.",
-    isFixed: false,
-    language: "ts",
-    code,
-  };
-}
-
-/** Build a safe handler name like `onSwitchActive` from action metadata. */
-function toFnName(actionId: string, columnKey: string, trigger: string): string {
-  const trig = trigger.charAt(0).toUpperCase() + trigger.slice(1);
-  const safeKey = columnKey
-    .replace(/[^a-zA-Z0-9]+/g, " ")
-    .trim()
-    .split(" ")
-    .map(s => s.charAt(0).toUpperCase() + s.slice(1))
-    .join("");
-  return `on${trig}${safeKey || actionId.replace(/[^a-zA-Z0-9]/g, "")}`;
-}
 
 // ─────────────────────────── Page generation ────────────────────────────
 
-function generateDataTablePage(config: TableBuilderConfig, dataMode: DataMode): GeneratedFile {
+function generateDataTablePage(
+  config: TableBuilderConfig,
+  dataMode: DataMode,
+  transport: TransportChoice = DEFAULT_TRANSPORT,
+): GeneratedFile {
+  // When axios is chosen the ENGINE must use it too. `TablePreview` fires
+  // `apiConfig.rowActions` through its own transport context, which defaults to
+  // fetch — so we mount the provider with the adapter exported by services.ts.
+  // Without this a `--axios` install would be half axios, half fetch (R-56).
+  const wrapTransport = transport.http === "axios";
   const apiSearch = resolveSource(config, "search") === "api" && config.enableSearch;
   const apiFilter = resolveSource(config, "filter") === "api" && config.enableColumnFilters;
   const apiSort = resolveSource(config, "sort") === "api";
@@ -508,11 +228,15 @@ ${hasInteractions ? `  // Typed per-column change handlers — see useRowInterac
 
   const queryBody = queryFields.map(f => `      ${f},`).join("\n");
 
+  const transportImports = wrapTransport
+    ? `import { TableTransportProvider } from "@/components/tables/transport/context";\nimport { tableTransport } from "./services";\n`
+    : "";
+
   const code = `import { useMemo, useState } from "react";
 import { TablePreview } from "./TablePreview";
 import { useTableData, type TableQuery } from "./useTableData";
 import { tableConfig, type Row } from "./tableConfig";
-${hasInteractions ? `import { useRowInteractions } from "./useRowInteractions";\n` : ""}
+${hasInteractions ? `import { useRowInteractions } from "./useRowInteractions";\n` : ""}${transportImports}
 /**
  * Server-driven DataTable wrapper.
  *
@@ -533,11 +257,17 @@ ${queryBody}
   const { data, loading } = useTableData<Row>(tableConfig.apiEndpoint!, query);
 ${hasInteractions ? `  // Typed per-column change handlers — see useRowInteractions.ts.\n  const { onCellInteract } = useRowInteractions<Row>();\n` : ""}
   return (
-    <TablePreview
+${wrapTransport ? `    <TableTransportProvider transport={tableTransport}>
+      <TablePreview
+        config={tableConfig}
+        data={data}
+        isLoading={loading}${hasInteractions ? "\n        onCellInteract={onCellInteract}" : ""}
+      />
+    </TableTransportProvider>` : `    <TablePreview
       config={tableConfig}
       data={data}
       isLoading={loading}${hasInteractions ? "\n      onCellInteract={onCellInteract}" : ""}
-    />
+    />`}
   );
 }
 `;
@@ -836,11 +566,19 @@ export const tableConfig: TableBuilderConfig = ${literal};${attachBlock}${dialog
 `;
 }
 
+export interface GenerateAllFilesOptions {
+  /** Source strings for a real `renderers.tsx` (reusable / per-column / dialog / …). */
+  rendererSources?: TableRendererSources;
+  /** Which HTTP client / query strategy to generate against (R-56). */
+  transport?: TransportChoice;
+}
+
 export function generateAllFiles(
   config: TableBuilderConfig,
   dataMode: DataMode,
-  rendererSources?: TableRendererSources,
+  options: GenerateAllFilesOptions = {},
 ): GeneratedFile[] {
+  const { rendererSources, transport = DEFAULT_TRANSPORT } = options;
   const cleaned = cleanedConfig(config);
   const rowType = pickRowType(config.columns);
 
@@ -875,7 +613,7 @@ export function generateAllFiles(
     });
   }
 
-  files.push(generateDataTablePage(config, dataMode));
+  files.push(generateDataTablePage(config, dataMode, transport));
 
   const anyApi = (
     (resolveSource(config, "search") === "api" && config.enableSearch) ||
@@ -884,7 +622,7 @@ export function generateAllFiles(
     (resolveSource(config, "pagination") === "api" && config.enablePagination)
   );
   if (dataMode === "api" && anyApi) {
-    files.push(generateHook(config));
+    files.push(...generateDataFiles(config, transport));
   }
 
   const interactionsHook = generateRowInteractionsHook(config);

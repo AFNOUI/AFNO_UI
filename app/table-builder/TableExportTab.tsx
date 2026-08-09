@@ -23,7 +23,7 @@ export function TableExportTab({ config, rendererSources }: TableExportTabProps)
   const [dataMode, setDataMode] = useState<DataMode>("static");
   const hasColumns = config.columns.filter(c => c.visible).length > 0;
 
-  const generated = useMemo(() => generateAllFiles(config, dataMode, rendererSources), [config, dataMode, rendererSources]);
+  const generated = useMemo(() => generateAllFiles(config, dataMode, { rendererSources }), [config, dataMode, rendererSources]);
   const sharedNeeded = useMemo(
     () => [...SHARED_TABLE_FILES, ...getOptionalEngineFiles(config)].map(f => ({ ...f, isFixed: true })),
     [config],

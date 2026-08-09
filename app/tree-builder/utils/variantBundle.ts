@@ -4,7 +4,7 @@
  *
  * - Calls `generateTreeFiles(config, tree, rendererSources, componentName)` to
  *   get the per-variant files (`<Component>.tsx`, `config.ts`, `data.ts`,
- *   `handlers.ts`, and optionally `renderers.tsx`).
+ *   `hooks.ts`, `services.ts`, and optionally `renderers.tsx`).
  * - Rewrites the absolute `@/components/tree/*` (and `@/components/graph`)
  *   import specifiers to stable relative paths so the generated bundle does not
  *   depend on the user's `tsconfig.json` `paths` alias matching ours.
@@ -20,6 +20,7 @@
 
 import type { TreeCanvasConfig, TreeNode } from "@/trees/types";
 
+import { DEFAULT_TRANSPORT, type TransportChoice } from "@/lib/codegen/transport";
 import { generateTreeFiles } from "./treeCodeGenerator";
 import type { TreeRendererSources } from "../data/treeBuilderTemplates";
 
@@ -88,9 +89,11 @@ export function buildTreeVariantFiles(
   tree: TreeNode,
   variantSlug: string,
   rendererSources?: TreeRendererSources,
+  /** Which HTTP client / query strategy to generate against (R-56). */
+  transport: TransportChoice = DEFAULT_TRANSPORT,
 ): TreeVariantFile[] {
   const componentName = variantTreeComponentName(variantSlug);
-  const generated = generateTreeFiles(config, tree, rendererSources, componentName);
+  const generated = generateTreeFiles(config, tree, rendererSources, componentName, transport);
 
   return generated.map((file) => {
     // `src/components/tree-instances/<file>` → `tree/<slug>/<file>`.

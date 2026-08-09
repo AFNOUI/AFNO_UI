@@ -22,7 +22,7 @@ export function generateStaticTanStack(config: FormConfig): string {
     `import { AlertCircle, X } from "lucide-react";`,
     `import { TanstackFormProvider } from "@/components/forms/tanstack-forms/TanstackFormContext";`,
     ...fieldImports.map(f => `import { ${f.component} } from "@/components/forms/tanstack-forms/fields/${f.file.replace('.tsx', '')}";`),
-    `import { formService } from "./formService";`,
+    `import { useFormSubmit } from "./hooks";`,
     `import { formSchema } from "./formSchema";`,
   ];
 
@@ -54,6 +54,7 @@ ${fieldsJSX}
 export default function MyFormPage() {
   const [globalError, setGlobalError] = useState<string | null>(null);
   const SUBMIT_EXCLUDED = ${submitExcluded};
+  const { submit } = useFormSubmit();
 
   const form = useForm({
     defaultValues: ${JSON.stringify(defaults, null, 4).split('\n').map((l, i) => i === 0 ? l : '    ' + l).join('\n')},
@@ -71,7 +72,7 @@ export default function MyFormPage() {
             if (k.startsWith(p)) delete payload[k];
           }
         }
-        await formService.submitForm(payload);
+        await submit(payload);
       } catch (error: any) {
         setGlobalError(error?.message || "An unexpected error occurred");
       }

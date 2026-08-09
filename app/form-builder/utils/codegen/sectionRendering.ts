@@ -61,7 +61,7 @@ export function buildDefaultValues(config: FormConfig): Record<string, unknown> 
   return defaults;
 }
 
-/** Names stripped before `formService.submitForm` in generated static pages (matches runtime hooks). */
+/** Names stripped before `submit()` in generated static pages (matches runtime hooks). */
 export function buildSubmitExcludedSetLiteral(config: FormConfig): string {
   const names: string[] = [];
   for (const section of config.sections) {

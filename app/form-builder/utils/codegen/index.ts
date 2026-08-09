@@ -10,6 +10,7 @@ export {
 
 export { generateFormConfigCode } from "./formConfigEmitter";
 export { generateFormServiceCode } from "./formService";
+export { generateFormHooksCode } from "./formHooks";
 export { generateHydrationHookCode } from "./hydration";
 
 export { generatePageComponentCode } from "./configPageEmitter";

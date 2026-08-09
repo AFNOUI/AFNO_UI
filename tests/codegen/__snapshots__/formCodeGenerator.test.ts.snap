@@ -16,6 +16,36 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > action /
       "path": "/app/forms/FormFieldErrorBoundary.tsx",
     },
     {
+      "codeBytes": 2087,
+      "language": "tsx",
+      "name": "transport/context.tsx",
+      "path": "/app/forms/transport/context.tsx",
+    },
+    {
+      "codeBytes": 1731,
+      "language": "typescript",
+      "name": "transport/defaultTransport.ts",
+      "path": "/app/forms/transport/defaultTransport.ts",
+    },
+    {
+      "codeBytes": 6418,
+      "language": "typescript",
+      "name": "transport/localStateAdapter.ts",
+      "path": "/app/forms/transport/localStateAdapter.ts",
+    },
+    {
+      "codeBytes": 4190,
+      "language": "typescript",
+      "name": "transport/requestBuilder.ts",
+      "path": "/app/forms/transport/requestBuilder.ts",
+    },
+    {
+      "codeBytes": 3165,
+      "language": "typescript",
+      "name": "transport/types.ts",
+      "path": "/app/forms/transport/types.ts",
+    },
+    {
       "codeBytes": 3806,
       "language": "typescript",
       "name": "dateFieldHelpers.ts",
@@ -28,7 +58,7 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > action /
       "path": "/app/forms/utils/dateSerialize.tsx",
     },
     {
-      "codeBytes": 6137,
+      "codeBytes": 4259,
       "language": "typescript",
       "name": "dependentApiRequest.ts",
       "path": "/app/forms/utils/dependentApiRequest.ts",
@@ -154,7 +184,7 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > action /
       "path": "hooks/useBackendErrors.ts",
     },
     {
-      "codeBytes": 8116,
+      "codeBytes": 8243,
       "language": "typescript",
       "name": "useInfiniteOptions.ts",
       "path": "hooks/useInfiniteOptions.ts",
@@ -167,6 +197,28 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > action /
     },
   ],
   "variant": [
+    {
+      "code": "/**
+ * Tunables for this form.
+ *
+ * Every knob this variant exposes lives here (AI_AGENT_RULES § R-57), so
+ * \`hooks.ts\` and \`services.ts\` stay free of magic numbers and you only have
+ * one file to edit when a base URL, page size or cache window changes.
+ */
+
+/** Base URL every request in services.ts is built from. */
+export const API_BASE = "/api";
+
+/** Appended to API_BASE when submitting this form. */
+export const SUBMIT_PATH = "/forms/submit";
+
+/** Sent on every request. Add auth headers here. */
+export const BASE_HEADERS = {} as Record<string, string>;
+",
+      "language": "typescript",
+      "name": "constants.ts",
+      "path": "forms/constants.ts",
+    },
     {
       "code": "import { FormConfig } from "../components/forms/types/types";
 
@@ -269,10 +321,55 @@ export const formConfig: FormConfig = {
       "path": "forms/formConfig.ts",
     },
     {
-      "code": "import axios from "axios";
-import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+      "code": "import { useCallback, useState } from "react";
 
-const API_BASE = "/api";
+import { formService } from "./services";
+
+/**
+ * React glue between the form component and \`services.ts\`.
+ *
+ * Per AI_AGENT_RULES § R-55 this is the ONLY file that calls services — the
+ * page never imports \`./services\` directly. Submit state, retries and cache
+ * invalidation belong here; the request belongs in \`services.ts\`.
+ *
+ * Errors are deliberately left to propagate: \`formService.submitForm\` throws a
+ * normalized \`BackendErrorResponse\`, which the form component already maps onto
+ * field errors. Wrap the call in try/catch here if you want different handling
+ * (custom error class, status-code mapping, toast).
+ *
+ * TODO(cli-gated): re-install with \`--tanstack-query\` to generate this on top of
+ * TanStack Query. Until then no data-fetching dependency is installed.
+ */
+export function useFormSubmit() {
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = useCallback(async (data: Record<string, unknown>): Promise<void> => {
+    setSubmitting(true);
+    try {
+      await formService.submitForm(data);
+    } finally {
+      setSubmitting(false);
+    }
+  }, []);
+
+  return { submit, submitting };
+}
+",
+      "language": "typescript",
+      "name": "hooks.ts",
+      "path": "forms/hooks.ts",
+    },
+    {
+      "code": "import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+import { API_BASE, SUBMIT_PATH, BASE_HEADERS } from "./constants";
+
+/**
+ * Network layer for this form — the ONLY file here that talks to your backend
+ * (AI_AGENT_RULES § R-55: component → hooks.ts → services.ts).
+ *
+ * TODO(cli-gated): re-install with \`--axios\` to generate this on top of axios
+ * instead of fetch. Until then no HTTP dependency is installed.
+ */
 
 /**
  * Normalize any backend payload to AfnoUI's expected shape:
@@ -323,28 +420,46 @@ function normalizeBackendError(data: unknown): BackendErrorResponse {
   return { success: false, message, errors };
 }
 
+/**
+ * Single place the HTTP client is named, so swapping \`fetch\` for axios (or
+ * adding interceptors / auth refresh) is a one-spot change.
+ */
+async function request(url: string, data: Record<string, unknown>): Promise<void> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...BASE_HEADERS },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => undefined);
+    throw normalizeBackendError(payload);
+  }
+}
+
 export const formService = {
+  /**
+   * Throws a normalized \`BackendErrorResponse\` on failure so the hook layer can
+   * map it onto field errors. Nothing is swallowed here.
+   */
   async submitForm(data: Record<string, unknown>): Promise<void> {
     try {
-      await axios.post(\`\${API_BASE}/forms/submit\`, data);
+      await request(\`\${API_BASE}\${SUBMIT_PATH}\`, data);
     } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response?.data !== undefined) {
-        throw normalizeBackendError(error.response.data);
-      }
-      throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
+    if (error && typeof error === "object" && "success" in error) throw error;
+    throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
     }
   },
 };
 ",
       "language": "typescript",
-      "name": "formService.ts",
-      "path": "forms/formService.ts",
+      "name": "services.ts",
+      "path": "forms/services.ts",
     },
     {
       "code": "import { useMemo } from "react";
 import { ActionForm } from "../components/forms/action-forms";
 import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
-import { formService } from "./formService";
+import { useFormSubmit } from "./hooks";
 import { formConfig } from "./formConfig";
 import { buildZodSchema } from "../components/forms/utils/zodSchemaBuilder";
 import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
@@ -352,8 +467,10 @@ import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
 export default function MyFormPage() {
   const schema = useMemo(() => buildZodSchema(extractFields(formConfig)), []);
 
+  const { submit } = useFormSubmit();
+
   const handleSubmit = async (data: Record<string, unknown>) => {
-    await formService.submitForm(data);
+    await submit(data);
   };
 
   return (
@@ -387,6 +504,36 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > action /
       "path": "/app/forms/FormFieldErrorBoundary.tsx",
     },
     {
+      "codeBytes": 2087,
+      "language": "tsx",
+      "name": "transport/context.tsx",
+      "path": "/app/forms/transport/context.tsx",
+    },
+    {
+      "codeBytes": 1731,
+      "language": "typescript",
+      "name": "transport/defaultTransport.ts",
+      "path": "/app/forms/transport/defaultTransport.ts",
+    },
+    {
+      "codeBytes": 6418,
+      "language": "typescript",
+      "name": "transport/localStateAdapter.ts",
+      "path": "/app/forms/transport/localStateAdapter.ts",
+    },
+    {
+      "codeBytes": 4190,
+      "language": "typescript",
+      "name": "transport/requestBuilder.ts",
+      "path": "/app/forms/transport/requestBuilder.ts",
+    },
+    {
+      "codeBytes": 3165,
+      "language": "typescript",
+      "name": "transport/types.ts",
+      "path": "/app/forms/transport/types.ts",
+    },
+    {
       "codeBytes": 3806,
       "language": "typescript",
       "name": "dateFieldHelpers.ts",
@@ -399,7 +546,7 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > action /
       "path": "/app/forms/utils/dateSerialize.tsx",
     },
     {
-      "codeBytes": 6137,
+      "codeBytes": 4259,
       "language": "typescript",
       "name": "dependentApiRequest.ts",
       "path": "/app/forms/utils/dependentApiRequest.ts",
@@ -495,13 +642,35 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > action /
       "path": "hooks/useBackendErrors.ts",
     },
     {
-      "codeBytes": 8116,
+      "codeBytes": 8243,
       "language": "typescript",
       "name": "useInfiniteOptions.ts",
       "path": "hooks/useInfiniteOptions.ts",
     },
   ],
   "variant": [
+    {
+      "code": "/**
+ * Tunables for this form.
+ *
+ * Every knob this variant exposes lives here (AI_AGENT_RULES § R-57), so
+ * \`hooks.ts\` and \`services.ts\` stay free of magic numbers and you only have
+ * one file to edit when a base URL, page size or cache window changes.
+ */
+
+/** Base URL every request in services.ts is built from. */
+export const API_BASE = "/api";
+
+/** Appended to API_BASE when submitting this form. */
+export const SUBMIT_PATH = "/forms/submit";
+
+/** Sent on every request. Add auth headers here. */
+export const BASE_HEADERS = {} as Record<string, string>;
+",
+      "language": "typescript",
+      "name": "constants.ts",
+      "path": "forms/constants.ts",
+    },
     {
       "code": "import { z } from "zod";
 
@@ -524,10 +693,55 @@ export type FormValues = z.infer<typeof formSchema>;",
       "path": "forms/formSchema.ts",
     },
     {
-      "code": "import axios from "axios";
-import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+      "code": "import { useCallback, useState } from "react";
 
-const API_BASE = "/api";
+import { formService } from "./services";
+
+/**
+ * React glue between the form component and \`services.ts\`.
+ *
+ * Per AI_AGENT_RULES § R-55 this is the ONLY file that calls services — the
+ * page never imports \`./services\` directly. Submit state, retries and cache
+ * invalidation belong here; the request belongs in \`services.ts\`.
+ *
+ * Errors are deliberately left to propagate: \`formService.submitForm\` throws a
+ * normalized \`BackendErrorResponse\`, which the form component already maps onto
+ * field errors. Wrap the call in try/catch here if you want different handling
+ * (custom error class, status-code mapping, toast).
+ *
+ * TODO(cli-gated): re-install with \`--tanstack-query\` to generate this on top of
+ * TanStack Query. Until then no data-fetching dependency is installed.
+ */
+export function useFormSubmit() {
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = useCallback(async (data: Record<string, unknown>): Promise<void> => {
+    setSubmitting(true);
+    try {
+      await formService.submitForm(data);
+    } finally {
+      setSubmitting(false);
+    }
+  }, []);
+
+  return { submit, submitting };
+}
+",
+      "language": "typescript",
+      "name": "hooks.ts",
+      "path": "forms/hooks.ts",
+    },
+    {
+      "code": "import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+import { API_BASE, SUBMIT_PATH, BASE_HEADERS } from "./constants";
+
+/**
+ * Network layer for this form — the ONLY file here that talks to your backend
+ * (AI_AGENT_RULES § R-55: component → hooks.ts → services.ts).
+ *
+ * TODO(cli-gated): re-install with \`--axios\` to generate this on top of axios
+ * instead of fetch. Until then no HTTP dependency is installed.
+ */
 
 /**
  * Normalize any backend payload to AfnoUI's expected shape:
@@ -578,22 +792,40 @@ function normalizeBackendError(data: unknown): BackendErrorResponse {
   return { success: false, message, errors };
 }
 
+/**
+ * Single place the HTTP client is named, so swapping \`fetch\` for axios (or
+ * adding interceptors / auth refresh) is a one-spot change.
+ */
+async function request(url: string, data: Record<string, unknown>): Promise<void> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...BASE_HEADERS },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => undefined);
+    throw normalizeBackendError(payload);
+  }
+}
+
 export const formService = {
+  /**
+   * Throws a normalized \`BackendErrorResponse\` on failure so the hook layer can
+   * map it onto field errors. Nothing is swallowed here.
+   */
   async submitForm(data: Record<string, unknown>): Promise<void> {
     try {
-      await axios.post(\`\${API_BASE}/forms/submit\`, data);
+      await request(\`\${API_BASE}\${SUBMIT_PATH}\`, data);
     } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response?.data !== undefined) {
-        throw normalizeBackendError(error.response.data);
-      }
-      throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
+    if (error && typeof error === "object" && "success" in error) throw error;
+    throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
     }
   },
 };
 ",
       "language": "typescript",
-      "name": "formService.ts",
-      "path": "forms/formService.ts",
+      "name": "services.ts",
+      "path": "forms/services.ts",
     },
     {
       "code": "import { useState, useCallback } from "react";
@@ -609,11 +841,12 @@ import { MultiselectField } from "../components/forms/action-forms/fields/Multis
 import { CheckboxField } from "../components/forms/action-forms/fields/CheckboxField";
 import { DateField } from "../components/forms/action-forms/fields/DateField";
 import { TextareaField } from "../components/forms/action-forms/fields/TextareaField";
-import { formService } from "./formService";
+import { useFormSubmit } from "./hooks";
 import { formSchema } from "./formSchema";
 
 export default function MyFormPage() {
   const SUBMIT_EXCLUDED = new Set<string>();
+  const { submit } = useFormSubmit();
   const [values, setValues] = useState<Record<string, unknown>>({
       "name": "",
       "age": "",
@@ -656,7 +889,7 @@ export default function MyFormPage() {
           if (k.startsWith(p)) delete payload[k];
         }
       }
-      await formService.submitForm(payload);
+      await submit(payload);
     } catch (error: any) {
       setGlobalError(error?.message || "An unexpected error occurred");
     } finally {
@@ -791,6 +1024,36 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > rhf / co
       "path": "/app/forms/react-hook-form/applyBackendErrors.ts",
     },
     {
+      "codeBytes": 2087,
+      "language": "tsx",
+      "name": "transport/context.tsx",
+      "path": "/app/forms/transport/context.tsx",
+    },
+    {
+      "codeBytes": 1731,
+      "language": "typescript",
+      "name": "transport/defaultTransport.ts",
+      "path": "/app/forms/transport/defaultTransport.ts",
+    },
+    {
+      "codeBytes": 6418,
+      "language": "typescript",
+      "name": "transport/localStateAdapter.ts",
+      "path": "/app/forms/transport/localStateAdapter.ts",
+    },
+    {
+      "codeBytes": 4190,
+      "language": "typescript",
+      "name": "transport/requestBuilder.ts",
+      "path": "/app/forms/transport/requestBuilder.ts",
+    },
+    {
+      "codeBytes": 3165,
+      "language": "typescript",
+      "name": "transport/types.ts",
+      "path": "/app/forms/transport/types.ts",
+    },
+    {
       "codeBytes": 3806,
       "language": "typescript",
       "name": "dateFieldHelpers.ts",
@@ -803,7 +1066,7 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > rhf / co
       "path": "/app/forms/utils/dateSerialize.tsx",
     },
     {
-      "codeBytes": 6137,
+      "codeBytes": 4259,
       "language": "typescript",
       "name": "dependentApiRequest.ts",
       "path": "/app/forms/utils/dependentApiRequest.ts",
@@ -923,7 +1186,7 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > rhf / co
       "path": "hooks/useBackendErrors.ts",
     },
     {
-      "codeBytes": 8116,
+      "codeBytes": 8243,
       "language": "typescript",
       "name": "useInfiniteOptions.ts",
       "path": "hooks/useInfiniteOptions.ts",
@@ -936,6 +1199,28 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > rhf / co
     },
   ],
   "variant": [
+    {
+      "code": "/**
+ * Tunables for this form.
+ *
+ * Every knob this variant exposes lives here (AI_AGENT_RULES § R-57), so
+ * \`hooks.ts\` and \`services.ts\` stay free of magic numbers and you only have
+ * one file to edit when a base URL, page size or cache window changes.
+ */
+
+/** Base URL every request in services.ts is built from. */
+export const API_BASE = "/api";
+
+/** Appended to API_BASE when submitting this form. */
+export const SUBMIT_PATH = "/forms/submit";
+
+/** Sent on every request. Add auth headers here. */
+export const BASE_HEADERS = {} as Record<string, string>;
+",
+      "language": "typescript",
+      "name": "constants.ts",
+      "path": "forms/constants.ts",
+    },
     {
       "code": "import { FormConfig } from "../components/forms/types/types";
 
@@ -1038,10 +1323,55 @@ export const formConfig: FormConfig = {
       "path": "forms/formConfig.ts",
     },
     {
-      "code": "import axios from "axios";
-import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+      "code": "import { useCallback, useState } from "react";
 
-const API_BASE = "/api";
+import { formService } from "./services";
+
+/**
+ * React glue between the form component and \`services.ts\`.
+ *
+ * Per AI_AGENT_RULES § R-55 this is the ONLY file that calls services — the
+ * page never imports \`./services\` directly. Submit state, retries and cache
+ * invalidation belong here; the request belongs in \`services.ts\`.
+ *
+ * Errors are deliberately left to propagate: \`formService.submitForm\` throws a
+ * normalized \`BackendErrorResponse\`, which the form component already maps onto
+ * field errors. Wrap the call in try/catch here if you want different handling
+ * (custom error class, status-code mapping, toast).
+ *
+ * TODO(cli-gated): re-install with \`--tanstack-query\` to generate this on top of
+ * TanStack Query. Until then no data-fetching dependency is installed.
+ */
+export function useFormSubmit() {
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = useCallback(async (data: Record<string, unknown>): Promise<void> => {
+    setSubmitting(true);
+    try {
+      await formService.submitForm(data);
+    } finally {
+      setSubmitting(false);
+    }
+  }, []);
+
+  return { submit, submitting };
+}
+",
+      "language": "typescript",
+      "name": "hooks.ts",
+      "path": "forms/hooks.ts",
+    },
+    {
+      "code": "import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+import { API_BASE, SUBMIT_PATH, BASE_HEADERS } from "./constants";
+
+/**
+ * Network layer for this form — the ONLY file here that talks to your backend
+ * (AI_AGENT_RULES § R-55: component → hooks.ts → services.ts).
+ *
+ * TODO(cli-gated): re-install with \`--axios\` to generate this on top of axios
+ * instead of fetch. Until then no HTTP dependency is installed.
+ */
 
 /**
  * Normalize any backend payload to AfnoUI's expected shape:
@@ -1092,28 +1422,46 @@ function normalizeBackendError(data: unknown): BackendErrorResponse {
   return { success: false, message, errors };
 }
 
+/**
+ * Single place the HTTP client is named, so swapping \`fetch\` for axios (or
+ * adding interceptors / auth refresh) is a one-spot change.
+ */
+async function request(url: string, data: Record<string, unknown>): Promise<void> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...BASE_HEADERS },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => undefined);
+    throw normalizeBackendError(payload);
+  }
+}
+
 export const formService = {
+  /**
+   * Throws a normalized \`BackendErrorResponse\` on failure so the hook layer can
+   * map it onto field errors. Nothing is swallowed here.
+   */
   async submitForm(data: Record<string, unknown>): Promise<void> {
     try {
-      await axios.post(\`\${API_BASE}/forms/submit\`, data);
+      await request(\`\${API_BASE}\${SUBMIT_PATH}\`, data);
     } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response?.data !== undefined) {
-        throw normalizeBackendError(error.response.data);
-      }
-      throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
+    if (error && typeof error === "object" && "success" in error) throw error;
+    throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
     }
   },
 };
 ",
       "language": "typescript",
-      "name": "formService.ts",
-      "path": "forms/formService.ts",
+      "name": "services.ts",
+      "path": "forms/services.ts",
     },
     {
       "code": "import { useMemo } from "react";
 import { ReactHookForm } from "../components/forms/react-hook-form";
 import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
-import { formService } from "./formService";
+import { useFormSubmit } from "./hooks";
 import { formConfig } from "./formConfig";
 import { buildZodSchema } from "../components/forms/utils/zodSchemaBuilder";
 import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
@@ -1121,8 +1469,10 @@ import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
 export default function MyFormPage() {
   const schema = useMemo(() => buildZodSchema(extractFields(formConfig)), []);
 
+  const { submit } = useFormSubmit();
+
   const handleSubmit = async (data: Record<string, unknown>) => {
-    await formService.submitForm(data);
+    await submit(data);
   };
 
   return (
@@ -1156,6 +1506,36 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > rhf / st
       "path": "/app/forms/react-hook-form/applyBackendErrors.ts",
     },
     {
+      "codeBytes": 2087,
+      "language": "tsx",
+      "name": "transport/context.tsx",
+      "path": "/app/forms/transport/context.tsx",
+    },
+    {
+      "codeBytes": 1731,
+      "language": "typescript",
+      "name": "transport/defaultTransport.ts",
+      "path": "/app/forms/transport/defaultTransport.ts",
+    },
+    {
+      "codeBytes": 6418,
+      "language": "typescript",
+      "name": "transport/localStateAdapter.ts",
+      "path": "/app/forms/transport/localStateAdapter.ts",
+    },
+    {
+      "codeBytes": 4190,
+      "language": "typescript",
+      "name": "transport/requestBuilder.ts",
+      "path": "/app/forms/transport/requestBuilder.ts",
+    },
+    {
+      "codeBytes": 3165,
+      "language": "typescript",
+      "name": "transport/types.ts",
+      "path": "/app/forms/transport/types.ts",
+    },
+    {
       "codeBytes": 3806,
       "language": "typescript",
       "name": "dateFieldHelpers.ts",
@@ -1168,7 +1548,7 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > rhf / st
       "path": "/app/forms/utils/dateSerialize.tsx",
     },
     {
-      "codeBytes": 6137,
+      "codeBytes": 4259,
       "language": "typescript",
       "name": "dependentApiRequest.ts",
       "path": "/app/forms/utils/dependentApiRequest.ts",
@@ -1258,13 +1638,35 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > rhf / st
       "path": "hooks/useBackendErrors.ts",
     },
     {
-      "codeBytes": 8116,
+      "codeBytes": 8243,
       "language": "typescript",
       "name": "useInfiniteOptions.ts",
       "path": "hooks/useInfiniteOptions.ts",
     },
   ],
   "variant": [
+    {
+      "code": "/**
+ * Tunables for this form.
+ *
+ * Every knob this variant exposes lives here (AI_AGENT_RULES § R-57), so
+ * \`hooks.ts\` and \`services.ts\` stay free of magic numbers and you only have
+ * one file to edit when a base URL, page size or cache window changes.
+ */
+
+/** Base URL every request in services.ts is built from. */
+export const API_BASE = "/api";
+
+/** Appended to API_BASE when submitting this form. */
+export const SUBMIT_PATH = "/forms/submit";
+
+/** Sent on every request. Add auth headers here. */
+export const BASE_HEADERS = {} as Record<string, string>;
+",
+      "language": "typescript",
+      "name": "constants.ts",
+      "path": "forms/constants.ts",
+    },
     {
       "code": "import { z } from "zod";
 
@@ -1287,10 +1689,55 @@ export type FormValues = z.infer<typeof formSchema>;",
       "path": "forms/formSchema.ts",
     },
     {
-      "code": "import axios from "axios";
-import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+      "code": "import { useCallback, useState } from "react";
 
-const API_BASE = "/api";
+import { formService } from "./services";
+
+/**
+ * React glue between the form component and \`services.ts\`.
+ *
+ * Per AI_AGENT_RULES § R-55 this is the ONLY file that calls services — the
+ * page never imports \`./services\` directly. Submit state, retries and cache
+ * invalidation belong here; the request belongs in \`services.ts\`.
+ *
+ * Errors are deliberately left to propagate: \`formService.submitForm\` throws a
+ * normalized \`BackendErrorResponse\`, which the form component already maps onto
+ * field errors. Wrap the call in try/catch here if you want different handling
+ * (custom error class, status-code mapping, toast).
+ *
+ * TODO(cli-gated): re-install with \`--tanstack-query\` to generate this on top of
+ * TanStack Query. Until then no data-fetching dependency is installed.
+ */
+export function useFormSubmit() {
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = useCallback(async (data: Record<string, unknown>): Promise<void> => {
+    setSubmitting(true);
+    try {
+      await formService.submitForm(data);
+    } finally {
+      setSubmitting(false);
+    }
+  }, []);
+
+  return { submit, submitting };
+}
+",
+      "language": "typescript",
+      "name": "hooks.ts",
+      "path": "forms/hooks.ts",
+    },
+    {
+      "code": "import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+import { API_BASE, SUBMIT_PATH, BASE_HEADERS } from "./constants";
+
+/**
+ * Network layer for this form — the ONLY file here that talks to your backend
+ * (AI_AGENT_RULES § R-55: component → hooks.ts → services.ts).
+ *
+ * TODO(cli-gated): re-install with \`--axios\` to generate this on top of axios
+ * instead of fetch. Until then no HTTP dependency is installed.
+ */
 
 /**
  * Normalize any backend payload to AfnoUI's expected shape:
@@ -1341,22 +1788,40 @@ function normalizeBackendError(data: unknown): BackendErrorResponse {
   return { success: false, message, errors };
 }
 
+/**
+ * Single place the HTTP client is named, so swapping \`fetch\` for axios (or
+ * adding interceptors / auth refresh) is a one-spot change.
+ */
+async function request(url: string, data: Record<string, unknown>): Promise<void> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...BASE_HEADERS },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => undefined);
+    throw normalizeBackendError(payload);
+  }
+}
+
 export const formService = {
+  /**
+   * Throws a normalized \`BackendErrorResponse\` on failure so the hook layer can
+   * map it onto field errors. Nothing is swallowed here.
+   */
   async submitForm(data: Record<string, unknown>): Promise<void> {
     try {
-      await axios.post(\`\${API_BASE}/forms/submit\`, data);
+      await request(\`\${API_BASE}\${SUBMIT_PATH}\`, data);
     } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response?.data !== undefined) {
-        throw normalizeBackendError(error.response.data);
-      }
-      throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
+    if (error && typeof error === "object" && "success" in error) throw error;
+    throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
     }
   },
 };
 ",
       "language": "typescript",
-      "name": "formService.ts",
-      "path": "forms/formService.ts",
+      "name": "services.ts",
+      "path": "forms/services.ts",
     },
     {
       "code": "import { useForm } from "react-hook-form";
@@ -1371,11 +1836,12 @@ import { MultiselectField } from "../components/forms/react-hook-form/fields/Mul
 import { CheckboxField } from "../components/forms/react-hook-form/fields/CheckboxField";
 import { DateField } from "../components/forms/react-hook-form/fields/DateField";
 import { TextareaField } from "../components/forms/react-hook-form/fields/TextareaField";
-import { formService } from "./formService";
+import { useFormSubmit } from "./hooks";
 import { formSchema } from "./formSchema";
 
 export default function MyFormPage() {
   const SUBMIT_EXCLUDED = new Set<string>();
+  const { submit } = useFormSubmit();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -1401,7 +1867,7 @@ export default function MyFormPage() {
         if (k.startsWith(p)) delete payload[k];
       }
     }
-    await formService.submitForm(payload);
+    await submit(payload);
   });
 
   return (
@@ -1521,6 +1987,36 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > tanstack
       "path": "/app/forms/tanstack-forms/applyBackendErrors.ts",
     },
     {
+      "codeBytes": 2087,
+      "language": "tsx",
+      "name": "transport/context.tsx",
+      "path": "/app/forms/transport/context.tsx",
+    },
+    {
+      "codeBytes": 1731,
+      "language": "typescript",
+      "name": "transport/defaultTransport.ts",
+      "path": "/app/forms/transport/defaultTransport.ts",
+    },
+    {
+      "codeBytes": 6418,
+      "language": "typescript",
+      "name": "transport/localStateAdapter.ts",
+      "path": "/app/forms/transport/localStateAdapter.ts",
+    },
+    {
+      "codeBytes": 4190,
+      "language": "typescript",
+      "name": "transport/requestBuilder.ts",
+      "path": "/app/forms/transport/requestBuilder.ts",
+    },
+    {
+      "codeBytes": 3165,
+      "language": "typescript",
+      "name": "transport/types.ts",
+      "path": "/app/forms/transport/types.ts",
+    },
+    {
       "codeBytes": 3806,
       "language": "typescript",
       "name": "dateFieldHelpers.ts",
@@ -1533,7 +2029,7 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > tanstack
       "path": "/app/forms/utils/dateSerialize.tsx",
     },
     {
-      "codeBytes": 6137,
+      "codeBytes": 4259,
       "language": "typescript",
       "name": "dependentApiRequest.ts",
       "path": "/app/forms/utils/dependentApiRequest.ts",
@@ -1659,7 +2155,7 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > tanstack
       "path": "hooks/useBackendErrors.ts",
     },
     {
-      "codeBytes": 8116,
+      "codeBytes": 8243,
       "language": "typescript",
       "name": "useInfiniteOptions.ts",
       "path": "hooks/useInfiniteOptions.ts",
@@ -1672,6 +2168,28 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > tanstack
     },
   ],
   "variant": [
+    {
+      "code": "/**
+ * Tunables for this form.
+ *
+ * Every knob this variant exposes lives here (AI_AGENT_RULES § R-57), so
+ * \`hooks.ts\` and \`services.ts\` stay free of magic numbers and you only have
+ * one file to edit when a base URL, page size or cache window changes.
+ */
+
+/** Base URL every request in services.ts is built from. */
+export const API_BASE = "/api";
+
+/** Appended to API_BASE when submitting this form. */
+export const SUBMIT_PATH = "/forms/submit";
+
+/** Sent on every request. Add auth headers here. */
+export const BASE_HEADERS = {} as Record<string, string>;
+",
+      "language": "typescript",
+      "name": "constants.ts",
+      "path": "forms/constants.ts",
+    },
     {
       "code": "import { FormConfig } from "../components/forms/types/types";
 
@@ -1774,10 +2292,55 @@ export const formConfig: FormConfig = {
       "path": "forms/formConfig.ts",
     },
     {
-      "code": "import axios from "axios";
-import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+      "code": "import { useCallback, useState } from "react";
 
-const API_BASE = "/api";
+import { formService } from "./services";
+
+/**
+ * React glue between the form component and \`services.ts\`.
+ *
+ * Per AI_AGENT_RULES § R-55 this is the ONLY file that calls services — the
+ * page never imports \`./services\` directly. Submit state, retries and cache
+ * invalidation belong here; the request belongs in \`services.ts\`.
+ *
+ * Errors are deliberately left to propagate: \`formService.submitForm\` throws a
+ * normalized \`BackendErrorResponse\`, which the form component already maps onto
+ * field errors. Wrap the call in try/catch here if you want different handling
+ * (custom error class, status-code mapping, toast).
+ *
+ * TODO(cli-gated): re-install with \`--tanstack-query\` to generate this on top of
+ * TanStack Query. Until then no data-fetching dependency is installed.
+ */
+export function useFormSubmit() {
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = useCallback(async (data: Record<string, unknown>): Promise<void> => {
+    setSubmitting(true);
+    try {
+      await formService.submitForm(data);
+    } finally {
+      setSubmitting(false);
+    }
+  }, []);
+
+  return { submit, submitting };
+}
+",
+      "language": "typescript",
+      "name": "hooks.ts",
+      "path": "forms/hooks.ts",
+    },
+    {
+      "code": "import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+import { API_BASE, SUBMIT_PATH, BASE_HEADERS } from "./constants";
+
+/**
+ * Network layer for this form — the ONLY file here that talks to your backend
+ * (AI_AGENT_RULES § R-55: component → hooks.ts → services.ts).
+ *
+ * TODO(cli-gated): re-install with \`--axios\` to generate this on top of axios
+ * instead of fetch. Until then no HTTP dependency is installed.
+ */
 
 /**
  * Normalize any backend payload to AfnoUI's expected shape:
@@ -1828,28 +2391,46 @@ function normalizeBackendError(data: unknown): BackendErrorResponse {
   return { success: false, message, errors };
 }
 
+/**
+ * Single place the HTTP client is named, so swapping \`fetch\` for axios (or
+ * adding interceptors / auth refresh) is a one-spot change.
+ */
+async function request(url: string, data: Record<string, unknown>): Promise<void> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...BASE_HEADERS },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => undefined);
+    throw normalizeBackendError(payload);
+  }
+}
+
 export const formService = {
+  /**
+   * Throws a normalized \`BackendErrorResponse\` on failure so the hook layer can
+   * map it onto field errors. Nothing is swallowed here.
+   */
   async submitForm(data: Record<string, unknown>): Promise<void> {
     try {
-      await axios.post(\`\${API_BASE}/forms/submit\`, data);
+      await request(\`\${API_BASE}\${SUBMIT_PATH}\`, data);
     } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response?.data !== undefined) {
-        throw normalizeBackendError(error.response.data);
-      }
-      throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
+    if (error && typeof error === "object" && "success" in error) throw error;
+    throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
     }
   },
 };
 ",
       "language": "typescript",
-      "name": "formService.ts",
-      "path": "forms/formService.ts",
+      "name": "services.ts",
+      "path": "forms/services.ts",
     },
     {
       "code": "import { useMemo } from "react";
 import { TanstackForm } from "../components/forms/tanstack-forms";
 import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
-import { formService } from "./formService";
+import { useFormSubmit } from "./hooks";
 import { formConfig } from "./formConfig";
 import { buildZodSchema } from "../components/forms/utils/zodSchemaBuilder";
 import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
@@ -1857,8 +2438,10 @@ import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
 export default function MyFormPage() {
   const schema = useMemo(() => buildZodSchema(extractFields(formConfig)), []);
 
+  const { submit } = useFormSubmit();
+
   const handleSubmit = async (data: Record<string, unknown>) => {
-    await formService.submitForm(data);
+    await submit(data);
   };
 
   return (
@@ -1892,6 +2475,36 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > tanstack
       "path": "/app/forms/tanstack-forms/applyBackendErrors.ts",
     },
     {
+      "codeBytes": 2087,
+      "language": "tsx",
+      "name": "transport/context.tsx",
+      "path": "/app/forms/transport/context.tsx",
+    },
+    {
+      "codeBytes": 1731,
+      "language": "typescript",
+      "name": "transport/defaultTransport.ts",
+      "path": "/app/forms/transport/defaultTransport.ts",
+    },
+    {
+      "codeBytes": 6418,
+      "language": "typescript",
+      "name": "transport/localStateAdapter.ts",
+      "path": "/app/forms/transport/localStateAdapter.ts",
+    },
+    {
+      "codeBytes": 4190,
+      "language": "typescript",
+      "name": "transport/requestBuilder.ts",
+      "path": "/app/forms/transport/requestBuilder.ts",
+    },
+    {
+      "codeBytes": 3165,
+      "language": "typescript",
+      "name": "transport/types.ts",
+      "path": "/app/forms/transport/types.ts",
+    },
+    {
       "codeBytes": 3806,
       "language": "typescript",
       "name": "dateFieldHelpers.ts",
@@ -1904,7 +2517,7 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > tanstack
       "path": "/app/forms/utils/dateSerialize.tsx",
     },
     {
-      "codeBytes": 6137,
+      "codeBytes": 4259,
       "language": "typescript",
       "name": "dependentApiRequest.ts",
       "path": "/app/forms/utils/dependentApiRequest.ts",
@@ -2000,13 +2613,35 @@ exports[`formCodeGenerator / generateAllFiles (per stack × per mode) > tanstack
       "path": "hooks/useBackendErrors.ts",
     },
     {
-      "codeBytes": 8116,
+      "codeBytes": 8243,
       "language": "typescript",
       "name": "useInfiniteOptions.ts",
       "path": "hooks/useInfiniteOptions.ts",
     },
   ],
   "variant": [
+    {
+      "code": "/**
+ * Tunables for this form.
+ *
+ * Every knob this variant exposes lives here (AI_AGENT_RULES § R-57), so
+ * \`hooks.ts\` and \`services.ts\` stay free of magic numbers and you only have
+ * one file to edit when a base URL, page size or cache window changes.
+ */
+
+/** Base URL every request in services.ts is built from. */
+export const API_BASE = "/api";
+
+/** Appended to API_BASE when submitting this form. */
+export const SUBMIT_PATH = "/forms/submit";
+
+/** Sent on every request. Add auth headers here. */
+export const BASE_HEADERS = {} as Record<string, string>;
+",
+      "language": "typescript",
+      "name": "constants.ts",
+      "path": "forms/constants.ts",
+    },
     {
       "code": "import { z } from "zod";
 
@@ -2029,10 +2664,55 @@ export type FormValues = z.infer<typeof formSchema>;",
       "path": "forms/formSchema.ts",
     },
     {
-      "code": "import axios from "axios";
-import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+      "code": "import { useCallback, useState } from "react";
 
-const API_BASE = "/api";
+import { formService } from "./services";
+
+/**
+ * React glue between the form component and \`services.ts\`.
+ *
+ * Per AI_AGENT_RULES § R-55 this is the ONLY file that calls services — the
+ * page never imports \`./services\` directly. Submit state, retries and cache
+ * invalidation belong here; the request belongs in \`services.ts\`.
+ *
+ * Errors are deliberately left to propagate: \`formService.submitForm\` throws a
+ * normalized \`BackendErrorResponse\`, which the form component already maps onto
+ * field errors. Wrap the call in try/catch here if you want different handling
+ * (custom error class, status-code mapping, toast).
+ *
+ * TODO(cli-gated): re-install with \`--tanstack-query\` to generate this on top of
+ * TanStack Query. Until then no data-fetching dependency is installed.
+ */
+export function useFormSubmit() {
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = useCallback(async (data: Record<string, unknown>): Promise<void> => {
+    setSubmitting(true);
+    try {
+      await formService.submitForm(data);
+    } finally {
+      setSubmitting(false);
+    }
+  }, []);
+
+  return { submit, submitting };
+}
+",
+      "language": "typescript",
+      "name": "hooks.ts",
+      "path": "forms/hooks.ts",
+    },
+    {
+      "code": "import { BackendErrorResponse, BackendFieldError } from "../components/forms/hooks/useBackendErrors";
+import { API_BASE, SUBMIT_PATH, BASE_HEADERS } from "./constants";
+
+/**
+ * Network layer for this form — the ONLY file here that talks to your backend
+ * (AI_AGENT_RULES § R-55: component → hooks.ts → services.ts).
+ *
+ * TODO(cli-gated): re-install with \`--axios\` to generate this on top of axios
+ * instead of fetch. Until then no HTTP dependency is installed.
+ */
 
 /**
  * Normalize any backend payload to AfnoUI's expected shape:
@@ -2083,22 +2763,40 @@ function normalizeBackendError(data: unknown): BackendErrorResponse {
   return { success: false, message, errors };
 }
 
+/**
+ * Single place the HTTP client is named, so swapping \`fetch\` for axios (or
+ * adding interceptors / auth refresh) is a one-spot change.
+ */
+async function request(url: string, data: Record<string, unknown>): Promise<void> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...BASE_HEADERS },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => undefined);
+    throw normalizeBackendError(payload);
+  }
+}
+
 export const formService = {
+  /**
+   * Throws a normalized \`BackendErrorResponse\` on failure so the hook layer can
+   * map it onto field errors. Nothing is swallowed here.
+   */
   async submitForm(data: Record<string, unknown>): Promise<void> {
     try {
-      await axios.post(\`\${API_BASE}/forms/submit\`, data);
+      await request(\`\${API_BASE}\${SUBMIT_PATH}\`, data);
     } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response?.data !== undefined) {
-        throw normalizeBackendError(error.response.data);
-      }
-      throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
+    if (error && typeof error === "object" && "success" in error) throw error;
+    throw { success: false, message: "Network error — please try again", errors: [] } as BackendErrorResponse;
     }
   },
 };
 ",
       "language": "typescript",
-      "name": "formService.ts",
-      "path": "forms/formService.ts",
+      "name": "services.ts",
+      "path": "forms/services.ts",
     },
     {
       "code": "import { useState } from "react";
@@ -2115,12 +2813,13 @@ import { MultiselectField } from "../components/forms/tanstack-forms/fields/Mult
 import { CheckboxField } from "../components/forms/tanstack-forms/fields/CheckboxField";
 import { DateField } from "../components/forms/tanstack-forms/fields/DateField";
 import { TextareaField } from "../components/forms/tanstack-forms/fields/TextareaField";
-import { formService } from "./formService";
+import { useFormSubmit } from "./hooks";
 import { formSchema } from "./formSchema";
 
 export default function MyFormPage() {
   const [globalError, setGlobalError] = useState<string | null>(null);
   const SUBMIT_EXCLUDED = new Set<string>();
+  const { submit } = useFormSubmit();
 
   const form = useForm({
     defaultValues: {
@@ -2147,7 +2846,7 @@ export default function MyFormPage() {
             if (k.startsWith(p)) delete payload[k];
           }
         }
-        await formService.submitForm(payload);
+        await submit(payload);
       } catch (error: any) {
         setGlobalError(error?.message || "An unexpected error occurred");
       }
@@ -2276,15 +2975,17 @@ exports[`formCodeGenerator / generatePageComponentCode (per stack × per mode ×
 "import { useMemo } from "react";
 import { ActionForm } from "../components/forms/action-forms";
 import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
-import { formService } from "./formService";
+import { useFormSubmit } from "./hooks";
 import { formConfig } from "./formConfig";
 import { formSchema } from "./formSchema";
 
 export default function MyFormPage() {
   const schema = formSchema;
 
+  const { submit } = useFormSubmit();
+
   const handleSubmit = async (data: Record<string, unknown>) => {
-    await formService.submitForm(data);
+    await submit(data);
   };
 
   return (
@@ -2300,7 +3001,7 @@ exports[`formCodeGenerator / generatePageComponentCode (per stack × per mode ×
 "import { useMemo } from "react";
 import { ActionForm } from "../components/forms/action-forms";
 import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
-import { formService } from "./formService";
+import { useFormSubmit } from "./hooks";
 import { formConfig } from "./formConfig";
 import { buildZodSchema } from "../components/forms/utils/zodSchemaBuilder";
 import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
@@ -2308,8 +3009,10 @@ import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
 export default function MyFormPage() {
   const schema = useMemo(() => buildZodSchema(extractFields(formConfig)), []);
 
+  const { submit } = useFormSubmit();
+
   const handleSubmit = async (data: Record<string, unknown>) => {
-    await formService.submitForm(data);
+    await submit(data);
   };
 
   return (
@@ -2330,11 +3033,12 @@ import { AlertCircle, X } from "lucide-react";
 import { ActionFormProvider } from "../components/forms/action-forms/ActionFormContext";
 import { TextField } from "../components/forms/action-forms/fields/TextField";
 import { CheckboxField } from "../components/forms/action-forms/fields/CheckboxField";
-import { formService } from "./formService";
+import { useFormSubmit } from "./hooks";
 import { formSchema } from "./formSchema";
 
 export default function MyFormPage() {
   const SUBMIT_EXCLUDED = new Set<string>();
+  const { submit } = useFormSubmit();
   const [values, setValues] = useState<Record<string, unknown>>({
       "email": "",
       "password": "",
@@ -2372,7 +3076,7 @@ export default function MyFormPage() {
           if (k.startsWith(p)) delete payload[k];
         }
       }
-      await formService.submitForm(payload);
+      await submit(payload);
     } catch (error: any) {
       setGlobalError(error?.message || "An unexpected error occurred");
     } finally {
@@ -2429,15 +3133,17 @@ exports[`formCodeGenerator / generatePageComponentCode (per stack × per mode ×
 "import { useMemo } from "react";
 import { ReactHookForm } from "../components/forms/react-hook-form";
 import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
-import { formService } from "./formService";
+import { useFormSubmit } from "./hooks";
 import { formConfig } from "./formConfig";
 import { formSchema } from "./formSchema";
 
 export default function MyFormPage() {
   const schema = formSchema;
 
+  const { submit } = useFormSubmit();
+
   const handleSubmit = async (data: Record<string, unknown>) => {
-    await formService.submitForm(data);
+    await submit(data);
   };
 
   return (
@@ -2453,7 +3159,7 @@ exports[`formCodeGenerator / generatePageComponentCode (per stack × per mode ×
 "import { useMemo } from "react";
 import { ReactHookForm } from "../components/forms/react-hook-form";
 import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
-import { formService } from "./formService";
+import { useFormSubmit } from "./hooks";
 import { formConfig } from "./formConfig";
 import { buildZodSchema } from "../components/forms/utils/zodSchemaBuilder";
 import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
@@ -2461,8 +3167,10 @@ import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
 export default function MyFormPage() {
   const schema = useMemo(() => buildZodSchema(extractFields(formConfig)), []);
 
+  const { submit } = useFormSubmit();
+
   const handleSubmit = async (data: Record<string, unknown>) => {
-    await formService.submitForm(data);
+    await submit(data);
   };
 
   return (
@@ -2482,11 +3190,12 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
 import { TextField } from "../components/forms/react-hook-form/fields/TextField";
 import { CheckboxField } from "../components/forms/react-hook-form/fields/CheckboxField";
-import { formService } from "./formService";
+import { useFormSubmit } from "./hooks";
 import { formSchema } from "./formSchema";
 
 export default function MyFormPage() {
   const SUBMIT_EXCLUDED = new Set<string>();
+  const { submit } = useFormSubmit();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -2507,7 +3216,7 @@ export default function MyFormPage() {
         if (k.startsWith(p)) delete payload[k];
       }
     }
-    await formService.submitForm(payload);
+    await submit(payload);
   });
 
   return (
@@ -2549,15 +3258,17 @@ exports[`formCodeGenerator / generatePageComponentCode (per stack × per mode ×
 "import { useMemo } from "react";
 import { TanstackForm } from "../components/forms/tanstack-forms";
 import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
-import { formService } from "./formService";
+import { useFormSubmit } from "./hooks";
 import { formConfig } from "./formConfig";
 import { formSchema } from "./formSchema";
 
 export default function MyFormPage() {
   const schema = formSchema;
 
+  const { submit } = useFormSubmit();
+
   const handleSubmit = async (data: Record<string, unknown>) => {
-    await formService.submitForm(data);
+    await submit(data);
   };
 
   return (
@@ -2573,7 +3284,7 @@ exports[`formCodeGenerator / generatePageComponentCode (per stack × per mode ×
 "import { useMemo } from "react";
 import { TanstackForm } from "../components/forms/tanstack-forms";
 import { BackendErrorResponse } from "../components/forms/hooks/useBackendErrors";
-import { formService } from "./formService";
+import { useFormSubmit } from "./hooks";
 import { formConfig } from "./formConfig";
 import { buildZodSchema } from "../components/forms/utils/zodSchemaBuilder";
 import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
@@ -2581,8 +3292,10 @@ import { extractFields } from "../components/forms/utils/zodSchemaBuilder";
 export default function MyFormPage() {
   const schema = useMemo(() => buildZodSchema(extractFields(formConfig)), []);
 
+  const { submit } = useFormSubmit();
+
   const handleSubmit = async (data: Record<string, unknown>) => {
-    await formService.submitForm(data);
+    await submit(data);
   };
 
   return (
@@ -2604,12 +3317,13 @@ import { AlertCircle, X } from "lucide-react";
 import { TanstackFormProvider } from "../components/forms/tanstack-forms/TanstackFormContext";
 import { TextField } from "../components/forms/tanstack-forms/fields/TextField";
 import { CheckboxField } from "../components/forms/tanstack-forms/fields/CheckboxField";
-import { formService } from "./formService";
+import { useFormSubmit } from "./hooks";
 import { formSchema } from "./formSchema";
 
 export default function MyFormPage() {
   const [globalError, setGlobalError] = useState<string | null>(null);
   const SUBMIT_EXCLUDED = new Set<string>();
+  const { submit } = useFormSubmit();
 
   const form = useForm({
     defaultValues: {
@@ -2631,7 +3345,7 @@ export default function MyFormPage() {
             if (k.startsWith(p)) delete payload[k];
           }
         }
-        await formService.submitForm(payload);
+        await submit(payload);
       } catch (error: any) {
         setGlobalError(error?.message || "An unexpected error occurred");
       }

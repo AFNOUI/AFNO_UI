@@ -4,7 +4,7 @@
  *
  * - Calls `generateKanbanFiles(config, cards, componentNameOverride)` to get the
  *   per-variant files (`<Component>.tsx`, `config.ts`, `data.ts`,
- *   `useCardChange.ts`).
+ *   `hooks.ts`, `services.ts`).
  * - Rewrites the absolute `@/components/kanban/*` import specifiers to stable
  *   relative paths so the generated bundle does not depend on the user's
  *   `tsconfig.json` `paths` alias being configured exactly the same way as ours.
@@ -21,6 +21,7 @@
 
 import type { KanbanBuilderConfig, KanbanCardData } from "@/kanban/types";
 
+import { DEFAULT_TRANSPORT, type TransportChoice } from "@/lib/codegen/transport";
 import { generateKanbanFiles, type GeneratedFile, type KanbanRendererSources } from "./kanbanCodeGenerator";
 
 export interface KanbanVariantFile {
@@ -74,6 +75,8 @@ export function buildKanbanVariantFiles(
   cards: KanbanCardData[],
   variantSlug: string,
   rendererSources?: KanbanRendererSources,
+  /** Which HTTP client / query strategy to generate against (R-56). */
+  transport: TransportChoice = DEFAULT_TRANSPORT,
 ): KanbanVariantFile[] {
   const componentName = variantPageComponentName(variantSlug);
   const generated: GeneratedFile[] = generateKanbanFiles(
@@ -81,6 +84,7 @@ export function buildKanbanVariantFiles(
     cards,
     rendererSources,
     componentName,
+    transport,
   );
 
   return generated.map((file) => {

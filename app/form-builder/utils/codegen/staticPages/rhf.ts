@@ -23,7 +23,7 @@ export function generateStaticRHF(config: FormConfig): string {
     `import { Button } from "@/components/ui/button";`,
     `import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";`,
     ...fieldImports.map(f => `import { ${f.component} } from "@/components/forms/react-hook-form/fields/${f.file.replace('.tsx', '')}";`),
-    `import { formService } from "./formService";`,
+    `import { useFormSubmit } from "./hooks";`,
     `import { formSchema } from "./formSchema";`,
   ];
 
@@ -53,6 +53,7 @@ ${fieldsJSX}
 
 export default function MyFormPage() {
   const SUBMIT_EXCLUDED = ${submitExcluded};
+  const { submit } = useFormSubmit();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -69,7 +70,7 @@ export default function MyFormPage() {
         if (k.startsWith(p)) delete payload[k];
       }
     }
-    await formService.submitForm(payload);
+    await submit(payload);
   });
 
   return (

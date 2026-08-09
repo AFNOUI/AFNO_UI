@@ -7,6 +7,8 @@ import { generateTrimmedDispatcher } from "./dispatchers";
 import { getRequiredComponents, getUsedFieldTypes } from "./fieldRegistry";
 import { generateFormConfigCode } from "./formConfigEmitter";
 import { generateFormServiceCode } from "./formService";
+import { generateFormHooksCode, generateFormConstantsCode } from "./formHooks";
+import { DEFAULT_TRANSPORT, type TransportChoice } from "@/lib/codegen/transport";
 import { generateHydrationHookCode } from "./hydration";
 import { applyImportStyle, ImportStyle } from "./importAliases";
 import { generateTrimmedFieldsIndex } from "./sectionRendering";
@@ -30,14 +32,31 @@ export function getHydratableFields(config: FormConfig) {
  * Fixed files use exact copies from the registry (actual source code).
  * Dispatcher and barrel files are generated with only the used imports.
  */
+export interface GenerateAllFilesOptions {
+  /** Field names hydrated from a backend before first render. */
+  hydratedFieldNames?: string[];
+  /** Which form stack to emit against. */
+  library?: FormLibrary;
+  /** `config` renders from formConfig.ts; `static` inlines fields into JSX. */
+  implementationMode?: ImplementationMode;
+  /** Emit `@/`-alias imports or relative ones. */
+  importStyle?: ImportStyle;
+  /** Which HTTP client / query strategy to generate against (R-56). */
+  transport?: TransportChoice;
+}
+
 export function generateAllFiles(
   config: FormConfig,
   schemaMode: SchemaMode,
-  hydratedFieldNames: string[] = [],
-  library: FormLibrary = 'rhf',
-  implementationMode: ImplementationMode = 'config',
-  importStyle: ImportStyle = "relative",
+  options: GenerateAllFilesOptions = {},
 ): GeneratedFile[] {
+  const {
+    hydratedFieldNames = [],
+    library = 'rhf',
+    implementationMode = 'config',
+    importStyle = "relative",
+    transport = DEFAULT_TRANSPORT,
+  } = options;
   const usedTypes = getUsedFieldTypes(config);
   const isStatic = implementationMode === 'static';
 
@@ -63,6 +82,7 @@ export function generateAllFiles(
         implementationMode,
         importStyle,
         "pages/MyFormPage.tsx",
+        transport,
       ),
       language: "tsx",
       description: isStatic
@@ -112,9 +132,28 @@ export function generateAllFiles(
   }
 
   files.push({
-    name: "formService.ts",
-    path: "forms/formService.ts",
-    code: applyImportStyle(generateFormServiceCode(), "forms/formService.ts", importStyle),
+    name: "constants.ts",
+    path: "forms/constants.ts",
+    code: applyImportStyle(generateFormConstantsCode(transport), "forms/constants.ts", importStyle),
+    language: "typescript",
+    description: "Tunables for this form — API base, submit path, headers, cache windows (R-57).",
+    isFixed: false,
+  });
+
+  files.push({
+    name: "hooks.ts",
+    path: "forms/hooks.ts",
+    code: applyImportStyle(generateFormHooksCode(transport), "forms/hooks.ts", importStyle),
+    language: "typescript",
+    description:
+      "React glue — submit state and the only caller of services.ts. The page never imports services directly.",
+    isFixed: false,
+  });
+
+  files.push({
+    name: "services.ts",
+    path: "forms/services.ts",
+    code: applyImportStyle(generateFormServiceCode(transport), "forms/services.ts", importStyle),
     language: "typescript",
     description: "Service layer for form API operations. Throws BackendErrorResponse on validation errors.",
     isFixed: false,

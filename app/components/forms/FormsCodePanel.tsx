@@ -97,7 +97,7 @@ export function FormsCodePanel({
     //   },
     // ];
 
-    const fixedCoreFiles = generateAllFiles(config, "compile-time", [], library, implementationMode);
+    const fixedCoreFiles = generateAllFiles(config, "compile-time", { library, implementationMode });
 
     // const allFiles = [...variantFiles, ...fixedCoreFiles];
 

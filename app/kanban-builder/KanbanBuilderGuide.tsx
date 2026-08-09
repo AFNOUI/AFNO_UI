@@ -43,7 +43,7 @@ export function KanbanBuilderGuide() {
           <CardTitle className="text-base flex items-center gap-2"><Code2 className="h-4 w-4" /> Multi-file export</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-1.5">
-          <p>The Export tab emits one <strong>per-board</strong> folder (<code className="text-xs bg-muted px-1 rounded">component / config / data / useCardChange / types</code>) plus the <strong>shared engine</strong> files (KanbanBoard, KanbanCard, dialog template engine, full DnD lib). Copy the engine once; generate as many boards as you want.</p>
+          <p>The Export tab emits one <strong>per-board</strong> folder (<code className="text-xs bg-muted px-1 rounded">component / config / data / hooks / services / types</code>) plus the <strong>shared engine</strong> files (KanbanBoard, KanbanCard, dialog template engine, full DnD lib). Copy the engine once; generate as many boards as you want.</p>
           <p>Mirrors the same multi-file shape as the Table Builder export.</p>
         </CardContent>
       </Card>
@@ -61,7 +61,7 @@ export function KanbanBuilderGuide() {
           <CardTitle className="text-base flex items-center gap-2"><Webhook className="h-4 w-4" /> Persist via onCardChange</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-1.5">
-          <p>Provide a sandboxed snippet in <strong>On card change (DnD)</strong> to call your backend after every drop. The snippet receives <code className="text-xs bg-muted px-1 rounded">row</code> = the full change event. The exported <code className="text-xs bg-muted px-1 rounded">useCardChange</code> hook gives you a typed surface for production.</p>
+          <p>Provide a sandboxed snippet in <strong>On card change (DnD)</strong> to call your backend after every drop. The snippet receives <code className="text-xs bg-muted px-1 rounded">row</code> = the full change event. For production, put the request in the generated <code className="text-xs bg-muted px-1 rounded">services.ts</code> and call it from <code className="text-xs bg-muted px-1 rounded">hooks.ts</code> — the board component never talks to the network directly.</p>
         </CardContent>
       </Card>
       <Card>

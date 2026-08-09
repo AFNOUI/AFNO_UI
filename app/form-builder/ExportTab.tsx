@@ -55,7 +55,11 @@ export function ExportTab({ formConfig }: ExportTabProps) {
   // All fields can be hydrated — not just option-based ones
   const hydratableFields = useMemo(() => getHydratableFields(formConfig), [formConfig]);
 
-  const generatedFiles = generateAllFiles(formConfig, schemaMode, hydratedFields, formLibrary, implementationMode);
+  const generatedFiles = generateAllFiles(formConfig, schemaMode, {
+    hydratedFieldNames: hydratedFields,
+    library: formLibrary,
+    implementationMode,
+  });
   const installCmd = generateInstallCommand(formConfig);
   const requiredComponents = getRequiredComponents(formConfig);
   const usedTypes = getUsedFieldTypes(formConfig);
