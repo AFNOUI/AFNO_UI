@@ -1,4 +1,4 @@
-import type { EmptyFieldConfig } from "../../types/types.js";
+import type { EmptyFieldConfig } from "../../types/types";
 
 interface EmptyFieldProps {
   config: EmptyFieldConfig;

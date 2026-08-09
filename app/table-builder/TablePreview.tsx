@@ -99,8 +99,8 @@ import {
 // ───── Expandable row content ─────
 // Layout switch lives in `src/components/tables/defaultExpandedRowRenderer.tsx`
 // so user-supplied `renderExpandedRow` can compose with the built-in layouts.
+import { useRowApiActions } from "@/tables/useRowApiActions";
 import { DefaultRowDialogBody } from "@/tables/defaultRowDialog";
-import { useRowApiActions } from "@/tables/useRowApiActions.hook";
 import { DefaultPaginationBar } from "@/tables/defaultPaginationBar";
 import { DefaultExpandedRow } from "@/tables/defaultExpandedRowRenderer";
 
@@ -968,9 +968,11 @@ export function TablePreview({
   const effectivePageSize = pageSize;
 
   // ─── Row-action API wiring ───
-  // All the optimistic-update / fetch / rollback / toast logic lives in the
-  // `useRowApiActions` hook (so this component stays presentational) and the
-  // raw network calls live in `tableServices.ts`.
+  // All the optimistic-update / rollback / notification logic lives in the
+  // `useRowApiActions` hook (so this component stays presentational). Requests
+  // are described by `transport/requestBuilder` and sent by whatever transport
+  // is in context — `fetch` by default, overridable from a variant's
+  // `services.ts`. See AI_AGENT_RULES § R-53.
   const { wrappedCellUpdate, getRowActionButtons } = useRowApiActions({
     config,
     rows,
