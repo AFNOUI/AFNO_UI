@@ -45,7 +45,16 @@ and installed into consumer projects via the `afnoui` CLI under
 4. **Strict TS, no `any` (except parser boundaries).** `interface X { id: string }`
    for snippet drag-data is BANNED — use
    `type X = { id: string } & Record<string, unknown>` (see § R-32).
-5. **Production gate before "done":** `pnpm lint && pnpm test && pnpm run build:cli
+5. **No transport in the engine layer.** No engine/shared file may import
+   `axios`, `@tanstack/react-query`, or any HTTP client — the engine *describes*
+   a request, the variant's `services.ts` *sends* it (§ R-53, R-54).
+6. **`component → hooks.ts → services.ts`** in every variant. Components never
+   import `services.ts`; only the hook layer does. Every variant gets a
+   `services.ts`, stub body included (§ R-55).
+7. **axios / TanStack Query are CLI-gated opt-ins.** Generated default is
+   `fetch` + local React state; the other paths are selected by CLI flags, not
+   hand-written. Mark them `TODO(cli-gated)` (§ R-56).
+8. **Production gate before "done":** `pnpm lint && pnpm test && pnpm run build:cli
    && pnpm run verify:quick && pnpm run validate:variants && cd test && pnpm build`.
 
 ## Quick commands by task

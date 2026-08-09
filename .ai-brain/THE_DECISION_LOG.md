@@ -412,6 +412,61 @@ Rejected because:
 
 ---
 
+### 1.17 [Accepted] Wave-9: the engine layer is transport-free; transport lives in variant `services.ts`
+
+**Context.** The two-layer model (afnoui-managed engine vs user-owned variant)
+was being violated by the engine itself. An audit found user-changeable code in
+files that `afnoui add --force` overwrites:
+
+- `app/tables/tableServices.ts` — raw `fetch`, hardcoded `Content-Type`,
+  hardcoded `HTTP ${status}` error convention, default request bodies.
+- `app/tables/useRowApiActions.hook.ts` — hardcoded `toast` + rollback policy.
+- `app/forms/hooks/useInfiniteOptions.ts` — imported **both** `axios` and
+  `@tanstack/react-query`, with hardcoded `staleTime` / `gcTime` / query keys.
+- `app/forms/utils/dependentApiRequest.ts` — typed its public surface as
+  `AxiosRequestConfig`, making the engine's *types* axios-shaped.
+- 4 `action-forms` Combobox fields called `axios` inline **in the component**,
+  duplicating ~90 lines each of logic their rhf/tanstack twins got from the hook.
+
+Net effect: a project on axios + interceptors had to edit afnoui-managed files,
+and every async-form install pulled in axios **and** react-query whether or not
+it wanted them.
+
+**Decision.** Split by purity, not by file (R-54). The engine keeps the
+deterministic half — token grammar, request-descriptor building, response
+mapping, loading/pagination state machines. The variant owns the policy half —
+HTTP client, headers, caching, notifications. They meet at an injected port with
+a zero-dependency default (`fetch` + React state).
+
+Kanban, tree, dnd and charts engines were audited and found already
+transport-free; R-53 now keeps them that way rather than assuming it.
+
+**Alternative rejected.** Moving whole files to the variant layer. It would have
+handed users the token grammar and pagination state machine to maintain — code
+that is part of the builder's contract and must not drift per project.
+
+**Alternative rejected.** Keeping axios/react-query and making them peer
+dependencies. It does not fix the real problem: the *code* was unreachable for
+editing, not merely the dependency.
+
+**Consequences.**
+- Clean break, one wave. Engine props changed; existing installs must re-add.
+- `useAsyncOptions` / `useInfiniteOptions` kept identical names and return
+  shapes, so all 20 field files that consume them changed by **zero lines** —
+  only the 4 outliers that bypassed the hook were rewritten.
+- `localStateAdapter.ts` deliberately reimplements react-query's 5-min stale /
+  10-min gc / in-flight de-dupe, so dropping the dependency is not a behavioural
+  regression.
+- axios / react-query remain as CLI-gated generated code (R-56), not deletions.
+
+**Forbidden change**:
+- Do NOT add a transport import to an engine file to "simplify" it (R-53).
+- Do NOT let a variant component import `services.ts` directly (R-55).
+- Do NOT make the engine branch on whether axios/tanstack was selected — the
+  whole point is that it cannot tell.
+
+---
+
 ## Section 2 — The "Hacks" Library
 
 > Each entry is a non-standard piece of code. If you’re an AI tempted to "clean it up" — read the rationale first. Most of these protect against silent regressions.

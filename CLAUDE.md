@@ -24,7 +24,15 @@ shipped to consumer projects via `afnoui add`.
    `playwright`, `cypress`. See § R-04.
 4. DnD drag-data: `type X = { id: string } & Record<string, unknown>`, never
    `interface X { id: string }` (§ R-32).
-5. Production gate before "done":
+5. **No transport in the engine layer.** No engine/shared file may import `axios`,
+   `@tanstack/react-query`, or any HTTP client. Requests are *described* by the
+   engine and *sent* by the variant's `services.ts` (§ R-53, R-54).
+6. **`component → hooks.ts → services.ts`** in every variant. A component never
+   imports `services.ts`; only the hook layer calls services. `services.ts` is
+   emitted for every variant, stub body included (§ R-55).
+7. axios / TanStack Query are **CLI-gated opt-ins** — generated default is
+   `fetch` + local state; the other paths are selected, not written (§ R-56).
+8. Production gate before "done":
    `pnpm lint && pnpm test && pnpm run build:cli && pnpm run verify:quick &&
     pnpm run validate:variants && cd test && pnpm build`.
 
