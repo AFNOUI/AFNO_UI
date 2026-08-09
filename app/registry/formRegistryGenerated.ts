@@ -13,7 +13,7 @@ export interface RegistryFile {
   category: 'core' | 'hook' | 'util' | 'field';
 }
 
-export const formRegistryGeneratedAt = '2026-08-07T06:24:25.322Z';
+export const formRegistryGeneratedAt = '2026-08-09T12:47:16.920Z';
 
 /**
  * Single source of truth for per-stack install metadata.
@@ -797,18 +797,14 @@ export function applyBackendErrors(
   return firstErrorSectionIndex;
 }
 `;
-export const action_forms_fields_AsyncComboboxFieldRaw = `import axios from "axios";
-import { useEffect, useState, useCallback, useMemo } from "react";
+export const action_forms_fields_AsyncComboboxFieldRaw = `import { useState, useMemo } from "react";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 
-import type {
-  FieldOption,
-  AsyncComboboxFieldConfig,
-} from "@/forms/types/types";
-import { buildAxiosConfigForAsyncApi } from "@/forms/utils/dependentApiRequest";
+import type { AsyncComboboxFieldConfig } from "@/forms/types/types";
 import { mergeGhostOptionForSingle } from "@/forms/utils/watchPopulate";
 import { cn } from "@/lib/utils";
 import { getExtraKeyValues } from "../../utils/fieldExtraKeys";
+import { useAsyncOptions } from "../../hooks/useInfiniteOptions";
 import { useActionFormContext } from "../ActionFormContext";
 
 import {
@@ -837,38 +833,11 @@ export function AsyncComboboxField({
   const v = values[config.name] as string | undefined;
 
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [options, setOptions] = useState<FieldOption[]>(config.options || []);
-
-  const fetchOptions = useCallback(async () => {
-    if (!config.apiConfig?.url) {
-      setOptions(config.options || []);
-      return;
-    }
-    setLoading(true);
-    try {
-      const { responseMapping } = config.apiConfig;
-      const res = await axios(buildAxiosConfigForAsyncApi(config.apiConfig));
-      const raw = responseMapping.dataPath
-        .split(".")
-        .reduce((o, k: string) => o?.[k], res.data);
-      const items = Array.isArray(raw) ? raw : [];
-      setOptions(
-        items.map((item) => ({
-          label: String(item[responseMapping.labelKey] || ""),
-          value: String(item[responseMapping.valueKey] || ""),
-        })),
-      );
-    } catch {
-      /* keep existing */
-    }
-    setLoading(false);
-  }, [config.apiConfig, config.options]);
-
-  useEffect(() => {
-    fetchOptions();
-  }, [fetchOptions]);
+  const { options, isLoading: loading } = useAsyncOptions({
+    apiConfig: config.apiConfig,
+    initialOptions: config.options,
+  });
 
   const allOptions = useMemo(
     () => mergeGhostOptionForSingle(options, v),
@@ -962,18 +931,14 @@ export function AsyncComboboxField({
   );
 }
 `;
-export const action_forms_fields_AsyncMultiComboboxFieldRaw = `import axios from "axios";
-import { useEffect, useState, useCallback, useMemo } from "react";
+export const action_forms_fields_AsyncMultiComboboxFieldRaw = `import { useState, useMemo } from "react";
 import { Check, ChevronsUpDown, X, Loader2 } from "lucide-react";
 
-import type {
-  FieldOption,
-  AsyncMultiComboboxFieldConfig,
-} from "@/forms/types/types";
-import { buildAxiosConfigForAsyncApi } from "@/forms/utils/dependentApiRequest";
+import type { AsyncMultiComboboxFieldConfig } from "@/forms/types/types";
 import { mergeGhostOptionsForMultiValues } from "@/forms/utils/watchPopulate";
 import { cn } from "@/lib/utils";
 import { getExtraKeyValuesFromOptions } from "../../utils/fieldExtraKeys";
+import { useAsyncOptions } from "../../hooks/useInfiniteOptions";
 import { useActionFormContext } from "../ActionFormContext";
 
 import {
@@ -1002,8 +967,10 @@ export function AsyncMultiComboboxField({
   const { values, errors, setValue } = useActionFormContext();
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [options, setOptions] = useState<FieldOption[]>(config.options || []);
-  const [loading, setLoading] = useState(false);
+  const { options, isLoading: loading } = useAsyncOptions({
+    apiConfig: config.apiConfig,
+    initialOptions: config.options,
+  });
   const selected: string[] = (values[config.name] as string[]) || [];
   const optionsWithGhosts = useMemo(
     () => mergeGhostOptionsForMultiValues(options, selected),
@@ -1029,35 +996,6 @@ export function AsyncMultiComboboxField({
     });
     Object.entries(extras).forEach(([k, val]) => setValue(k, val));
   };
-
-  const fetchOptions = useCallback(async () => {
-    if (!config.apiConfig?.url) {
-      setOptions(config.options || []);
-      return;
-    }
-    setLoading(true);
-    try {
-      const { responseMapping } = config.apiConfig;
-      const res = await axios(buildAxiosConfigForAsyncApi(config.apiConfig));
-      const raw = responseMapping.dataPath
-        .split(".")
-        .reduce((o, k: string) => o?.[k], res.data);
-      const items = Array.isArray(raw) ? raw : [];
-      setOptions(
-        items.map((item) => ({
-          label: String(item[responseMapping.labelKey] || ""),
-          value: String(item[responseMapping.valueKey] || ""),
-        })),
-      );
-    } catch {
-      /* keep existing */
-    }
-    setLoading(false);
-  }, [config.apiConfig, config.options]);
-
-  useEffect(() => {
-    fetchOptions();
-  }, [fetchOptions]);
 
   const toggle = (v: string) => {
     const nv = selected.includes(v)
@@ -2108,18 +2046,14 @@ export { InfiniteComboboxField } from "./InfiniteComboboxField";
 export { InfiniteMultiSelectField } from "./InfiniteMultiSelectField";
 export { InfiniteMultiComboboxField } from "./InfiniteMultiComboboxField";
 `;
-export const action_forms_fields_InfiniteComboboxFieldRaw = `import axios from "axios";
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
-import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+export const action_forms_fields_InfiniteComboboxFieldRaw = `import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
 
-import type {
-  FieldOption,
-  InfiniteComboboxFieldConfig,
-} from "@/forms/types/types";
-import { buildAxiosConfigForAsyncApi } from "@/forms/utils/dependentApiRequest";
+import type { InfiniteComboboxFieldConfig } from "@/forms/types/types";
 import { mergeGhostOptionForSingle } from "@/forms/utils/watchPopulate";
 import { cn } from "@/lib/utils";
 import { getExtraKeyValues } from "../../utils/fieldExtraKeys";
+import { useInfiniteOptions } from "../../hooks/useInfiniteOptions";
 import { useActionFormContext } from "../ActionFormContext";
 
 import {
@@ -2147,15 +2081,19 @@ export function InfiniteComboboxField({
   const { values, errors, setValue } = useActionFormContext();
   const [open, setOpen] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState("");
-  const [options, setOptions] = useState<FieldOption[]>(config.options || []);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [search, setSearch] = useState("");
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
   const v = values[config.name] as string;
-  const watchValue = config.apiConfig?._watchValue;
+
+  const {
+    options,
+    isLoading: loading,
+    isFetchingNextPage,
+    searchTerm: search,
+    setSearchTerm: setSearch,
+    sentinelRef,
+  } = useInfiniteOptions({
+    apiConfig: config.apiConfig,
+    pageSize: config.apiConfig?.pageSize,
+  });
 
   const optionsForSelect = useMemo(
     () => mergeGhostOptionForSingle(options, v),
@@ -2170,88 +2108,6 @@ export function InfiniteComboboxField({
     const option = options.find((o) => o.value === v);
     setSelectedLabel(option?.label ?? String(v));
   }, [v, options]);
-
-  const fetchPage = useCallback(
-    async (p: number, q: string, reset = false) => {
-      if (!config.apiConfig?.url) return;
-      setLoading(true);
-      try {
-        const {
-          responseMapping,
-          searchParam = "search",
-          pageParam = "page",
-          pageSizeParam = "limit",
-          pageSize = 20,
-          hasMorePath,
-          offsetBased,
-        } = config.apiConfig;
-        const params: Record<string, string | number> = {
-          [pageSizeParam]: pageSize,
-        };
-        if (q) params[searchParam] = q;
-        params[pageParam] = offsetBased ? p * pageSize : p + 1;
-        const res = await axios(buildAxiosConfigForAsyncApi(config.apiConfig, params));
-        const raw = responseMapping.dataPath
-          .split(".")
-          .reduce((o, k: string) => o?.[k], res.data);
-        const items = Array.isArray(raw) ? raw : [];
-        const mapped = items.map((item) => ({
-          label: String(item[responseMapping.labelKey] || ""),
-          value: String(item[responseMapping.valueKey] || ""),
-        }));
-        setOptions((prev) => (reset ? mapped : [...prev, ...mapped]));
-        if (hasMorePath) {
-          const more = hasMorePath
-            .split(".")
-            .reduce((o, k: string) => o?.[k], res.data);
-          setHasMore(!!more);
-        } else setHasMore(items.length >= pageSize);
-      } catch {
-        setHasMore(false);
-      }
-      setLoading(false);
-    },
-    [config.apiConfig],
-  );
-
-  useEffect(() => {
-    if (!config.apiConfig?.url) {
-      setOptions(config.options || []);
-      setPage(0);
-      setHasMore(false);
-      return;
-    }
-    setPage(0);
-    setHasMore(true);
-    fetchPage(0, "", true);
-  }, [config.apiConfig, config.options, fetchPage, watchValue]);
-
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      setPage(0);
-      fetchPage(0, search, true);
-    }, 300);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [search, fetchPage]);
-
-  useEffect(() => {
-    if (!sentinelRef.current || !open) return;
-    const obs = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting && hasMore && !loading) {
-          const next = page + 1;
-          setPage(next);
-          fetchPage(next, search);
-        }
-      },
-      { threshold: 0.1 },
-    );
-    obs.observe(sentinelRef.current);
-    return () => obs.disconnect();
-  }, [open, hasMore, loading, page, search, fetchPage]);
 
   return (
     <div className={cn("flex flex-col space-y-2", config.className)}>
@@ -2321,7 +2177,7 @@ export function InfiniteComboboxField({
                 ref={sentinelRef}
                 className="h-6 flex items-center justify-center"
               >
-                {loading && (
+                {isFetchingNextPage && (
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 )}
               </div>
@@ -2337,18 +2193,14 @@ export function InfiniteComboboxField({
   );
 }
 `;
-export const action_forms_fields_InfiniteMultiComboboxFieldRaw = `import axios from "axios";
-import { Check, ChevronsUpDown, X, Loader2 } from "lucide-react";
-import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+export const action_forms_fields_InfiniteMultiComboboxFieldRaw = `import { Check, ChevronsUpDown, X, Loader2 } from "lucide-react";
+import { useState, useMemo } from "react";
 
-import type {
-  FieldOption,
-  InfiniteMultiComboboxFieldConfig,
-} from "@/forms/types/types";
-import { buildAxiosConfigForAsyncApi } from "@/forms/utils/dependentApiRequest";
+import type { InfiniteMultiComboboxFieldConfig } from "@/forms/types/types";
 import { mergeGhostOptionsForMultiValues } from "@/forms/utils/watchPopulate";
 import { cn } from "@/lib/utils";
 import { getExtraKeyValuesFromOptions } from "../../utils/fieldExtraKeys";
+import { useInfiniteOptions } from "../../hooks/useInfiniteOptions";
 import { useActionFormContext } from "../ActionFormContext";
 
 import {
@@ -2376,15 +2228,18 @@ export function InfiniteMultiComboboxField({
 }) {
   const { values, errors, setValue } = useActionFormContext();
   const [open, setOpen] = useState(false);
-  const [options, setOptions] = useState<FieldOption[]>(config.options || []);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [search, setSearch] = useState("");
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const {
+    options,
+    isLoading: loading,
+    isFetchingNextPage,
+    searchTerm: search,
+    setSearchTerm: setSearch,
+    sentinelRef,
+  } = useInfiniteOptions({
+    apiConfig: config.apiConfig,
+    pageSize: config.apiConfig?.pageSize,
+  });
   const selected: string[] = (values[config.name] as string[]) || [];
-  const watchValue = config.apiConfig?._watchValue;
   const optionsForList = useMemo(
     () => mergeGhostOptionsForMultiValues(options, selected),
     [options, selected],
@@ -2400,88 +2255,6 @@ export function InfiniteMultiComboboxField({
     });
     Object.entries(extras).forEach(([k, val]) => setValue(k, val));
   };
-
-  const fetchPage = useCallback(
-    async (p: number, q: string, reset = false) => {
-      if (!config.apiConfig?.url) return;
-      setLoading(true);
-      try {
-        const {
-          responseMapping,
-          searchParam = "search",
-          pageParam = "page",
-          pageSizeParam = "limit",
-          pageSize = 20,
-          hasMorePath,
-          offsetBased,
-        } = config.apiConfig;
-        const params: Record<string, string | number> = {
-          [pageSizeParam]: pageSize,
-        };
-        if (q) params[searchParam] = q;
-        params[pageParam] = offsetBased ? p * pageSize : p + 1;
-        const res = await axios(buildAxiosConfigForAsyncApi(config.apiConfig, params));
-        const raw = responseMapping.dataPath
-          .split(".")
-          .reduce((o, k: string) => o?.[k], res.data);
-        const items = Array.isArray(raw) ? raw : [];
-        const mapped = items.map((item) => ({
-          label: String(item[responseMapping.labelKey] || ""),
-          value: String(item[responseMapping.valueKey] || ""),
-        }));
-        setOptions((prev) => (reset ? mapped : [...prev, ...mapped]));
-        if (hasMorePath) {
-          const more = hasMorePath
-            .split(".")
-            .reduce((o, k: string) => o?.[k], res.data);
-          setHasMore(!!more);
-        } else setHasMore(items.length >= pageSize);
-      } catch {
-        setHasMore(false);
-      }
-      setLoading(false);
-    },
-    [config.apiConfig],
-  );
-
-  useEffect(() => {
-    if (!config.apiConfig?.url) {
-      setOptions(config.options || []);
-      setPage(0);
-      setHasMore(false);
-      return;
-    }
-    setPage(0);
-    setHasMore(true);
-    fetchPage(0, "", true);
-  }, [config.apiConfig, config.options, fetchPage, watchValue]);
-
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      setPage(0);
-      fetchPage(0, search, true);
-    }, 300);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [search, fetchPage]);
-
-  useEffect(() => {
-    if (!sentinelRef.current || !open) return;
-    const obs = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting && hasMore && !loading) {
-          const next = page + 1;
-          setPage(next);
-          fetchPage(next, search);
-        }
-      },
-      { threshold: 0.1 },
-    );
-    obs.observe(sentinelRef.current);
-    return () => obs.disconnect();
-  }, [open, hasMore, loading, page, search, fetchPage]);
 
   const toggle = (v: string) => {
     const nv = selected.includes(v)
@@ -2582,7 +2355,7 @@ export function InfiniteMultiComboboxField({
                 ref={sentinelRef}
                 className="h-6 flex items-center justify-center"
               >
-                {loading && (
+                {isFetchingNextPage && (
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 )}
               </div>
@@ -3928,12 +3701,26 @@ export function mapBackendErrors<T>(
   return { success: false, ...mapped };
 }
 `;
-export const hooks_useInfiniteOptionsRaw = `import axios from "axios";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useCallback, useMemo, useRef, useState, useEffect } from "react";
+export const hooks_useInfiniteOptionsRaw = `"use client";
+
+/**
+ * Async and infinite-scroll option loading.
+ *
+ * ENGINE-OWNED. Everything here is transport-agnostic: the request is built by
+ * \`../transport/requestBuilder\`, sent by whatever \`OptionsTransport\` is in
+ * context, and cached by whatever \`OptionsQueryAdapter\` is in context. The
+ * defaults are \`fetch\` + React state, so a bare install pulls in no HTTP or
+ * data-fetching dependency at all.
+ *
+ * To use axios / react-query, supply them from your variant's \`services.ts\` /
+ * \`hooks.ts\` through \`FormTransportProvider\` — do not edit this file.
+ * See AI_AGENT_RULES § R-53 / § R-54.
+ */
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { AsyncApiConfig, FieldOption } from "../types/types";
-import { buildAxiosConfigForAsyncApi } from "../utils/dependentApiRequest";
+import { useFormTransport } from "../transport/context";
+import { buildOptionsRequest, buildPaginationParams } from "../transport/requestBuilder";
 
 // ─── Types ───
 
@@ -3958,7 +3745,7 @@ export type FetchOptionsFunction = (
  * Safely retrieves a nested value from an object using a dot-separated path.
  * Returns the root object if path is empty.
  */
-function getByPath(obj: Record<string, unknown>, path: string): unknown {
+export function getByPath(obj: Record<string, unknown>, path: string): unknown {
   if (!path || path.trim() === "") return obj;
   return path.split(".").reduce<unknown>((acc, key) => {
     if (acc && typeof acc === "object" && key in (acc as Record<string, unknown>)) {
@@ -3972,7 +3759,7 @@ function getByPath(obj: Record<string, unknown>, path: string): unknown {
  * Maps a raw API response to an array of { label, value } options.
  * If dataPath is empty, assumes the response itself is the array.
  */
-function mapResponseToOptions(
+export function mapResponseToOptions(
   data: unknown,
   mapping: AsyncApiConfig["responseMapping"]
 ): InfiniteOption[] {
@@ -4014,30 +3801,30 @@ export function useAsyncOptions({
   apiConfig,
   initialOptions = [],
 }: UseAsyncOptionsProps) {
+  const { transport, adapter } = useFormTransport();
   const watchValue = apiConfig?._watchValue;
-  const queryKey = ["async-options", apiConfig?.url ?? "custom", watchValue ?? ""];
-
-  const fetcher = useCallback(async (): Promise<InfiniteOption[]> => {
-    if (fetchOptions) return fetchOptions();
-    if (apiConfig?.url) {
-      try {
-        const res = await axios(buildAxiosConfigForAsyncApi(apiConfig));
-        return mapResponseToOptions(res.data, apiConfig.responseMapping);
-      } catch {
-        return [];
-      }
-    }
-    return [];
-  }, [fetchOptions, apiConfig]);
-
   const hasSource = !!fetchOptions || !!apiConfig?.url;
 
-  const { data, isLoading, error } = useQuery({
-    queryKey,
-    queryFn: fetcher,
+  const run = useCallback(
+    async (signal?: AbortSignal): Promise<InfiniteOption[]> => {
+      if (fetchOptions) return fetchOptions();
+      if (apiConfig?.url) {
+        try {
+          const raw = await transport(buildOptionsRequest(apiConfig), signal);
+          return mapResponseToOptions(raw, apiConfig.responseMapping);
+        } catch {
+          return [];
+        }
+      }
+      return [];
+    },
+    [fetchOptions, apiConfig, transport],
+  );
+
+  const { data, isLoading, error } = adapter.useAsyncQuery({
+    key: ["async-options", apiConfig?.url ?? "custom", watchValue ?? ""],
     enabled: hasSource,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    run,
   });
 
   const options = useMemo(() => {
@@ -4087,6 +3874,7 @@ export function useInfiniteOptions({
   debounceMs = 300,
   enabled = true,
 }: UseInfiniteOptionsProps) {
+  const { transport, adapter } = useFormTransport();
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedTerm, setDebouncedTerm] = useState("");
 
@@ -4096,7 +3884,6 @@ export function useInfiniteOptions({
   }, [searchTerm, debounceMs]);
 
   const effectivePageSize = apiConfig?.pageSize ?? pageSize;
-  const isOffsetBased = !!(apiConfig as { offsetBased?: boolean })?.offsetBased;
   const watchValue = apiConfig?._watchValue;
 
   const resolvedFetch = useMemo((): FetchOptionsFunction | null => {
@@ -4104,21 +3891,15 @@ export function useInfiniteOptions({
     if (!apiConfig?.url) return null;
 
     return async (search: string, page: number, size: number) => {
-      const params: Record<string, string | number> = {};
-      if (apiConfig.searchParam && search) params[apiConfig.searchParam] = search;
-
-      if (apiConfig.pageParam) {
-        params[apiConfig.pageParam] = isOffsetBased ? (page - 1) * size : page;
-      }
-      if (apiConfig.pageSizeParam) params[apiConfig.pageSizeParam] = size;
+      const params = buildPaginationParams(apiConfig, search, page, size);
 
       try {
-        const res = await axios(buildAxiosConfigForAsyncApi(apiConfig, params));
-        const options = mapResponseToOptions(res.data, apiConfig.responseMapping);
+        const raw = await transport(buildOptionsRequest(apiConfig, params));
+        const options = mapResponseToOptions(raw, apiConfig.responseMapping);
 
         let hasMore = false;
         if (apiConfig.hasMorePath) {
-          const moreValue = getByPath(res.data as Record<string, unknown>, apiConfig.hasMorePath);
+          const moreValue = getByPath(raw as Record<string, unknown>, apiConfig.hasMorePath);
           if (typeof moreValue === "boolean") {
             hasMore = moreValue;
           } else if (typeof moreValue === "number") {
@@ -4134,41 +3915,29 @@ export function useInfiniteOptions({
         return { options: [], hasMore: false, page };
       }
     };
-  }, [fetchOptions, apiConfig, isOffsetBased]);
+  }, [fetchOptions, apiConfig, transport]);
 
   const cacheKey = debouncedTerm.toLowerCase() || "__all__";
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    isFetching,
-  } = useInfiniteQuery({
-    queryKey: [
-      "infinite-options",
-      apiConfig?.url ?? "custom",
-      watchValue ?? "",
-      cacheKey,
-    ],
-    queryFn: async ({ pageParam = 1 }) => {
+  const run = useCallback(
+    async (page: number): Promise<InfiniteOptionsResult> => {
       if (!resolvedFetch) return { options: [], hasMore: false, page: 1 };
-      return resolvedFetch(debouncedTerm, pageParam as number, effectivePageSize);
+      return resolvedFetch(debouncedTerm, page, effectivePageSize);
     },
-    getNextPageParam: (lastPage) =>
-      lastPage.hasMore ? lastPage.page + 1 : undefined,
-    initialPageParam: 1,
-    enabled: enabled && !!resolvedFetch,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
+    [resolvedFetch, debouncedTerm, effectivePageSize],
+  );
+
+  const { pages, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+    adapter.useInfiniteQuery({
+      key: ["infinite-options", apiConfig?.url ?? "custom", watchValue ?? "", cacheKey],
+      enabled: enabled && !!resolvedFetch,
+      run,
+    });
 
   const options = useMemo<InfiniteOption[]>(() => {
-    if (!data?.pages) return [];
-    const all = data.pages.flatMap((p) => p.options);
+    const all = pages.flatMap((p) => p.options);
     return Array.from(new Map(all.map((o) => [o.value, o])).values());
-  }, [data]);
+  }, [pages]);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useCallback(
@@ -4190,9 +3959,9 @@ export function useInfiniteOptions({
 
   return {
     options,
-    isLoading: isLoading || isFetching,
+    isLoading,
     isFetchingNextPage,
-    hasMore: !!hasNextPage,
+    hasMore: hasNextPage,
     searchTerm,
     setSearchTerm,
     sentinelRef,
@@ -5367,7 +5136,7 @@ export function DateField({ config }: DateFieldProps) {
   );
 }
 `;
-export const react_hook_form_fields_EmptyFieldRaw = `import type { EmptyFieldConfig } from "../../types/types.js";
+export const react_hook_form_fields_EmptyFieldRaw = `import type { EmptyFieldConfig } from "../../types/types";
 
 interface EmptyFieldProps {
   config: EmptyFieldConfig;
@@ -11468,6 +11237,572 @@ export function useTanstackForm({ config, schema, onSubmit, initialValues }: Use
   };
 }
 `;
+export const transport_contextRaw = `"use client";
+
+/**
+ * Dependency-injection seam for option loading.
+ *
+ * The field components are ENGINE files, so they cannot import a project's
+ * HTTP client directly. Instead they read the transport out of context, and
+ * the project supplies it from its VARIANT layer:
+ *
+ *   component  →  hooks.ts  →  services.ts
+ *   (renders)     (adapter)    (transport)
+ *
+ * Without a provider the engine falls back to \`fetch\` + React state, which is
+ * exactly what an install with no extra dependencies should do.
+ *
+ * See AI_AGENT_RULES § R-53 / § R-54.
+ */
+import { createContext, useContext, useMemo, type ReactNode } from "react";
+
+import { fetchOptionsTransport } from "./defaultTransport";
+import { localStateQueryAdapter } from "./localStateAdapter";
+import type { FormTransport, OptionsQueryAdapter, OptionsTransport } from "./types";
+
+/** Module-level constant: its \`adapter\` members are called as hooks. */
+export const defaultFormTransport: FormTransport = {
+  transport: fetchOptionsTransport,
+  adapter: localStateQueryAdapter,
+};
+
+const FormTransportContext = createContext<FormTransport>(defaultFormTransport);
+
+export interface FormTransportProviderProps {
+  children: ReactNode;
+  /** Sends requests. Defaults to the built-in \`fetch\` implementation. */
+  transport?: OptionsTransport;
+  /**
+   * Caching / state strategy. Defaults to React state.
+   *
+   * MUST be a stable module-level value — it is invoked as a hook, so an
+   * inline object literal would violate the rules of hooks on re-render.
+   */
+  adapter?: OptionsQueryAdapter;
+}
+
+export function FormTransportProvider({
+  children,
+  transport,
+  adapter,
+}: FormTransportProviderProps) {
+  const value = useMemo<FormTransport>(
+    () => ({
+      transport: transport ?? defaultFormTransport.transport,
+      adapter: adapter ?? defaultFormTransport.adapter,
+    }),
+    [transport, adapter],
+  );
+
+  return (
+    <FormTransportContext.Provider value={value}>{children}</FormTransportContext.Provider>
+  );
+}
+
+export function useFormTransport(): FormTransport {
+  return useContext(FormTransportContext);
+}
+`;
+export const transport_defaultTransportRaw = `/**
+ * The engine's built-in \`fetch\` transport — zero runtime dependencies.
+ *
+ * This is the DEFAULT every install gets. Projects that want axios (or an
+ * authenticated client, or interceptors) override it from their variant's
+ * \`services.ts\` via \`FormTransportProvider\`; they never edit this file.
+ *
+ * See AI_AGENT_RULES § R-53 / § R-54.
+ */
+import { resolveRequestUrl } from "./requestBuilder";
+import type { OptionsRequest, OptionsTransport } from "./types";
+
+/** Thrown for non-2xx responses so adapters can surface a real error. */
+export class OptionsRequestError extends Error {
+  readonly status: number;
+
+  constructor(status: number, url: string) {
+    super(\`Request failed with status \${status}: \${url}\`);
+    this.name = "OptionsRequestError";
+    this.status = status;
+  }
+}
+
+function hasBody(request: OptionsRequest): boolean {
+  return request.body !== undefined && request.method !== "GET";
+}
+
+export const fetchOptionsTransport: OptionsTransport = async (request, signal) => {
+  const headers: Record<string, string> = { ...(request.headers ?? {}) };
+  if (hasBody(request) && !hasHeader(headers, "content-type")) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const response = await fetch(resolveRequestUrl(request), {
+    method: request.method,
+    headers,
+    body: hasBody(request) ? JSON.stringify(request.body) : undefined,
+    signal,
+  });
+
+  if (!response.ok) throw new OptionsRequestError(response.status, request.url);
+  if (response.status === 204) return null;
+
+  return response.json();
+};
+
+function hasHeader(headers: Record<string, string>, name: string): boolean {
+  const lower = name.toLowerCase();
+  return Object.keys(headers).some((key) => key.toLowerCase() === lower);
+}
+`;
+export const transport_localStateAdapterRaw = `"use client";
+
+/**
+ * The engine's built-in query adapter — plain React state, zero dependencies.
+ *
+ * It reproduces the caching semantics the option hooks have always had
+ * (5-minute stale window, 10-minute retention, in-flight de-duplication) so
+ * dropping \`@tanstack/react-query\` from the default install is not a
+ * behavioural regression. Projects that already run a QueryClient supply a
+ * react-query adapter from their variant's \`hooks.ts\` instead.
+ *
+ * See AI_AGENT_RULES § R-53 / § R-54.
+ */
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import type { FieldOption } from "../types/types";
+import type {
+  AsyncQueryState,
+  InfiniteQueryState,
+  OptionsPage,
+  OptionsQueryAdapter,
+} from "./types";
+
+const STALE_TIME_MS = 5 * 60 * 1000;
+const GC_TIME_MS = 10 * 60 * 1000;
+
+interface CacheRecord {
+  value: unknown;
+  storedAt: number;
+  inFlight?: Promise<unknown>;
+}
+
+const cache = new Map<string, CacheRecord>();
+
+function serializeKey(key: readonly unknown[]): string {
+  return JSON.stringify(key);
+}
+
+function sweep(now: number): void {
+  for (const [key, record] of cache) {
+    if (!record.inFlight && now - record.storedAt > GC_TIME_MS) cache.delete(key);
+  }
+}
+
+/**
+ * Resolves from cache when fresh, joins the in-flight promise when one is
+ * already running for the same key, otherwise starts a new request.
+ */
+function loadCached<T>(cacheKey: string, run: () => Promise<T>): Promise<T> {
+  const now = Date.now();
+  sweep(now);
+
+  const record = cache.get(cacheKey);
+  if (record?.inFlight) return record.inFlight as Promise<T>;
+  if (record && now - record.storedAt < STALE_TIME_MS) {
+    return Promise.resolve(record.value as T);
+  }
+
+  const inFlight = run()
+    .then((value) => {
+      cache.set(cacheKey, { value, storedAt: Date.now() });
+      return value;
+    })
+    .catch((error: unknown) => {
+      cache.delete(cacheKey);
+      throw error;
+    });
+
+  cache.set(cacheKey, { value: record?.value, storedAt: record?.storedAt ?? 0, inFlight });
+  return inFlight as Promise<T>;
+}
+
+/** Drops every cached option page. Exposed for tests and manual invalidation. */
+export function clearOptionsCache(): void {
+  cache.clear();
+}
+
+function useAsyncQuery({
+  key,
+  enabled,
+  run,
+}: {
+  key: readonly unknown[];
+  enabled: boolean;
+  run: (signal?: AbortSignal) => Promise<FieldOption[]>;
+}): AsyncQueryState {
+  const cacheKey = serializeKey(key);
+  const [state, setState] = useState<AsyncQueryState>({
+    data: undefined,
+    isLoading: enabled,
+    error: null,
+  });
+
+  // \`run\` is rebuilt every render by callers; keep it out of the effect deps
+  // and read the latest one when the effect actually fires.
+  const runRef = useRef(run);
+  useEffect(() => {
+    runRef.current = run;
+  });
+
+  useEffect(() => {
+    if (!enabled) {
+      setState({ data: undefined, isLoading: false, error: null });
+      return;
+    }
+
+    const controller = new AbortController();
+    let active = true;
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+    loadCached(cacheKey, () => runRef.current(controller.signal))
+      .then((data) => {
+        if (active) setState({ data, isLoading: false, error: null });
+      })
+      .catch((error: unknown) => {
+        if (!active || controller.signal.aborted) return;
+        setState({
+          data: undefined,
+          isLoading: false,
+          error: error instanceof Error ? error : new Error(String(error)),
+        });
+      });
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [cacheKey, enabled]);
+
+  return state;
+}
+
+function useInfiniteQuery({
+  key,
+  enabled,
+  run,
+}: {
+  key: readonly unknown[];
+  enabled: boolean;
+  run: (page: number, signal?: AbortSignal) => Promise<OptionsPage>;
+}): InfiniteQueryState {
+  const cacheKey = serializeKey(key);
+  const [pages, setPages] = useState<OptionsPage[]>([]);
+  const [isLoading, setIsLoading] = useState(enabled);
+  const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
+  const [hasNextPage, setHasNextPage] = useState(false);
+
+  const runRef = useRef(run);
+  useEffect(() => {
+    runRef.current = run;
+  });
+
+  // Every mounted effect run registers its controller here so \`fetchNextPage\`
+  // (which lives outside the effect) can be cancelled by the same teardown.
+  const controllerRef = useRef<AbortController | null>(null);
+  const pageRef = useRef(1);
+  const loadingRef = useRef(false);
+
+  useEffect(() => {
+    if (!enabled) {
+      setPages([]);
+      setHasNextPage(false);
+      setIsLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    controllerRef.current = controller;
+    pageRef.current = 1;
+    loadingRef.current = true;
+    let active = true;
+
+    setPages([]);
+    setIsLoading(true);
+
+    loadCached(\`\${cacheKey}::1\`, () => runRef.current(1, controller.signal))
+      .then((page) => {
+        if (!active) return;
+        setPages([page]);
+        setHasNextPage(page.hasMore);
+      })
+      .catch(() => {
+        if (active) setHasNextPage(false);
+      })
+      .finally(() => {
+        if (!active) return;
+        loadingRef.current = false;
+        setIsLoading(false);
+      });
+
+    return () => {
+      active = false;
+      loadingRef.current = false;
+      controller.abort();
+    };
+  }, [cacheKey, enabled]);
+
+  const fetchNextPage = useCallback(() => {
+    if (!enabled || loadingRef.current || !hasNextPage) return;
+
+    const next = pageRef.current + 1;
+    loadingRef.current = true;
+    setIsFetchingNextPage(true);
+
+    loadCached(\`\${cacheKey}::\${next}\`, () =>
+      runRef.current(next, controllerRef.current?.signal),
+    )
+      .then((page) => {
+        pageRef.current = next;
+        setPages((prev) => [...prev, page]);
+        setHasNextPage(page.hasMore);
+      })
+      .catch(() => {
+        setHasNextPage(false);
+      })
+      .finally(() => {
+        loadingRef.current = false;
+        setIsFetchingNextPage(false);
+      });
+  }, [cacheKey, enabled, hasNextPage]);
+
+  return useMemo(
+    () => ({ pages, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage }),
+    [pages, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage],
+  );
+}
+
+/**
+ * Module-level constant — required, because its members are called as hooks.
+ * Never rebuild this object inside a component body.
+ */
+export const localStateQueryAdapter: OptionsQueryAdapter = {
+  useAsyncQuery,
+  useInfiniteQuery,
+};
+`;
+export const transport_requestBuilderRaw = `/**
+ * Pure \`AsyncApiConfig\` → \`OptionsRequest\` translation.
+ *
+ * ENGINE-OWNED and intentionally un-editable: the token grammar documented on
+ * \`DependentApiConfig\` (\`{value}\`, \`/:id\`, \`/:value\`) and the method/body rules
+ * below are part of the builder's contract, not a per-project preference. What
+ * a project *does* want to own — the HTTP client, headers, retries, caching —
+ * is injected instead (see \`types.ts\`).
+ *
+ * No transport library may be imported here — see AI_AGENT_RULES § R-53.
+ */
+import type { AsyncApiConfig } from "../types/types";
+
+import {
+  serializeWatchValue,
+  hasMeaningfulPayload,
+  flattenPayloadToQueryParams,
+  resolveAsyncApiConfigForFetch,
+} from "../utils/dependentApiRequest";
+import type { OptionsRequest } from "./types";
+
+const BODY_METHODS = new Set<AsyncApiConfig["method"]>(["POST", "PUT", "PATCH"]);
+
+function methodUsesJsonBody(
+  method: AsyncApiConfig["method"],
+  originalPayload: AsyncApiConfig["payload"],
+): boolean {
+  if (BODY_METHODS.has(method)) return true;
+  if (method === "DELETE" && hasMeaningfulPayload(originalPayload)) return true;
+  return false;
+}
+
+/**
+ * Builds the transport-agnostic request for an async / infinite option fetch.
+ *
+ * - GET (and DELETE without a meaningful payload): \`payload\` is merged into
+ *   **query params** alongside \`dynamicParams\` (search / page / pageSize).
+ * - POST / PUT / PATCH, and DELETE with a payload: JSON **body** = substituted
+ *   \`payload\` + \`dynamicParams\`. When the user supplied no payload, injects
+ *   \`{ value: <watch> }\` so dependent POST calls work without an explicit body.
+ */
+export function buildOptionsRequest(
+  apiConfig: AsyncApiConfig,
+  dynamicParams: Record<string, string | number> = {},
+): OptionsRequest {
+  const resolved = resolveAsyncApiConfigForFetch(apiConfig);
+  const method = resolved.method;
+  const repl = serializeWatchValue(apiConfig._watchValue);
+  const hadUserPayload = hasMeaningfulPayload(apiConfig.payload);
+
+  if (methodUsesJsonBody(method, apiConfig.payload)) {
+    if (Array.isArray(resolved.payload)) {
+      return {
+        url: resolved.url,
+        method,
+        headers: resolved.headers,
+        body: resolved.payload,
+      };
+    }
+    let body: Record<string, unknown> =
+      resolved.payload && typeof resolved.payload === "object" && !Array.isArray(resolved.payload)
+        ? { ...(resolved.payload as Record<string, unknown>) }
+        : {};
+    if (!hadUserPayload && repl) {
+      body = { value: repl, ...body };
+    }
+    return {
+      url: resolved.url,
+      method,
+      headers: resolved.headers,
+      body: { ...body, ...dynamicParams },
+    };
+  }
+
+  const queryFromPayload =
+    resolved.payload && typeof resolved.payload === "object" && !Array.isArray(resolved.payload)
+      ? flattenPayloadToQueryParams(resolved.payload as Record<string, unknown>)
+      : {};
+
+  return {
+    url: resolved.url,
+    method,
+    headers: resolved.headers,
+    params: { ...queryFromPayload, ...dynamicParams },
+  };
+}
+
+/**
+ * Collapses \`params\` into the URL query string.
+ *
+ * Clients that take params separately (axios) should ignore this; clients that
+ * do not (\`fetch\`) call it to get the final URL. Existing query strings on the
+ * configured URL are preserved.
+ */
+export function resolveRequestUrl(request: OptionsRequest): string {
+  const entries = Object.entries(request.params ?? {});
+  if (entries.length === 0) return request.url;
+  const search = new URLSearchParams();
+  for (const [key, value] of entries) search.set(key, String(value));
+  return request.url + (request.url.includes("?") ? "&" : "?") + search.toString();
+}
+
+/** Pagination params for one page, derived from the config's param names. */
+export function buildPaginationParams(
+  apiConfig: AsyncApiConfig,
+  search: string,
+  page: number,
+  size: number,
+): Record<string, string | number> {
+  const params: Record<string, string | number> = {};
+  if (apiConfig.searchParam && search) params[apiConfig.searchParam] = search;
+  if (apiConfig.pageParam) {
+    params[apiConfig.pageParam] = apiConfig.offsetBased ? (page - 1) * size : page;
+  }
+  if (apiConfig.pageSizeParam) params[apiConfig.pageSizeParam] = size;
+  return params;
+}
+`;
+export const transport_typesRaw = `/**
+ * Transport contracts for async / infinite option loading.
+ *
+ * This file is ENGINE-OWNED and deliberately dependency-free: it names the
+ * seam between the parts of option-loading that can never change (building a
+ * request from an \`AsyncApiConfig\`, tracking loading state, de-duplicating
+ * pages) and the parts every project wants to own (which HTTP client sends
+ * the request, how responses are cached, how auth headers are attached).
+ *
+ * Nothing here may import \`axios\`, \`@tanstack/react-query\`, or any other
+ * transport library — see AI_AGENT_RULES § R-53.
+ */
+import type { FieldOption } from "../types/types";
+
+/**
+ * A library-agnostic description of one outbound request.
+ *
+ * Deliberately shaped so the two common adapters are near-trivial:
+ *   axios → \`{ url, method, headers, params, data: body }\`
+ *   fetch → \`resolveRequestUrl(req)\` + \`{ method, headers, body }\`
+ */
+export interface OptionsRequest {
+  url: string;
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  headers?: Record<string, string>;
+  /** Query-string values. Already flattened to primitives. */
+  params?: Record<string, string | number | boolean>;
+  /** JSON body. \`undefined\` for requests that carry no body. */
+  body?: unknown;
+}
+
+/**
+ * Sends one \`OptionsRequest\` and resolves with the parsed response body.
+ *
+ * Implementations live in the VARIANT layer (\`services.ts\`) so a project can
+ * swap \`fetch\` for axios, attach interceptors, or refresh tokens without
+ * touching an afnoui-managed file. The engine ships a \`fetch\` implementation
+ * as the default — see \`defaultTransport.ts\`.
+ */
+export type OptionsTransport = (
+  request: OptionsRequest,
+  signal?: AbortSignal,
+) => Promise<unknown>;
+
+export interface OptionsPage {
+  options: FieldOption[];
+  hasMore: boolean;
+  page: number;
+}
+
+export interface AsyncQueryState {
+  data: FieldOption[] | undefined;
+  isLoading: boolean;
+  error: Error | null;
+}
+
+export interface InfiniteQueryState {
+  pages: OptionsPage[];
+  isLoading: boolean;
+  isFetchingNextPage: boolean;
+  hasNextPage: boolean;
+  fetchNextPage: () => void;
+}
+
+/**
+ * The caching / state-management strategy behind the option hooks.
+ *
+ * Both members are React hooks and are called unconditionally from
+ * \`useAsyncOptions\` / \`useInfiniteOptions\`. To stay compatible with the rules
+ * of hooks, an adapter object MUST be module-level constant — never rebuilt
+ * inside a component body. The provider enforces this by taking the adapter
+ * as a value, not a factory.
+ */
+export interface OptionsQueryAdapter {
+  /** One-shot list load. \`key\` changes re-run the query. */
+  useAsyncQuery(args: {
+    key: readonly unknown[];
+    enabled: boolean;
+    run: (signal?: AbortSignal) => Promise<FieldOption[]>;
+  }): AsyncQueryState;
+
+  /** Paginated load. \`key\` changes reset accumulated pages. */
+  useInfiniteQuery(args: {
+    key: readonly unknown[];
+    enabled: boolean;
+    run: (page: number, signal?: AbortSignal) => Promise<OptionsPage>;
+  }): InfiniteQueryState;
+}
+
+/** Everything the option hooks need from the host project. */
+export interface FormTransport {
+  transport: OptionsTransport;
+  adapter: OptionsQueryAdapter;
+}
+`;
 export const types_hydrationRaw = `/**
  * Hydration utilities for ReactHookForm — OPTIONAL.
  * Only import if fields need to be hydrated from a backend API at runtime.
@@ -12137,8 +12472,13 @@ export function HeaderlessMonth({
   );
 }
 `;
-export const utils_dependentApiRequestRaw = `import type { AxiosRequestConfig } from "axios";
-
+export const utils_dependentApiRequestRaw = `/**
+ * Pure \`{value}\` / \`/:id\` / \`/:value\` substitution for dependent API configs.
+ *
+ * ENGINE-OWNED and transport-free — the request that these helpers feed is
+ * assembled in \`../transport/requestBuilder.ts\` and *sent* by the variant's
+ * \`services.ts\`. No HTTP client may be imported here (AI_AGENT_RULES § R-53).
+ */
 import type { AsyncApiConfig } from "../types/types";
 
 /** Placeholder replaced with the serialized watched field value (dependent API). */
@@ -12187,14 +12527,14 @@ function deepSubstitute(value: unknown, replacement: string): unknown {
   return out;
 }
 
-function hasMeaningfulPayload(payload: unknown): boolean {
+export function hasMeaningfulPayload(payload: unknown): boolean {
   if (payload === undefined || payload === null) return false;
   if (typeof payload !== "object") return true;
   if (Array.isArray(payload)) return payload.length > 0;
   return Object.keys(payload as Record<string, unknown>).length > 0;
 }
 
-/** Flatten a JSON-like object into axios query params (primitives only; objects JSON-stringified). */
+/** Flatten a JSON-like object into query params (primitives only; objects JSON-stringified). */
 export function flattenPayloadToQueryParams(
   payload: Record<string, unknown>
 ): Record<string, string | number | boolean> {
@@ -12212,7 +12552,7 @@ export function flattenPayloadToQueryParams(
 
 /**
  * Applies \`{value}\` substitution from \`_watchValue\` to url, headers, and payload.
- * Call before building the axios config; keep \`_watchValue\` on the returned object for query keys.
+ * Call before building the request; keep \`_watchValue\` on the returned object for query keys.
  */
 export function resolveAsyncApiConfigForFetch(api: AsyncApiConfig): AsyncApiConfig {
   const replacement = serializeWatchValue(api._watchValue);
@@ -12234,71 +12574,6 @@ export function resolveAsyncApiConfigForFetch(api: AsyncApiConfig): AsyncApiConf
       : (deepSubstitute(api.payload, replacement) as Record<string, unknown> | unknown[]);
 
   return { ...api, url, headers, payload: payload as AsyncApiConfig["payload"] };
-}
-
-const BODY_METHODS = new Set(["POST", "PUT", "PATCH"]);
-
-function methodUsesJsonBody(
-  method: AsyncApiConfig["method"],
-  originalPayload: AsyncApiConfig["payload"],
-): boolean {
-  if (BODY_METHODS.has(method)) return true;
-  if (method === "DELETE" && hasMeaningfulPayload(originalPayload)) return true;
-  return false;
-}
-
-/**
- * Builds axios config for async/infinite option fetches.
- * - GET (and DELETE without a meaningful payload): \`payload\` is merged into **query params** with \`dynamicParams\`.
- * - POST / PUT / PATCH, and DELETE with a payload: JSON body = substituted \`payload\` + \`dynamicParams\`.
- *   If there was no user payload, injects \`{ value: <watch> }\` so POST dependent calls work without an explicit body.
- */
-export function buildAxiosConfigForAsyncApi(
-  apiConfig: AsyncApiConfig,
-  dynamicParams: Record<string, string | number> = {},
-): AxiosRequestConfig {
-  const resolved = resolveAsyncApiConfigForFetch(apiConfig);
-  const method = resolved.method;
-  const repl = serializeWatchValue(apiConfig._watchValue);
-  const hadUserPayload = hasMeaningfulPayload(apiConfig.payload);
-
-  if (methodUsesJsonBody(method, apiConfig.payload)) {
-    if (Array.isArray(resolved.payload)) {
-      return {
-        url: resolved.url,
-        method,
-        headers: resolved.headers,
-        data: resolved.payload,
-      };
-    }
-    let body: Record<string, unknown> =
-      resolved.payload && typeof resolved.payload === "object" && !Array.isArray(resolved.payload)
-        ? { ...(resolved.payload as Record<string, unknown>) }
-        : {};
-    if (!hadUserPayload && repl) {
-      body = { value: repl, ...body };
-    }
-    return {
-      url: resolved.url,
-      method,
-      headers: resolved.headers,
-      data: { ...body, ...dynamicParams },
-    };
-  }
-
-  const queryFromPayload =
-    resolved.payload &&
-    typeof resolved.payload === "object" &&
-    !Array.isArray(resolved.payload)
-      ? flattenPayloadToQueryParams(resolved.payload as Record<string, unknown>)
-      : {};
-
-  return {
-    url: resolved.url,
-    method,
-    headers: resolved.headers,
-    params: { ...queryFromPayload, ...dynamicParams },
-  };
 }
 `;
 export const utils_fieldExtraKeysRaw = `/**
@@ -13030,6 +13305,51 @@ export const generatedFixedFiles: RegistryFile[] = [
     category: 'core',
   },
   {
+    name: 'transport/types.ts',
+    path: '/app/forms/transport/types.ts',
+    code: transport_typesRaw,
+    language: 'typescript',
+    description: 'Transport contracts: OptionsRequest, OptionsTransport, OptionsQueryAdapter.',
+    isFixed: true,
+    category: 'core',
+  },
+  {
+    name: 'transport/requestBuilder.ts',
+    path: '/app/forms/transport/requestBuilder.ts',
+    code: transport_requestBuilderRaw,
+    language: 'typescript',
+    description: 'Pure AsyncApiConfig → OptionsRequest translation (token grammar, pagination params).',
+    isFixed: true,
+    category: 'core',
+  },
+  {
+    name: 'transport/defaultTransport.ts',
+    path: '/app/forms/transport/defaultTransport.ts',
+    code: transport_defaultTransportRaw,
+    language: 'typescript',
+    description: 'Built-in fetch transport — the zero-dependency default. Swap via services.ts, do not edit.',
+    isFixed: true,
+    category: 'core',
+  },
+  {
+    name: 'transport/localStateAdapter.ts',
+    path: '/app/forms/transport/localStateAdapter.ts',
+    code: transport_localStateAdapterRaw,
+    language: 'typescript',
+    description: 'Built-in React-state query adapter with the 5min/10min cache semantics react-query provided.',
+    isFixed: true,
+    category: 'core',
+  },
+  {
+    name: 'transport/context.tsx',
+    path: '/app/forms/transport/context.tsx',
+    code: transport_contextRaw,
+    language: 'tsx',
+    description: 'FormTransportProvider / useFormTransport — the injection seam for axios or react-query.',
+    isFixed: true,
+    category: 'core',
+  },
+  {
     name: 'useBackendErrors.ts',
     path: '/app/forms/hooks/useBackendErrors.ts',
     code: hooks_useBackendErrorsRaw,
@@ -13079,7 +13399,7 @@ export const generatedFixedFiles: RegistryFile[] = [
     path: '/app/forms/utils/dependentApiRequest.ts',
     code: utils_dependentApiRequestRaw,
     language: 'typescript',
-    description: 'Dependent API URL/header/payload substitution and axios config for async/infinite fetches.',
+    description: 'Dependent API URL/header/payload substitution for async/infinite fetches (transport-free).',
     isFixed: true,
     category: 'util',
   },
@@ -13424,6 +13744,51 @@ export const generatedTanstackFixedFiles: RegistryFile[] = [
     category: 'core',
   },
   {
+    name: 'transport/types.ts',
+    path: '/app/forms/transport/types.ts',
+    code: transport_typesRaw,
+    language: 'typescript',
+    description: 'Transport contracts: OptionsRequest, OptionsTransport, OptionsQueryAdapter.',
+    isFixed: true,
+    category: 'core',
+  },
+  {
+    name: 'transport/requestBuilder.ts',
+    path: '/app/forms/transport/requestBuilder.ts',
+    code: transport_requestBuilderRaw,
+    language: 'typescript',
+    description: 'Pure AsyncApiConfig → OptionsRequest translation (token grammar, pagination params).',
+    isFixed: true,
+    category: 'core',
+  },
+  {
+    name: 'transport/defaultTransport.ts',
+    path: '/app/forms/transport/defaultTransport.ts',
+    code: transport_defaultTransportRaw,
+    language: 'typescript',
+    description: 'Built-in fetch transport — the zero-dependency default. Swap via services.ts, do not edit.',
+    isFixed: true,
+    category: 'core',
+  },
+  {
+    name: 'transport/localStateAdapter.ts',
+    path: '/app/forms/transport/localStateAdapter.ts',
+    code: transport_localStateAdapterRaw,
+    language: 'typescript',
+    description: 'Built-in React-state query adapter with the 5min/10min cache semantics react-query provided.',
+    isFixed: true,
+    category: 'core',
+  },
+  {
+    name: 'transport/context.tsx',
+    path: '/app/forms/transport/context.tsx',
+    code: transport_contextRaw,
+    language: 'tsx',
+    description: 'FormTransportProvider / useFormTransport — the injection seam for axios or react-query.',
+    isFixed: true,
+    category: 'core',
+  },
+  {
     name: 'useBackendErrors.ts',
     path: '/app/forms/hooks/useBackendErrors.ts',
     code: hooks_useBackendErrorsRaw,
@@ -13473,7 +13838,7 @@ export const generatedTanstackFixedFiles: RegistryFile[] = [
     path: '/app/forms/utils/dependentApiRequest.ts',
     code: utils_dependentApiRequestRaw,
     language: 'typescript',
-    description: 'Dependent API URL/header/payload substitution and axios config for async/infinite fetches.',
+    description: 'Dependent API URL/header/payload substitution for async/infinite fetches (transport-free).',
     isFixed: true,
     category: 'util',
   },
@@ -13827,6 +14192,51 @@ export const generatedActionFixedFiles: RegistryFile[] = [
     category: 'core',
   },
   {
+    name: 'transport/types.ts',
+    path: '/app/forms/transport/types.ts',
+    code: transport_typesRaw,
+    language: 'typescript',
+    description: 'Transport contracts: OptionsRequest, OptionsTransport, OptionsQueryAdapter.',
+    isFixed: true,
+    category: 'core',
+  },
+  {
+    name: 'transport/requestBuilder.ts',
+    path: '/app/forms/transport/requestBuilder.ts',
+    code: transport_requestBuilderRaw,
+    language: 'typescript',
+    description: 'Pure AsyncApiConfig → OptionsRequest translation (token grammar, pagination params).',
+    isFixed: true,
+    category: 'core',
+  },
+  {
+    name: 'transport/defaultTransport.ts',
+    path: '/app/forms/transport/defaultTransport.ts',
+    code: transport_defaultTransportRaw,
+    language: 'typescript',
+    description: 'Built-in fetch transport — the zero-dependency default. Swap via services.ts, do not edit.',
+    isFixed: true,
+    category: 'core',
+  },
+  {
+    name: 'transport/localStateAdapter.ts',
+    path: '/app/forms/transport/localStateAdapter.ts',
+    code: transport_localStateAdapterRaw,
+    language: 'typescript',
+    description: 'Built-in React-state query adapter with the 5min/10min cache semantics react-query provided.',
+    isFixed: true,
+    category: 'core',
+  },
+  {
+    name: 'transport/context.tsx',
+    path: '/app/forms/transport/context.tsx',
+    code: transport_contextRaw,
+    language: 'tsx',
+    description: 'FormTransportProvider / useFormTransport — the injection seam for axios or react-query.',
+    isFixed: true,
+    category: 'core',
+  },
+  {
     name: 'useBackendErrors.ts',
     path: '/app/forms/hooks/useBackendErrors.ts',
     code: hooks_useBackendErrorsRaw,
@@ -13876,7 +14286,7 @@ export const generatedActionFixedFiles: RegistryFile[] = [
     path: '/app/forms/utils/dependentApiRequest.ts',
     code: utils_dependentApiRequestRaw,
     language: 'typescript',
-    description: 'Dependent API URL/header/payload substitution and axios config for async/infinite fetches.',
+    description: 'Dependent API URL/header/payload substitution for async/infinite fetches (transport-free).',
     isFixed: true,
     category: 'util',
   },
