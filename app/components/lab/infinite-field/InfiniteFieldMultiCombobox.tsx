@@ -13,7 +13,7 @@ import { ComponentInstall } from "@/components/lab/ComponentInstall";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
-import { INFINITE_SOURCES, getInfiniteSourceByName, useInfiniteOptions } from "./shared";
+import { getInfiniteSourceByName, INFINITE_SOURCES, SEARCH_DEBOUNCE_MS, useInfiniteOptions } from "./shared";
 
 export function InfiniteFieldMultiCombobox() {
   const [source, setSource] = useState(getInfiniteSourceByName(data.defaultSource));
@@ -25,16 +25,15 @@ export function InfiniteFieldMultiCombobox() {
   const handleSearch = (v: string) => {
     setSearch(v);
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setDebouncedSearch(v), 300);
+    timerRef.current = setTimeout(() => setDebouncedSearch(v), SEARCH_DEBOUNCE_MS);
   };
 
-  const { data: qData, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteOptions(
+  const { options: allOptions, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteOptions(
     source.baseUrl,
     source.labelKey,
     source.valueKey,
     debouncedSearch
   );
-  const allOptions = qData?.pages.flatMap((p) => p.options) ?? [];
 
   const toggle = (val: string) =>
     setSelected((prev) => (prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val]));

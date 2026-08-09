@@ -16,6 +16,11 @@ import { kanbanTemplates } from "../app/kanban-builder/data/kanbanBuilderTemplat
 import { buildKanbanVariantFiles } from "../app/kanban-builder/utils/variantBundle";
 import { treeTemplates } from "../app/tree-builder/data/treeBuilderTemplates";
 import { buildTreeVariantFiles, treeVariantFeatures } from "../app/tree-builder/utils/variantBundle";
+import {
+  buildFieldVariantFiles,
+  type FieldFamily,
+  type TransportChoice,
+} from "../app/registry/fieldVariantBundle";
 
 /**
  * Build Variants Registry Script
@@ -353,6 +358,54 @@ async function buildVariantsRegistry() {
       } catch (err) {
         errors.push(
           `Variant "${variantName}": failed to build form bundles: ${err instanceof Error ? err.message : String(err)}`,
+        );
+        continue;
+      }
+    } else if (category === "async-field" || category === "infinite-field") {
+      // These two families ship as an R-55 bundle (component → hooks → services)
+      // rather than one self-contained file, so `--axios` / `--tanstack-query`
+      // can swap a single file each instead of duplicating the whole snippet.
+      try {
+        const url = pathToFileURL(registryPath).href;
+        const mod = await import(url);
+        if (
+          typeof mod.componentName !== "string" ||
+          typeof mod.componentCode !== "string" ||
+          typeof mod.data !== "object"
+        ) {
+          errors.push(
+            `Variant "${variantName}": missing data / componentName / componentCode export`,
+          );
+          continue;
+        }
+
+        const fieldModule = {
+          data: mod.data,
+          componentName: mod.componentName,
+          componentCode: mod.componentCode,
+        };
+        const emit = (choice?: TransportChoice): VariantRegistryItemFile[] =>
+          buildFieldVariantFiles(category as FieldFamily, variantSlug, fieldModule, choice).map(
+            (f) => ({
+              path: f.path,
+              type: "registry:variant" as const,
+              content: f.content,
+            }),
+          );
+
+        const defaultFiles = emit();
+        const transport = buildTransportBlock(defaultFiles, emit);
+
+        item = {
+          name: variantName,
+          category,
+          variant: variantSlug,
+          files: defaultFiles,
+          ...(transport ? { transport } : {}),
+        };
+      } catch (err) {
+        errors.push(
+          `Variant "${variantName}": failed to build field bundle: ${err instanceof Error ? err.message : String(err)}`,
         );
         continue;
       }

@@ -467,6 +467,88 @@ editing, not merely the dependency.
 
 ---
 
+### 1.18 [Accepted] `async-field` / `infinite-field` ship as R-55 bundles, not single files
+
+**Context**: the 12 snippets under `app/registry/{async-field,infinite-field}/`
+were the last place a default install still pulled a transport dependency.
+Each was one self-contained `.tsx` that imported `axios` +
+`@tanstack/react-query` outright, so `afnoui add async-field/<slug>` installed
+both with no flag passed. Not an R-53 violation — they are `registry:variant`
+files landing in user-owned `ui-variants/` — but it broke R-56's promise that a
+default install has **zero** transport dependencies.
+
+**Decision**: give them the same treatment as forms / tables, i.e. a real R-55
+bundle rather than a fetch-only rewrite of one big file:
+
+```
+ui-variants/<family>/<slug>/
+  <Component>.tsx   renders; imports ./hooks + ./constants, never ./services
+  hooks.ts          React state  | react-query adapter
+  services.ts       fetch        | axios
+  constants.ts      presets + every tunable (R-57)
+```
+
+**Why not the two alternatives considered**:
+- *Single file + whole-file transport overrides* — works with today's
+  mechanism, but the override unit is the whole ~200-line snippet, so the
+  registry would carry three near-identical copies of each. That is exactly the
+  "duplicate bundle" shape R-56 rejects.
+- *Leave them fetch-only* — cheapest, but then two variant families would be
+  the only ones where `--axios` / `--tanstack-query` silently do nothing.
+
+**The invariant that makes it cheap**: the hook's **name, argument list and
+return shape are identical** across the local-state and react-query
+implementations, so `<Component>.tsx` is byte-identical in all four
+combinations and appears in neither override set. Verified by sha: all four
+installed components hash the same. If a future edit makes the component differ
+per combo, the override payload silently triples — treat that as a regression.
+
+**Consequences**:
+- `afnoui add async-field/<slug>` now writes a folder of 4 files, not 1 file.
+- Default `npmDependencies` dropped from
+  `["@tanstack/react-query","axios","lucide-react"]` to `["lucide-react"]`.
+- `transport.axios` → `services.ts`; `transport.tanstack` → `hooks.ts` +
+  `constants.ts`. No CLI change was needed: `resolveRegistryOutputPath`'s
+  `ui-variants/` branch is a prefix replace, so nested paths already worked,
+  and the transport-override application in `operations.ts` was already
+  category-agnostic.
+- `app/components/lab/{async-field,infinite-field}/shared.*` were converted to
+  the same fetch + local-state runtime. The lab page renders that code *and*
+  displays the generated bundle beside it, so letting them diverge would show a
+  user one thing and run another.
+- `useInfiniteOptionsAutoScroll` was deleted. It existed only to give the
+  sentinel demos a distinct react-query cache key; without react-query each
+  hook instance owns its state, so it was the same hook twice.
+
+**Known gap (deliberate)**: `ComponentInstall` / `CodePreview` still take a
+single `fullCode` string, so the gallery shows the bundle as one concatenated
+block via `buildFieldVariantPreview`. Real per-file tabs belong to the
+export-tab consistency pass — `.ai-brain/TASK_QUEUE.md` item 3.
+
+**Caught while verifying this**: `forms.json`'s `stackInstall.{rhf,tanstack,
+action}.npmDependencies` still listed `axios` and `@tanstack/react-query`,
+hardcoded in `scripts/generate-registry.ts::STACK_INSTALL`. Wave-9 removed the
+*imports* from the forms engine but left the *declarations*, so every
+`afnoui form init` kept installing both — R-56 was false for reasons that had
+nothing to do with these 12 snippets. Removed; `tables.json` was already clean.
+
+The lesson: **an engine being import-free does not make an install
+dependency-free.** Grepping `app/**` for `axios` proves nothing about what the
+CLI installs. Check the registry JSON's dependency lists, or better, install
+into a *fresh* `test/` and read `test/package.json` — a stale one carries the
+old deps forward and hides the regression.
+
+**Forbidden change**:
+- Do NOT let the generated `<Component>.tsx` differ between transport combos.
+- Do NOT re-add a transport to `STACK_INSTALL` "so it's there if a variant
+  needs it". The per-variant `transport` block installs it on demand.
+- Do NOT read the cache with `Date.now()` during render in the local-state
+  hook — it trips `react-hooks/purity` under the React Compiler. Resolve the
+  cache inside the effect, as `app/forms/transport/localStateAdapter.ts` does.
+  This was caught by lint, not by `tsc`.
+
+---
+
 ## Section 2 — The "Hacks" Library
 
 > Each entry is a non-standard piece of code. If you’re an AI tempted to "clean it up" — read the rationale first. Most of these protect against silent regressions.

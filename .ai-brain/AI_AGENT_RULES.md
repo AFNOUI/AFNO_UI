@@ -328,8 +328,14 @@ services.ts       ← transport. The only file that talks to the network.
 - A **component importing `services.ts` directly is a rule violation**, even for
   a one-line submit handler.
 - `services.ts` is emitted for **every** variant in tables / kanban / tree /
-  forms — including variants with no backend yet, where the service body is a
-  documented TODO stub. Uniform shape now beats restructuring later.
+  forms / async-field / infinite-field — including variants with no backend
+  yet, where the service body is a documented TODO stub. Uniform shape now
+  beats restructuring later.
+- `async-field` / `infinite-field` are bundles too, not single files: they ship
+  `ui-variants/<family>/<slug>/{<Component>.tsx,hooks.ts,services.ts,constants.ts}`
+  built by `app/registry/fieldVariantBundle.ts` (DECISION 1.18). A snippet
+  module there exports `data` + `componentName` + `componentCode`, never a
+  hand-written full-file `code` string.
 - The hook layer is `hooks.ts` by default. A family with genuinely separate
   concerns may use descriptive `use*.ts` files instead (tables ships
   `useTableData.ts` + `useRowInteractions.ts`) — but the one-direction rule and
@@ -371,6 +377,19 @@ The registry therefore ships **overrides, not bundles**: a variant's `transport`
 block carries only the files each flag actually changes (`axios` → `services.ts`;
 `tanstack` → hook + `constants.ts`). There is no combined key — passing both
 flags applies both override sets.
+
+This only stays cheap while the **hook's name, arguments and return shape are
+identical** across the local-state and react-query implementations — that is
+what keeps the component file byte-identical across all four combos and out of
+every override set. Check it the blunt way after changing a generator:
+
+```
+# install a variant four ways; the component must hash the same every time
+shasum <installed>/<Component>.tsx
+```
+
+If the component starts differing per combo, the override payload silently
+triples. Treat that as a regression, not a new baseline.
 
 Mark every such block with a `TODO(cli-gated)` comment naming the flag that
 selects it, so it is obvious the code is inert until the CLI installs it. The
