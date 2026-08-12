@@ -51,6 +51,7 @@ These attach to the root program and propagate to every sub-command.
 | `add [components...]` | Install one or more base components and/or variant bundles | `--stack`, `--react-hook-form`, `--tanstack`, `--action` |
 | `form init` | Install shared form types + ONE stack (RHF / TanStack / Action) | `--stack`, `--react-hook-form`, `--tanstack`, `--action` |
 | `update [components...]` | Re-fetch + overwrite base components (always `--force`) | (global only) |
+| `transport [variant]` | Switch an installed variant's transport, or list current choices | `--axios`, `--fetch`, `--tanstack-query`, `--local-state`, `--yes` |
 | `list [scope]` | List base components OR every `category/variant` slug | `--json`, scope = `variants` |
 | `doctor` | Verify Tailwind + globals.css + cn helper + registry connectivity | (global only) |
 | `diagnose` | Auto-repair stale install locks + expired registry-cache entries | (global only) |
@@ -226,6 +227,58 @@ npx afnoui update button input             # refresh two primitives
 npx afnoui update calendar form            # refresh primitives with peer deps
 npx afnoui update button --dry-run         # preview the diff
 ```
+
+## 6b. `afnoui transport [variant]`
+
+**Purpose:** Change which transport an already-installed variant uses, touching
+only the files that transport axis owns. Run with no argument to list what every
+installed variant is currently on.
+
+**Why it's separate from `add --force`:** `add --force` rewrites **every** file
+in the bundle, so switching an HTTP client also discarded whatever you had
+customised in the component and config. `transport` restricts the write to the
+axis you named.
+
+**Flags** — two independent axes (R-56), both reversible:
+
+| Flag | Effect | Installs |
+|---|---|---|
+| `--axios` | requests go through axios | `axios` |
+| `--fetch` | requests go through built-in `fetch` (the default) | — |
+| `--tanstack-query` | results held in TanStack Query | `@tanstack/react-query` |
+| `--local-state` | results held in plain React state (the default) | — |
+| `--yes` | skip the confirmation prompt (CI) | — |
+
+Each axis moves **only when a flag names it**, so `--axios` will not reset an
+existing TanStack Query choice. Opposing flags (`--axios --fetch`) are rejected.
+
+**What it touches:** the union of the paths named by the axes that are actually
+changing — typically `services.ts` for the HTTP axis, `hooks.ts` +
+`constants.ts` for the query axis. A few bundles legitimately include the
+component in an axis (tables' `--axios` owns `DataTable.tsx`, because the
+component body differs per transport); those are named explicitly before the
+prompt. Every change is shown as a diff first.
+
+**Turning an axis off does not uninstall the package** — another part of the
+project may import it. The command prints a note instead.
+
+The effective choice is recorded in `afnoui.json → transports["<cat>/<slug>"]`,
+so a later plain `add` / `update` keeps it rather than reverting to the default.
+
+**Examples:**
+
+```bash
+npx afnoui transport                                          # list current transports
+npx afnoui transport tables/tables-server-crm --axios          # fetch -> axios
+npx afnoui transport tables/tables-server-crm --fetch          # and back again
+npx afnoui transport forms/forms-contact --tanstack-query      # add TanStack Query
+npx afnoui transport forms/forms-contact --local-state         # drop it again
+npx afnoui transport tree/tree-org --axios --dry-run           # preview, write nothing
+npx afnoui transport tree/tree-org --axios --yes               # CI, no prompt
+```
+
+Without `--yes` in a non-interactive shell the command refuses rather than
+writing unattended. `--dry-run` never writes.
 
 ## 7. `afnoui list [scope]`
 

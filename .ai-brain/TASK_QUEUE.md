@@ -21,16 +21,6 @@
 
 ## Next
 
-### 2. `afnoui transport <cat>/<slug> --axios --tanstack-query`
-Leftover from #14. Persistence and stickiness are **done**; the switch command is not.
-
-Rewrites **only** transport-affected files, with a diff preview and `--dry-run`,
-so switching transports doesn't require `--force` against a hand-edited
-`services.ts`. Needs a non-interactive/CI path too.
-
-Open design question: standalone command, or folded into the planned
-`afnoui upgrade` (`CURRENT_SPRINT.md` § Step 5)?
-
 ### 3. Builder Export tabs + variant galleries must show transport flags
 Leftover from #12. Both still print only the default install command; they should
 reflect `--axios` / `--tanstack-query`.
@@ -98,6 +88,45 @@ npm view afnoui version                    # vs afnoui-cli/package.json
 ---
 
 ## Done (Wave-9 follow-ups)
+
+### `afnoui transport [variant]` — the transport switch command
+Standalone command, **not** folded into the planned `afnoui upgrade` (which does
+not exist yet, so folding would have blocked this on Step 5). `upgrade` can call
+into it later.
+
+- Two independent axes, both reversible: `--axios`/`--fetch`,
+  `--tanstack-query`/`--local-state`. Each axis moves only when a flag names it,
+  so `--axios` cannot silently reset a TanStack choice. Opposing flags rejected.
+- Bare `afnoui transport` lists what every installed variant is on.
+- `--dry-run` diff preview; `--yes` for CI; refuses to write unattended in a
+  non-interactive shell without `--yes`.
+- Writes are scoped to the paths of the **changing** axes only.
+
+**Two bugs found by probing rather than building** — both would have silently
+destroyed user code:
+1. Taking the union of both axes' paths meant `--axios` also rewrote
+   `constants.ts`, discarding tunables to change an HTTP client. Now scoped per
+   axis, and locked by a test.
+2. The preview re-implemented the write's transform chain, so it showed phantom
+   `use client` / import diffs. `writeRegistryOutputFile`'s chain was extracted
+   to `prepareRegistryOutputContent` and both now share it.
+
+The extraction is the only change to existing behaviour, and it is a pure
+refactor — proved by installing tables + forms + async-field with the new build
+and with `operations.ts` reverted: **114/114 files byte-identical**.
+
+Caveat worth remembering: a transport axis *can* legitimately own a component
+(tables' `--axios` owns `DataTable.tsx`, because its body differs per
+transport). Those are named explicitly before the prompt rather than sliding by
+inside a diff.
+
+Verified: 130/130 CLI tests (was 110); full round trip
+fetch+local → axios+local → axios+tanstack → fetch+tanstack → fetch+local against
+a live local registry; stickiness, no-op detection, non-TTY guard and `--dry-run`
+all confirmed; `verify:quick` exit 0, 287/287.
+
+Still open from the original #14: a **global** `--non-interactive` flag
+(`CURRENT_SPRINT.md` Step 2) should subsume this command's local `--yes`.
 
 ### `async-field` / `infinite-field` ship as R-55 bundles — DECISION 1.18
 The last place a default install still pulled a transport dependency. All 12

@@ -29,7 +29,7 @@
 | **Dashboard** (reference) | `app/(pages)/dashboard/page.tsx` | Stats cards + table + activity feed + quick actions. Demonstrates layouts. |
 | **i18n** | `app/lib/i18n.ts` | 7 locales: en, es, fr, de, zh, ja, ar. RTL handling for ar via `RtlLayoutProvide`. |
 | **Theme system** | `app/contexts/ThemeContext.tsx`, `app/data/*` | Light / dark + uploadable presets. Live CSS-variable mutation. |
-| **`afnoui` CLI** | `afnoui-cli/` | 9 commands: `add`, `init`, `form init`, `update`, `list`, `diagnose`, `doctor`, `clean`, `help`. **105/105** unit tests. Sandbox-helper paths (`utils/cellJsRunner.ts`, `utils/rowDialogTemplate.ts`) routed via a dedicated `resolveUtilsHelperPath` to a sibling `<libBase>/utils/` folder so they don't collide with the `utils` alias (which points at `lib/utils.ts`) and don't pollute `components/tables/` for kanban-only installs. |
+| **`afnoui` CLI** | `afnoui-cli/` | 10 commands: `add`, `init`, `form init`, `update`, `transport`, `list`, `diagnose`, `doctor`, `clean`, `help`. **130/130** unit tests. Sandbox-helper paths (`utils/cellJsRunner.ts`, `utils/rowDialogTemplate.ts`) routed via a dedicated `resolveUtilsHelperPath` to a sibling `<libBase>/utils/` folder so they don't collide with the `utils` alias (which points at `lib/utils.ts`) and don't pollute `components/tables/` for kanban-only installs. |
 | **Registry pipeline** | `scripts/build-*-registry.ts`, `scripts/verify-*-registry-sync.mjs` | Forms / tables / kanban / components / variants. `build-variants-registry.ts` now emits charts + tables + kanban variants from in-app template tables (single source of truth). Verifier scripts gate CI. |
 
 ### 1.2 Partially baked (works but has known sharp edges)
