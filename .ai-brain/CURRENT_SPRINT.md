@@ -254,8 +254,8 @@ pnpm run verify:quick
   └─ verify:theme-export-sync   ← scripts/verify-theme-export-sync.mjs
   └─ pnpm exec tsc --noEmit     (workspace, excludes afnoui-cli)
   └─ pnpm lint                   (workspace ESLint v9 flat config — floor: 0 errors)
-  └─ pnpm test                   (workspace Vitest — 213 tests)
-  └─ pnpm run build:cli          (afnoui-cli tsc, also runs its 105 tests)
+  └─ pnpm test                   (workspace Vitest — 314 tests, incl. tests/components/* via happy-dom + @testing-library/react)
+  └─ pnpm run build:cli          (afnoui-cli tsc; `cd afnoui-cli && npm test` runs its 130 tests)
 
 # Variant pipeline (must rerun after touching template files or shared engine sources)
 pnpm run build:tables-registry && pnpm run build:kanban-registry && pnpm run build:dnd-registry && pnpm run build:variants-registry
