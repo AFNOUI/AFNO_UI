@@ -21,19 +21,7 @@
 
 ## Next
 
-### 3. Builder Export tabs + variant galleries must show transport flags
-Leftover from #12. Both still print only the default install command; they should
-reflect `--axios` / `--tanstack-query`.
-
-User's call: ship this **inside the broader page-UI consistency pass**, not as a
-standalone change.
-
-**Now also owns the multi-file gallery display.** `ComponentInstall` /
-`CodePreview` still take a single `fullCode: string`, but `async-field` /
-`infinite-field` install four files each since DECISION 1.18. They currently
-render as one concatenated block via `buildFieldVariantPreview()` in
-`app/registry/fieldVariantBundle.ts`. Replace that with real per-file tabs
-(forms/tables already have the shape to copy) and delete the preview helper.
+*(nothing — item 3 is fully done, see Done below)*
 
 ---
 
@@ -88,6 +76,61 @@ npm view afnoui version                    # vs afnoui-cli/package.json
 ---
 
 ## Done (Wave-9 follow-ups)
+
+### Variant galleries + multi-file gallery display (item 3b)
+`TransportPicker` also wired into all four galleries —
+`(pages)/{tables,kanban,trees}/page.tsx` and `components/forms/FormsVariantsSwitcher`
+— so the printed `npx afnoui add …` carries `--axios` / `--tanstack-query`, and
+the shown code + dependency list follow the choice.
+
+**Real bug caught here:** the tables gallery printed
+`npx afnoui add tables/simpleList` — the *template record key*, which is
+camelCase and **404s**. The registry slug is kebab-case (`tables-simple-list`)
+with an override for `serverSideCRM → tables-server-crm`. Added a local mirror
+of `tableTemplateKeyToVariantSlug` and verified all **72** template keys across
+tables/kanban/tree resolve to a real `public/registry/variants/**` file.
+
+Kanban had two install commands on one page (its own `ComponentInstall` bar plus
+the picker) that could disagree. Transport state is lifted to the page so both
+render the same command — `FilesPanel` is now controlled.
+
+**Multi-file display** — `CodePreview` gained an optional `files` prop; when
+present the Component tab shows a per-file strip. Purely additive, so every
+existing single-`fullCode` caller is untouched. The 12 field snippet modules now
+export `files` instead of a concatenated `code` blob, and
+`buildFieldVariantPreview()` is deleted. The gallery now shows
+`constants.ts | services.ts | hooks.ts | <Component>.tsx` as real tabs, which is
+the whole point — concatenating them hid the layering the bundle exists to teach.
+
+### Transport picker in all four builder Export tabs
+New shared `app/components/shared/TransportPicker.tsx`, wired into
+`table-builder/TableExportTab`, `kanban-builder/KanbanExportTab`,
+`form-builder/ExportTab` and `(pages)/tree-builder/page.tsx::FilesPanel`.
+
+**The gap it closed:** every generator has accepted a `TransportChoice` since
+Wave-9, but *nothing in the UI ever passed one* — `transportFlags()` had zero
+callers. So the site only ever showed the fetch + React-state default and the
+axios / TanStack code paths were unreachable from the browser.
+
+Two independent radio groups (never one four-way list — that reads as coupled),
+matching the existing option-card markup so it looks like one more optional
+choice. Shows the resulting deps, the CLI flags, and the
+`afnoui transport <variant> …` line for an already-installed project.
+
+**Honesty fix found by probing:** a purely client-side table generates no
+`services.ts` / `useTableData.ts` at all, so the picker was a silent no-op there.
+Extracted `generatesDataLayer(config, dataMode)` from `generateAllFiles` (same
+condition, same result) and the picker now says *why* it is inert and what to
+change. The dep report also falls back to the default transport in that case, so
+it never lists a package nothing imports.
+
+Verified in a real browser on all four builders: the generated `services.ts`
+gains `import axios`, the hook gains `@tanstack/react-query`, and the install
+command grows both packages. Note kanban/tree hooks use `useMutation`, not
+`useQuery` — grep for the *import* when checking, or you get a false negative.
+
+`getDependencyReport(config, transport)` gained a defaulted second parameter, so
+existing callers are unchanged. 287/287, lint 0 errors, `next build` clean.
 
 ### `afnoui transport [variant]` — the transport switch command
 Standalone command, **not** folded into the planned `afnoui upgrade` (which does

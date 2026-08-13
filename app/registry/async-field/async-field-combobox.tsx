@@ -1,7 +1,4 @@
-import {
-  buildFieldVariantFiles,
-  buildFieldVariantPreview,
-} from "../fieldVariantBundle";
+import { buildFieldVariantFiles } from "../fieldVariantBundle";
 
 export const data = {
   title: "Async Field Combobox",
@@ -93,11 +90,16 @@ export function AsyncFieldCombobox() {
 }
 `;
 
-/** The full bundle, for the variant gallery's single code block. */
-export const code = buildFieldVariantPreview(
-  buildFieldVariantFiles("async-field", "async-field-combobox", {
+/**
+ * The installed bundle, one entry per file, for the gallery's Component tab.
+ * Shown as real per-file tabs — concatenating them hid the
+ * component -> hooks -> services layering the bundle exists to teach.
+ */
+export const files = buildFieldVariantFiles("async-field", "async-field-combobox", {
     data,
     componentName,
     componentCode,
-  }),
-);
+  }).map((f) => ({
+  name: f.path.split("/").pop() as string,
+  code: f.content,
+}));

@@ -9,10 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { CodeBlock, InstallCommand } from "@/components/shared/CodeBlock";
+import { TransportPicker } from "@/components/shared/TransportPicker";
+import { DEFAULT_TRANSPORT, type TransportChoice } from "@/lib/codegen/transport";
 
 import type { TableBuilderConfig } from "@/table-builder/data/tableBuilderTemplates";
 import { getOptionalEngineFiles, SHARED_TABLE_FILES } from "@/table-builder/utils/tableSharedFiles";
-import { generateAllFiles, getDependencyReport, TableRendererSources, type DataMode } from "@/table-builder/utils/tableCodeGenerator";
+import { generateAllFiles, generatesDataLayer, getDependencyReport, TableRendererSources, type DataMode } from "@/table-builder/utils/tableCodeGenerator";
 
 interface TableExportTabProps {
   config: TableBuilderConfig;
@@ -21,16 +23,23 @@ interface TableExportTabProps {
 
 export function TableExportTab({ config, rendererSources }: TableExportTabProps) {
   const [dataMode, setDataMode] = useState<DataMode>("static");
+  const [transport, setTransport] = useState<TransportChoice>(DEFAULT_TRANSPORT);
   const hasColumns = config.columns.filter(c => c.visible).length > 0;
 
-  const generated = useMemo(() => generateAllFiles(config, dataMode, { rendererSources }), [config, dataMode, rendererSources]);
+  const generated = useMemo(
+    () => generateAllFiles(config, dataMode, { rendererSources, transport }),
+    [config, dataMode, rendererSources, transport],
+  );
   const sharedNeeded = useMemo(
     () => [...SHARED_TABLE_FILES, ...getOptionalEngineFiles(config)].map(f => ({ ...f, isFixed: true })),
     [config],
   );
   const allFiles = useMemo(() => [...generated, ...sharedNeeded], [generated, sharedNeeded]);
   const [activeFile, setActiveFile] = useState<string>(allFiles[0]?.name ?? "");
-  const depReport = useMemo(() => getDependencyReport(config), [config]);
+  // A client-side table emits no services.ts, so the transport opt-ins would be
+  // dependencies nothing imports. Report what the generated code actually needs.
+  const effectiveTransport = generatesDataLayer(config, dataMode) ? transport : DEFAULT_TRANSPORT;
+  const depReport = useMemo(() => getDependencyReport(config, effectiveTransport), [config, effectiveTransport]);
 
   if (!hasColumns) {
     return (
@@ -79,6 +88,20 @@ export function TableExportTab({ config, rendererSources }: TableExportTabProps)
           </RadioGroup>
         </CardContent>
       </Card>
+
+      {/* Transport — independent of Data Source: this picks HOW requests are
+          sent and where results live, not whether the table talks to a server. */}
+      <TransportPicker
+        value={transport}
+        onChange={setTransport}
+        idPrefix="table-transport"
+        className="border-border"
+        inactiveReason={
+          generatesDataLayer(config, dataMode)
+            ? undefined
+            : "This table is fully client-side, so no services.ts / useTableData.ts is generated. Choose API / Server-side above and set at least one feature (search, sort, filter or pagination) to load from the API."
+        }
+      />
 
       {/* Install summary */}
       <Card className="border-primary/20 bg-primary/5">

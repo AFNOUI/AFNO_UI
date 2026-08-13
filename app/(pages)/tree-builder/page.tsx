@@ -86,6 +86,8 @@ import {
 } from "@/components/ui/graph";
 
 import { CodeBlock, InstallCommand } from "@/components/shared/CodeBlock";
+import { TransportPicker } from "@/components/shared/TransportPicker";
+import { DEFAULT_TRANSPORT, transportNpmDependencies, type TransportChoice } from "@/lib/codegen/transport";
 
 import type {
   TreeNode,
@@ -137,11 +139,14 @@ function FilesPanel({
   template: TreeTemplate;
   tree: TreeNode;
 }) {
+  const [transport, setTransport] = useState<TransportChoice>(DEFAULT_TRANSPORT);
   const allFiles = useMemo(() => {
     const generated = generateTreeFiles(
       template.config,
       tree,
       template.rendererSources,
+      undefined,
+      transport,
     );
     const shared = SHARED_TREE_FILES.map((f) => ({
       name: f.name,
@@ -163,14 +168,23 @@ function FilesPanel({
           }))
         : [];
     return [...generated, ...shared, ...toolbar];
-  }, [template, tree]);
+  }, [template, tree, transport]);
 
   const [activeFile, setActiveFile] = useState<string>(allFiles[0]?.name ?? "");
   const current = allFiles.find((f) => f.name === activeFile) ?? allFiles[0];
-  const npmInstall = `npm install ${TREE_DEPENDENCIES.runtime.join(" ")}`;
+  // transport opt-ins are additive on top of the engine deps (R-56)
+  const npmInstall = `npm install ${[...TREE_DEPENDENCIES.runtime, ...transportNpmDependencies(transport)].join(" ")}`;
 
   return (
     <div className="space-y-4">
+      {/* Tree always emits hooks.ts / services.ts, so the choice is never inert here. */}
+      <TransportPicker
+        value={transport}
+        onChange={setTransport}
+        idPrefix="tree-transport"
+        className="border-border"
+      />
+
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="py-4 px-5 space-y-3">
           <div className="flex items-start gap-3">

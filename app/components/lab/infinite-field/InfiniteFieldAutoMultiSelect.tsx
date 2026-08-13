@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { Check, ChevronsUpDown, Loader2, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { code, data } from "@/registry/infinite-field/infinite-field-multi-select-auto";
+import { files, data } from "@/registry/infinite-field/infinite-field-multi-select-auto";
 
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -68,7 +68,7 @@ import { InfiniteMultiSelectField } from "@/forms/react-hook-form";
       variant="infinite-field-multi-select-auto"
       title={data.title}
       code={snippet}
-      fullCode={code}
+      files={files}
     >
       <div className="space-y-3">
         <div className="flex flex-wrap gap-2">

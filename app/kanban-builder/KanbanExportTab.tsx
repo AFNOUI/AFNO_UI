@@ -13,6 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { CodeBlock, InstallCommand } from "@/components/shared/CodeBlock";
+import { TransportPicker } from "@/components/shared/TransportPicker";
+import { DEFAULT_TRANSPORT, transportNpmDependencies, type TransportChoice } from "@/lib/codegen/transport";
 
 import { generateKanbanFiles } from "@/kanban-builder/utils/kanbanCodeGenerator"; 
 import type { KanbanBuilderConfig, KanbanCardData, KanbanRendererSources } from "@/kanban/types"; 
@@ -25,7 +27,11 @@ interface Props {
 }
 
 export function KanbanExportTab({ config, cards, rendererSources }: Props) {
-  const generated = useMemo(() => generateKanbanFiles(config, cards, rendererSources), [config, cards, rendererSources]);
+  const [transport, setTransport] = useState<TransportChoice>(DEFAULT_TRANSPORT);
+  const generated = useMemo(
+    () => generateKanbanFiles(config, cards, rendererSources, undefined, transport),
+    [config, cards, rendererSources, transport],
+  );
   const sharedNeeded = useMemo(
     () => SHARED_KANBAN_FILES.map(f => ({ ...f, isFixed: true })),
     [],
@@ -46,10 +52,19 @@ export function KanbanExportTab({ config, cards, rendererSources }: Props) {
   }
 
   const current = allFiles.find(f => f.name === activeFile) ?? allFiles[0];
-  const npmInstall = `npm install ${KANBAN_DEPENDENCIES.runtime.join(" ")}`;
+  // transport opt-ins are additive on top of the engine deps (R-56)
+  const npmInstall = `npm install ${[...KANBAN_DEPENDENCIES.runtime, ...transportNpmDependencies(transport)].join(" ")}`;
 
   return (
     <div className="space-y-6">
+      {/* Kanban always emits hooks.ts / services.ts, so the choice is never inert here. */}
+      <TransportPicker
+        value={transport}
+        onChange={setTransport}
+        idPrefix="kanban-transport"
+        className="border-border"
+      />
+
       {/* Install summary */}
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="py-4 px-5">

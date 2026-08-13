@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { Check, ChevronsUpDown, Loader2, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { code, data } from "@/registry/infinite-field/infinite-field-multi-select";
+import { files, data } from "@/registry/infinite-field/infinite-field-multi-select";
 
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -63,7 +63,7 @@ export function InfiniteFieldMultiSelect() {
       variant="infinite-field-multi-select"
       title={data.title}
       code={snippet}
-      fullCode={code}
+      files={files}
     >
       <div className="space-y-3">
         <div className="flex flex-wrap gap-2">

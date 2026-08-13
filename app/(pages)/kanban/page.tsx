@@ -39,6 +39,8 @@ import {
   getSharedKanbanFiles,
 } from "@/kanban-builder/utils/kanbanSharedFiles";
 import { generateKanbanCode, generateKanbanFiles } from "@/kanban-builder/utils/kanbanCodeGenerator";
+import { TransportPicker } from "@/components/shared/TransportPicker";
+import { DEFAULT_TRANSPORT, transportFlags, transportNpmDependencies, type TransportChoice } from "@/lib/codegen/transport";
 
 import {
   kanbanTemplates,
@@ -73,14 +75,19 @@ function kanbanTemplateKeyToRegistryVariant(templateKey: string): string {
 }
 
 interface FilesPanelProps {
+  /** Registry slug, so the install command can carry the transport flags. */
+  variantSlug: string;
+  /** Lifted to the page: the ComponentInstall bar above shows the same command. */
+  transport: TransportChoice;
+  onTransportChange: (t: TransportChoice) => void;
   cards: KanbanCardData[];
   config: KanbanBuilderConfig;
   rendererSources?: import("@/kanban/types").KanbanRendererSources;
 }
 
-function FilesPanel({ config, cards, rendererSources }: FilesPanelProps) {
+function FilesPanel({ config, cards, rendererSources, variantSlug, transport, onTransportChange }: FilesPanelProps) {
   const allFiles = useMemo(() => {
-    const generated = generateKanbanFiles(config, cards, rendererSources);
+    const generated = generateKanbanFiles(config, cards, rendererSources, undefined, transport);
     // `getSharedKanbanFiles(config)` returns only the engine helpers this
     // variant actually reaches — `cellJsRunner.ts` / `rowDialogTemplate.ts`
     // are dropped (and the engine source rewritten with inline no-op stubs)
@@ -94,14 +101,22 @@ function FilesPanel({ config, cards, rendererSources }: FilesPanelProps) {
       isFixed: true,
     }));
     return [...generated, ...shared];
-  }, [config, cards, rendererSources]);
+  }, [config, cards, rendererSources, transport]);
 
   const [activeFile, setActiveFile] = useState<string>(allFiles[0]?.name ?? "");
   const current = allFiles.find((f) => f.name === activeFile) ?? allFiles[0];
-  const npmInstall = `npm install ${KANBAN_DEPENDENCIES.runtime.join(" ")}`;
+  const npmInstall = `npm install ${[...KANBAN_DEPENDENCIES.runtime, ...transportNpmDependencies(transport)].join(" ")}`;
 
   return (
     <div className="space-y-4">
+      <TransportPicker
+        value={transport}
+        onChange={onTransportChange}
+        idPrefix={`kanban-${variantSlug}-transport`}
+        installCommand={`npx afnoui add kanban/${variantSlug}${transportFlags(transport).length ? " " + transportFlags(transport).join(" ") : ""}`}
+        className="border-border"
+      />
+
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="py-4 px-5 space-y-3">
           <div className="flex items-start gap-3">
@@ -288,6 +303,7 @@ export default function KanbanVariants() {
     [effectiveConfig, active.cards],
   );
   const activeRegistryVariant = kanbanTemplateKeyToRegistryVariant(active.key);
+  const [transport, setTransport] = useState<TransportChoice>(DEFAULT_TRANSPORT);
 
   return (
     <TooltipProvider>
@@ -428,6 +444,7 @@ export default function KanbanVariants() {
           title={active.title}
           code={activeSnippet}
           fullCode={activeSnippet}
+          installArgs={transportFlags(transport).map((f) => ` ${f}`).join("")}
         >
           <LivePreview
             key={active.key}
@@ -444,7 +461,14 @@ export default function KanbanVariants() {
             </span>
             <div className="h-px flex-1 bg-border" />
           </div>
-          <FilesPanel config={effectiveConfig} cards={active.cards} rendererSources={active.rendererSources} />
+          <FilesPanel
+            config={effectiveConfig}
+            cards={active.cards}
+            rendererSources={active.rendererSources}
+            variantSlug={activeRegistryVariant}
+            transport={transport}
+            onTransportChange={setTransport}
+          />
         </div>
       </div>
     </div>

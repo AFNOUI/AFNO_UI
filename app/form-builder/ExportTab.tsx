@@ -16,6 +16,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { CodeBlock, InstallCommand } from "@/components/shared/CodeBlock";
+import { TransportPicker } from "@/components/shared/TransportPicker";
+import { DEFAULT_TRANSPORT, transportNpmDependencies, type TransportChoice } from "@/lib/codegen/transport";
 import {
   generateAllFiles, generateInstallCommand,
   getRequiredComponents, getUsedFieldTypes, getHydratableFields, SchemaMode,
@@ -50,6 +52,7 @@ export function ExportTab({ formConfig }: ExportTabProps) {
   const [codeFileTab, setCodeFileTab] = useState<string>("formConfig.ts");
   const [schemaMode, setSchemaMode] = useState<SchemaMode>("compile-time");
   const [implementationMode, setImplementationMode] = useState<ImplementationMode>("config");
+  const [transport, setTransport] = useState<TransportChoice>(DEFAULT_TRANSPORT);
 
   const hasFields = formConfig.sections.some(s => s.fields.length > 0);
   // All fields can be hydrated — not just option-based ones
@@ -59,7 +62,14 @@ export function ExportTab({ formConfig }: ExportTabProps) {
     hydratedFieldNames: hydratedFields,
     library: formLibrary,
     implementationMode,
+    transport,
   });
+  // transport opt-ins ride on top of the stack's own deps (R-56)
+  const coreDeps = [
+    ...formStackInstall[formLibrary].npmDependencies,
+    ...transportNpmDependencies(transport),
+  ].sort();
+  const coreDepsCommand = `npm install ${coreDeps.join(" ")}`;
   const installCmd = generateInstallCommand(formConfig);
   const requiredComponents = getRequiredComponents(formConfig);
   const usedTypes = getUsedFieldTypes(formConfig);
@@ -194,6 +204,15 @@ export function ExportTab({ formConfig }: ExportTabProps) {
       </Card>
       </>}
 
+      {/* Transport — orthogonal to the form library above: which stack renders
+          the form is unrelated to how its submit reaches your backend. */}
+      <TransportPicker
+        value={transport}
+        onChange={setTransport}
+        idPrefix="form-transport"
+        className="border-border"
+      />
+
       {/* Hydration Field Selector — ALL fields, not just option-based */}
       {hydratableFields.length > 0 && (
         <Card className="border-border">
@@ -256,7 +275,7 @@ export function ExportTab({ formConfig }: ExportTabProps) {
                 </p>
               </div>
               <div className="grid sm:grid-cols-3 gap-2">
-                <InstallCommand command={libraryMeta[formLibrary].deps} label="Step 1: Install core deps" />
+                <InstallCommand command={coreDepsCommand} label="Step 1: Install core deps" />
                 <InstallCommand command={installCmd} label="Step 2: Install UI components (Radix UI)" />
                 <InstallCommand command={`# Required field components:\n# ${requiredComponents.fieldComponents.map(c => c.file).join(', ')}`} label="Step 3: Copy field components" />
               </div>

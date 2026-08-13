@@ -18,7 +18,7 @@
 import type { TableBuilderConfig, TableColumnConfig } from "@/tables/types";
 import { generateDataFiles } from "./codegen/dataFiles";
 import { resolveSource, type DataMode, type GeneratedFile } from "./codegen/types";
-import { DEFAULT_TRANSPORT, type TransportChoice } from "@/lib/codegen/transport";
+import { DEFAULT_TRANSPORT, transportNpmDependencies, type TransportChoice } from "@/lib/codegen/transport";
 
 /**
  * Source strings used to emit a real `renderers.tsx` file alongside
@@ -573,6 +573,26 @@ export interface GenerateAllFilesOptions {
   transport?: TransportChoice;
 }
 
+/**
+ * Whether this table emits a network layer at all (`services.ts` +
+ * `useTableData.ts`).
+ *
+ * Extracted from `generateAllFiles` — same condition, same result — so the
+ * Export tab can tell the user *why* the transport choice does nothing for a
+ * purely client-side table, instead of showing a live control that silently
+ * no-ops. A table only talks to a server when the data mode is `api` AND at
+ * least one enabled feature is sourced from the API.
+ */
+export function generatesDataLayer(config: TableBuilderConfig, dataMode: DataMode): boolean {
+  if (dataMode !== "api") return false;
+  return (
+    (resolveSource(config, "search") === "api" && config.enableSearch) ||
+    (resolveSource(config, "filter") === "api" && config.enableColumnFilters) ||
+    (resolveSource(config, "sort") === "api") ||
+    (resolveSource(config, "pagination") === "api" && config.enablePagination)
+  );
+}
+
 export function generateAllFiles(
   config: TableBuilderConfig,
   dataMode: DataMode,
@@ -615,13 +635,7 @@ export function generateAllFiles(
 
   files.push(generateDataTablePage(config, dataMode, transport));
 
-  const anyApi = (
-    (resolveSource(config, "search") === "api" && config.enableSearch) ||
-    (resolveSource(config, "filter") === "api" && config.enableColumnFilters) ||
-    (resolveSource(config, "sort") === "api") ||
-    (resolveSource(config, "pagination") === "api" && config.enablePagination)
-  );
-  if (dataMode === "api" && anyApi) {
+  if (generatesDataLayer(config, dataMode)) {
     files.push(...generateDataFiles(config, transport));
   }
 
@@ -638,7 +652,14 @@ export interface DependencyReport {
   notes: string[];
 }
 
-export function getDependencyReport(config: TableBuilderConfig): DependencyReport {
+/**
+ * @param transport Defaults to the zero-dependency choice, so callers that do
+ * not offer the opt-ins keep reporting exactly what they reported before.
+ */
+export function getDependencyReport(
+  config: TableBuilderConfig,
+  transport: TransportChoice = DEFAULT_TRANSPORT,
+): DependencyReport {
   const deps = new Set<string>([
     "react",
     "lucide-react",
@@ -666,6 +687,9 @@ export function getDependencyReport(config: TableBuilderConfig): DependencyRepor
     "@radix-ui/react-avatar", "@radix-ui/react-scroll-area",
     "class-variance-authority",
   ].forEach(d => deps.add(d));
+
+  // CLI-gated opt-ins (R-56) — present only when the caller actually chose them.
+  for (const dep of transportNpmDependencies(transport)) deps.add(dep);
 
   return {
     npmInstall: `npm install ${Array.from(deps).sort().join(" ")}`,

@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { code, data } from "@/registry/infinite-field/infinite-field-combobox";
+import { files, data } from "@/registry/infinite-field/infinite-field-combobox";
 
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -59,7 +59,7 @@ export function InfiniteFieldCombobox() {
       variant="infinite-field-combobox"
       title={data.title}
       code={snippet}
-      fullCode={code}
+      files={files}
     >
       <div className="space-y-3">
         <div className="flex flex-wrap gap-2">

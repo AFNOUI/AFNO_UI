@@ -11,6 +11,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 import type { FormConfig } from "@/forms/types/types";
 import { generateAllFiles } from "@/form-builder/utils/formCodeGenerator";
+import { DEFAULT_TRANSPORT, type TransportChoice } from "@/lib/codegen/transport";
 import { formStackInstall, type ImplementationMode } from "@/registry/formRegistry";
 
 export type FormsCodePanelLibrary = "rhf" | "tanstack" | "action";
@@ -67,12 +68,15 @@ export function FormsCodePanel({
   library = "rhf",
   exportedSchemaCode,
   implementationMode = "config",
+  transport = DEFAULT_TRANSPORT,
 }: {
   code: string;
   config: FormConfig;
   exportedSchemaCode: string;
   library?: FormsCodePanelLibrary;
   implementationMode?: ImplementationMode;
+  /** Which HTTP client / query strategy the shown code targets (R-56). */
+  transport?: TransportChoice;
 }) {
   void code;
   void exportedSchemaCode;
@@ -97,7 +101,7 @@ export function FormsCodePanel({
     //   },
     // ];
 
-    const fixedCoreFiles = generateAllFiles(config, "compile-time", { library, implementationMode });
+    const fixedCoreFiles = generateAllFiles(config, "compile-time", { library, implementationMode, transport });
 
     // const allFiles = [...variantFiles, ...fixedCoreFiles];
 
@@ -109,7 +113,7 @@ export function FormsCodePanel({
       seen.add(key);
       return true;
     });
-  }, [config, library, implementationMode]);
+  }, [config, library, implementationMode, transport]);
 
   useEffect(() => {
     setActiveFile((i) => (files.length === 0 ? 0 : Math.min(i, files.length - 1)));

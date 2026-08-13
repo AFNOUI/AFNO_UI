@@ -30,9 +30,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
 import { CodeBlock, InstallCommand } from "@/components/shared/CodeBlock";
+import { TransportPicker } from "@/components/shared/TransportPicker";
+import { DEFAULT_TRANSPORT, transportFlags, type TransportChoice } from "@/lib/codegen/transport";
 
 import {
   generateAllFiles,
+  generatesDataLayer,
   getDependencyReport,
 } from "@/table-builder/utils/tableCodeGenerator";
 import { TablePreview } from "@/table-builder/TablePreview";
@@ -54,6 +57,27 @@ const complexityColors: Record<string, string> = {
     "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
 };
 
+/**
+ * Mirrors `TABLE_VARIANT_SLUG_OVERRIDES` + `tableTemplateKeyToVariantSlug` in
+ * scripts/build-variants-registry.ts. The template record key is camelCase
+ * (`simpleList`); the registry slug is kebab-case (`tables-simple-list`).
+ * Printing the raw key here produced an install command that 404s.
+ */
+const tableVariantSlugOverrides: Partial<Record<string, string>> = {
+  serverSideCRM: "tables-server-crm",
+};
+
+function toKebabCase(value: string): string {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .replace(/[\s_]+/g, "-")
+    .toLowerCase();
+}
+
+function tableTemplateKeyToRegistryVariant(key: string): string {
+  return tableVariantSlugOverrides[key] ?? `tables-${toKebabCase(key)}`;
+}
+
 function CodePanel({ variantKey }: { variantKey: string }) {
   const t = tableTemplates[variantKey];
   const dataMode =
@@ -63,8 +87,10 @@ function CodePanel({ variantKey }: { variantKey: string }) {
 
   // Plain derivation — the React Compiler memoizes this; a manual useMemo here
   // could not be preserved (the body reads `t.rendererSources`, not in the deps).
+  const [transport, setTransport] = useState<TransportChoice>(DEFAULT_TRANSPORT);
   const generatedFiles = generateAllFiles(t.config, dataMode, {
     rendererSources: t.rendererSources,
+    transport,
   }).map((f) => ({ ...f, isFixed: false }));
   const sharedFiles = [
     ...SHARED_TABLE_FILES,
@@ -79,12 +105,29 @@ function CodePanel({ variantKey }: { variantKey: string }) {
   }));
   const allFiles = [...generatedFiles, ...sharedFiles];
 
-  const depReport = useMemo(() => getDependencyReport(t.config), [t.config]);
+  const effectiveTransport = generatesDataLayer(t.config, dataMode) ? transport : DEFAULT_TRANSPORT;
+  const depReport = useMemo(
+    () => getDependencyReport(t.config, effectiveTransport),
+    [t.config, effectiveTransport],
+  );
   const [activeFile, setActiveFile] = useState<string>(allFiles[0]?.name ?? "");
   const current = allFiles.find((f) => f.name === activeFile) ?? allFiles[0];
 
   return (
     <div className="space-y-4">
+      <TransportPicker
+        value={transport}
+        onChange={setTransport}
+        idPrefix={`tables-${variantKey}-transport`}
+        installCommand={`npx afnoui add tables/${tableTemplateKeyToRegistryVariant(variantKey)}${transportFlags(transport).length ? " " + transportFlags(transport).join(" ") : ""}`}
+        className="border-border"
+        inactiveReason={
+          generatesDataLayer(t.config, dataMode)
+            ? undefined
+            : "This variant is fully client-side, so it generates no services.ts / useTableData.ts for a transport to affect."
+        }
+      />
+
       {/* Install summary */}
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="py-4 px-5 space-y-3">

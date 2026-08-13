@@ -12,6 +12,8 @@ interface ComponentInstallProps {
   variant: string;
   category: string;
   fullCode?: string;
+  /** Multi-file bundles pass their files instead of `fullCode` — see CodePreview. */
+  files?: { name: string; code: string }[];
   className?: string;
   installArgs?: string;
   children: React.ReactNode;
@@ -23,6 +25,7 @@ export function ComponentInstall({
   variant,
   category,
   fullCode,
+  files,
   children,
   className,
   installArgs,
@@ -38,7 +41,7 @@ export function ComponentInstall({
       />
 
       {/* CodePreview Component */}
-      <CodePreview title={title} code={code} fullCode={fullCode}>
+      <CodePreview title={title} code={code} fullCode={fullCode} files={files}>
         {children}
       </CodePreview>
     </div>

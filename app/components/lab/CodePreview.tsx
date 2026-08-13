@@ -27,6 +27,15 @@ interface CodePreviewProps {
    * the DnD variants).
    */
   fullCode?: string;
+  /**
+   * Multi-file variants (anything installing a `component → hooks → services`
+   * bundle) pass their files here instead of `fullCode`, and the Component tab
+   * gains a per-file strip. Concatenating a bundle into one blob was the old
+   * stopgap and it hid the layering the bundle exists to teach.
+   *
+   * Takes precedence over `fullCode` when both are present.
+   */
+  files?: { name: string; code: string }[];
   className?: string;
   children: React.ReactNode;
 }
@@ -39,16 +48,20 @@ export default function CodePreview({
   children,
   className,
   fullCode,
+  files,
 }: CodePreviewProps) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<CodeTab>("preview");
-  const hasFullCode = typeof fullCode === "string" && fullCode.trim().length > 0;
+  const [activeFile, setActiveFile] = useState(0);
+  const hasFiles = Array.isArray(files) && files.length > 0;
+  const hasFullCode = hasFiles || (typeof fullCode === "string" && fullCode.trim().length > 0);
 
   const displayCode = useMemo(() => {
-    if (activeTab === "component" && hasFullCode) return fullCode as string;
-    return code;
-  }, [activeTab, code, fullCode, hasFullCode]);
+    if (activeTab !== "component") return code;
+    if (hasFiles) return files[Math.min(activeFile, files.length - 1)]?.code ?? "";
+    return hasFullCode ? (fullCode as string) : code;
+  }, [activeTab, code, fullCode, hasFullCode, hasFiles, files, activeFile]);
 
   const copyCode = async (text: string) => {
     await navigator.clipboard.writeText(text);
@@ -133,6 +146,26 @@ export default function CodePreview({
               {copied ? t("code.copied") : t("code.copyCode")}
             </TooltipContent>
           </Tooltip>
+
+          {activeTab === "component" && hasFiles && (
+            <div className="flex flex-wrap gap-1 px-3 py-2 border-t border-border bg-muted/40">
+              {files.map((file, i) => (
+                <button
+                  key={file.name}
+                  type="button"
+                  onClick={() => setActiveFile(i)}
+                  className={cn(
+                    "text-[11px] font-mono px-2 py-1 rounded-md border transition-colors cursor-pointer",
+                    i === Math.min(activeFile, files.length - 1)
+                      ? "border-primary bg-primary/10 text-foreground"
+                      : "border-transparent text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  {file.name}
+                </button>
+              ))}
+            </div>
+          )}
 
           <ScrollArea className="h-[400px] w-full border-t border-border">
             <pre className="p-4 text-xs font-mono leading-relaxed overflow-x-auto">

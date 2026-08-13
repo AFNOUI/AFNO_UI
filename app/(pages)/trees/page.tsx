@@ -46,6 +46,8 @@ import type { TreeNode } from "@/trees/types";
 import { TreeCanvas } from "@/trees/TreeCanvas";
 import { NodeDataTable } from "@/tree-builder/NodeDataTable";
 import { generateTreeFiles } from "@/tree-builder/utils/treeCodeGenerator";
+import { TransportPicker } from "@/components/shared/TransportPicker";
+import { DEFAULT_TRANSPORT, transportFlags, transportNpmDependencies, type TransportChoice } from "@/lib/codegen/transport";
 import { SHARED_TREE_FILES, OPTIONAL_TREE_FILES, TREE_DEPENDENCIES } from "@/tree-builder/utils/treeSharedFiles";
 
 const complexityColors: Record<string, string> = {
@@ -59,18 +61,32 @@ const complexityColors: Record<string, string> = {
     "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
 };
 
+/** Mirrors `treeTemplateKeyToVariantSlug` in scripts/build-variants-registry.ts. */
+function toKebabCase(value: string): string {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .replace(/[\s_]+/g, "-")
+    .toLowerCase();
+}
+
 function FilesPanel({
   template,
   tree,
+  variantSlug,
 }: {
   template: TreeTemplate;
   tree: TreeNode;
+  /** Registry slug, so the install command can carry the transport flags. */
+  variantSlug: string;
 }) {
+  const [transport, setTransport] = useState<TransportChoice>(DEFAULT_TRANSPORT);
   const allFiles = useMemo(() => {
     const generated = generateTreeFiles(
       template.config,
       tree,
       template.rendererSources,
+      undefined,
+      transport,
     );
     const shared = SHARED_TREE_FILES.map((f) => ({
       name: f.name,
@@ -92,14 +108,22 @@ function FilesPanel({
           }))
         : [];
     return [...generated, ...shared, ...toolbar];
-  }, [template, tree]);
+  }, [template, tree, transport]);
 
   const [activeFile, setActiveFile] = useState<string>(allFiles[0]?.name ?? "");
   const current = allFiles.find((f) => f.name === activeFile) ?? allFiles[0];
-  const npmInstall = `npm install ${TREE_DEPENDENCIES.runtime.join(" ")}`;
+  const npmInstall = `npm install ${[...TREE_DEPENDENCIES.runtime, ...transportNpmDependencies(transport)].join(" ")}`;
 
   return (
     <div className="space-y-4">
+      <TransportPicker
+        value={transport}
+        onChange={setTransport}
+        idPrefix={`trees-${variantSlug}-transport`}
+        installCommand={`npx afnoui add tree/${variantSlug}${transportFlags(transport).length ? " " + transportFlags(transport).join(" ") : ""}`}
+        className="border-border"
+      />
+
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="py-4 px-5 space-y-3">
           <div className="flex items-start gap-3">
@@ -425,7 +449,7 @@ export default function TreeBuilder() {
             </span>
             <div className="h-px flex-1 bg-border" />
           </div>
-          <FilesPanel template={active} tree={active.tree} />
+          <FilesPanel template={active} tree={active.tree} variantSlug={`tree-${toKebabCase(active.key)}`} />
         </div>
       </div>
     </div>

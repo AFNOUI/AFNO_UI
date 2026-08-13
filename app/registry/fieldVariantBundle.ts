@@ -555,14 +555,3 @@ export function buildFieldVariantFiles(
     { path: `${dir}/${mod.componentName}.tsx`, content: mod.componentCode },
   ];
 }
-
-/**
- * A single readable string for the variant gallery, which still renders one
- * code block per variant. Replaced by real per-file tabs when the export-tab
- * consistency pass lands (see `.ai-brain/TASK_QUEUE.md` item 3).
- */
-export function buildFieldVariantPreview(files: FieldBundleFile[]): string {
-  return files
-    .map((f) => `// ${"─".repeat(4)} ${f.path.split("/").pop()} ${"─".repeat(40)}\n\n${f.content.trim()}`)
-    .join("\n\n");
-}
