@@ -3,10 +3,7 @@
 import {
   Info,
   Code2,
-  Package,
-  FileCode,
   Sparkles,
-  ArrowRight,
   ChevronDown,
 } from "lucide-react";
 import { useState, useMemo } from "react";
@@ -26,12 +23,10 @@ import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
-import { CodeBlock, InstallCommand } from "@/components/shared/CodeBlock";
-import { TransportPicker } from "@/components/shared/TransportPicker";
-import { DEFAULT_TRANSPORT, transportFlags, type TransportChoice } from "@/lib/codegen/transport";
+import { BuilderFilesPanel, BuilderInstallPanel } from "@/components/shared/builder-export";
+import { DEFAULT_TRANSPORT, type TransportChoice } from "@/lib/codegen/transport";
 
 import {
   generateAllFiles,
@@ -115,123 +110,42 @@ function CodePanel({ variantKey }: { variantKey: string }) {
 
   return (
     <div className="space-y-4">
-      <TransportPicker
-        value={transport}
-        onChange={setTransport}
-        idPrefix={`tables-${variantKey}-transport`}
-        installCommand={`npx afnoui add tables/${tableTemplateKeyToRegistryVariant(variantKey)}${transportFlags(transport).length ? " " + transportFlags(transport).join(" ") : ""}`}
-        className="border-border"
-        inactiveReason={
-          generatesDataLayer(t.config, dataMode)
+
+      <BuilderInstallPanel
+        transport={{
+          value: transport,
+          onChange: setTransport,
+          idPrefix: `tables-${variantKey}-transport`,
+          inactiveReason: generatesDataLayer(t.config, dataMode)
             ? undefined
-            : "This variant is fully client-side, so it generates no services.ts / useTableData.ts for a transport to affect."
-        }
+            : "This variant is fully client-side, so it generates no services.ts / useTableData.ts for a transport to affect.",
+        }}
+        subject="table"
+        idPrefix={`tables-${variantKey}-cli`}
+        generatedCount={allFiles.filter((f) => !f.isFixed).length}
+        sharedCount={allFiles.filter((f) => f.isFixed).length}
+        runtimeCommand={depReport.npmInstall}
+        devCommand={depReport.npmInstallDev}
+        notes={depReport.notes}
+        cliScope={{
+          commandId: "add",
+          lockCommand: true,
+          lockArgs: true,
+          args: [`tables/${tableTemplateKeyToRegistryVariant(variantKey)}`],
+          flags: {
+            axios: effectiveTransport.http === "axios",
+            tanstackQuery: effectiveTransport.query === "tanstack",
+          },
+        }}
       />
 
-      {/* Install summary */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="py-4 px-5 space-y-3">
-          <div className="flex items-start gap-3">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Package className="h-4 w-4 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-sm">
-                Required Dependencies & Files
-              </h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Install packages and copy{" "}
-                <span className="font-semibold">{allFiles.length} files</span>{" "}
-                to get this table running.
-              </p>
-            </div>
-          </div>
-          <div className="grid sm:grid-cols-2 gap-2">
-            <InstallCommand
-              command={depReport.npmInstall}
-              label="Runtime deps"
-            />
-            <InstallCommand
-              command={depReport.npmInstallDev}
-              label="Dev deps"
-            />
-          </div>
-          {depReport.notes.length > 0 && (
-            <ul className="text-[11px] text-muted-foreground list-disc ps-4 space-y-0.5">
-              {depReport.notes.map((n) => (
-                <li key={n}>{n}</li>
-              ))}
-            </ul>
-          )}
-          <div className="flex items-center gap-3 text-[11px] text-muted-foreground pt-1">
-            <span className="inline-flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />{" "}
-              Variant-specific (regenerated per table)
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />{" "}
-              Shared (copy once)
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+      <BuilderFilesPanel
+        subject="table"
+        files={allFiles}
+        activeFile={current.name}
+        onActiveFileChange={setActiveFile}
+      />
 
-      {/* File tabs (mirrors form-builder ExportTab look) */}
-      <Tabs value={current.name} onValueChange={setActiveFile}>
-        <ScrollArea className="w-full">
-          <TabsList className="h-auto flex-wrap gap-1 bg-muted/50 p-1">
-            {allFiles.map((file) => (
-              <TabsTrigger
-                key={file.name}
-                value={file.name}
-                className="text-xs gap-1.5 data-[state=active]:bg-background"
-              >
-                <span
-                  className={cn(
-                    "h-1.5 w-1.5 rounded-full",
-                    file.isFixed ? "bg-muted-foreground" : "bg-primary",
-                  )}
-                />
-                {file.isFixed ? (
-                  <Package className="h-3 w-3" />
-                ) : (
-                  <FileCode className="h-3 w-3" />
-                )}
-                {file.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </ScrollArea>
-
-        {allFiles.map((file) => (
-          <TabsContent key={file.name} value={file.name} className="mt-4">
-            <div className="space-y-3">
-              <div className="flex items-start gap-2 flex-wrap">
-                {file.isFixed ? (
-                  <Badge variant="secondary" className="text-[10px] shrink-0">
-                    <Package className="h-3 w-3 mr-1" /> Shared engine
-                  </Badge>
-                ) : (
-                  <Badge className="text-[10px] shrink-0 bg-primary/10 text-primary border-0">
-                    <FileCode className="h-3 w-3 mr-1" /> Variant-specific
-                  </Badge>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  {file.description}
-                </p>
-              </div>
-              <div className="text-xs text-muted-foreground font-mono flex items-center gap-1">
-                <ArrowRight className="h-3 w-3" /> {file.path}
-              </div>
-              <CodeBlock
-                code={file.code}
-                language={file.language}
-                filename={file.path}
-              />
-            </div>
-          </TabsContent>
-        ))}
-      </Tabs>
     </div>
   );
 }

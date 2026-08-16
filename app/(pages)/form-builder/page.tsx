@@ -19,7 +19,7 @@ import {
   useTemplateOptions,
   BuilderTemplatePicker,
 } from "@/components/shared/builder-header";
-import { useBuilderDraft } from "@/components/shared/builder-draft";
+import { useBuilderWorkspace } from "@/components/shared/builder-workspace";
 import {
   BuilderDiffPanel,
   useBuilderDiff,
@@ -72,11 +72,17 @@ export default function FormBuilder() {
     toast({ title: "Reset to template", description: `${entries.length} settings restored.` });
   }, [setFormConfig]);
 
-  const draft = useBuilderDraft<FormDraft>({
+  // Names a new saved build after the template it started from, so a
+  // workspace reads "Sprint Board" rather than "Untitled 3".
+  const workspaceLabel = selectedTemplateKey
+    ? formTemplates[selectedTemplateKey]?.title
+    : undefined;
+
+  const workspace = useBuilderWorkspace<FormDraft>({
     id: "form",
     deps: [formConfig, currentLayout, selectedTemplateKey],
     snapshot: () => ({ config: formConfig, layout: currentLayout, templateKey: selectedTemplateKey }),
-    label: selectedTemplateKey ? formTemplates[selectedTemplateKey]?.title : undefined,
+    label: workspaceLabel,
     validate: isFormDraft,
     onRestore: (saved) => {
       setSelectedTemplateKey(saved.templateKey);
@@ -297,7 +303,8 @@ export default function FormBuilder() {
               />
             }
             history={history}
-            draft={draft.header}
+            workspace={workspace.header}
+            workspaceName={workspaceLabel}
           />
 
           {/* Layout Picker */}

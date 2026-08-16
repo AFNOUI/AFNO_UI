@@ -6,11 +6,12 @@ import { cn } from "@/lib/utils";
 
 import { Separator } from "@/components/ui/separator";
 
+import { DraftSavedIndicator } from "@/components/shared/builder-draft";
 import {
-  BuilderDraftPrompt,
-  DraftSavedIndicator,
-  type BuilderDraftHeaderState,
-} from "@/components/shared/builder-draft";
+  WorkspacePanel,
+  WorkspaceRestorePrompt,
+  type BuilderWorkspaceHeaderState,
+} from "@/components/shared/builder-workspace";
 
 import { BuilderToolbar } from "./controls/BuilderToolbar";
 import { BuilderIdentity } from "./controls/BuilderIdentity";
@@ -33,13 +34,19 @@ export interface BuilderHeaderProps {
   /** Slot 4 — undo / redo. Spread `useBuilderHistory()` in directly. */
   history?: BuilderHistoryState;
 
+
   /**
-   * Autosave. Pass `useBuilderDraft(...).header`; the header places both of its
-   * surfaces — the "Saved 2m ago" caption beside the title, and the "Restore
-   * last session" strip below — so all four builders report autosave the same
-   * way, same as they do templates and undo.
+   * Saved builds. Pass `useBuilderWorkspace(...).header`; the header places both
+   * of its surfaces — the "Saved (N)" button in the toolbar and the restore
+   * strip below — so all four builders present saved work identically.
+   *
+   * Autosave is reported here too — the "Saved 2m ago" caption beside the
+   * title comes from the same state, so a builder has one place that says
+   * whether the work is safe.
    */
-  draft?: BuilderDraftHeaderState;
+  workspace?: BuilderWorkspaceHeaderState;
+  /** Default name offered when saving the current build. */
+  workspaceName?: string;
 
   className?: string;
 }
@@ -61,10 +68,12 @@ export function BuilderHeader({
   actions,
   jsonActions,
   history,
-  draft,
+  workspace,
+  workspaceName,
   className,
 }: BuilderHeaderProps) {
-  const hasToolbar = Boolean(templatePicker || actions || jsonActions || history);
+  const hasToolbar = Boolean(templatePicker || actions || jsonActions || history || workspace);
+
 
   return (
     <header
@@ -81,8 +90,8 @@ export function BuilderHeader({
           meta={
             <>
               {meta}
-              {draft ? (
-                <DraftSavedIndicator status={draft.status} savedAt={draft.savedAt} />
+              {workspace ? (
+                <DraftSavedIndicator status={workspace.status} savedAt={workspace.savedAt} />
               ) : null}
             </>
           }
@@ -93,6 +102,9 @@ export function BuilderHeader({
             {templatePicker}
             {actions}
             {jsonActions}
+            {workspace ? (
+              <WorkspacePanel workspace={workspace} suggestedName={workspaceName} />
+            ) : null}
             {history ? (
               <>
                 <Separator
@@ -110,7 +122,7 @@ export function BuilderHeader({
       {/* Full width, below the identity/toolbar row — a restore offer concerns
           the whole build, so it should not have to compete with the toolbar for
           horizontal space. Renders nothing when there is no draft to offer. */}
-      {draft ? <BuilderDraftPrompt draft={draft} /> : null}
+      {workspace ? <WorkspaceRestorePrompt workspace={workspace} /> : null}
     </header>
   );
 }

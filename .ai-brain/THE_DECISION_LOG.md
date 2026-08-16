@@ -549,6 +549,44 @@ old deps forward and hides the regression.
 
 ---
 
+### 1.19 [Accepted] The site's CLI reference is a model of the CLI, verified — not a second copy of it
+
+**Context**: the homepage had a hand-written list of ~20 CLI command cards.
+Two of them printed slugs that do not exist —
+`charts/bar/charts-bar-grouped` (the real slug is `charts/bar/grouped`) and
+`button/variants` (`button/button-variants`) — so anyone who copied them got a
+404 from the registry. Nobody noticed because nothing checked. This is the same
+failure the tables gallery had in Wave-9, from the same cause: **command
+strings assembled by hand at the call site.**
+
+**Decision**: replace the cards with an interactive playground under
+`app/components/shared/cli-playground/`, built on three separations:
+
+| Layer | Source of truth | Can it drift? |
+|---|---|---|
+| Command / flag **surface** | `commandSpecs.ts`, verified against `afnoui-cli/src/cli/**` by `scripts/verify-cli-playground-flags.ts` | No — build fails |
+| Installable **slugs** | imported from `public/registry/{index,variants/index}.json` | No — impossible to offer a slug that is not there |
+| **Descriptions** | hand-written in `commandSpecs.ts` | **Yes** — this is the residual risk, and why R-58 exists |
+
+The third row is deliberate. Generating prose from `--help` would have made
+drift impossible, but `--help` is written for someone who already knows the
+CLI; the playground exists for someone who does not. Accepting a
+human-maintained description layer is the cost of that, and R-58 is the
+mitigation.
+
+**Why one section, not two**: the playground first shipped as a section of its
+own, below the existing "Install Into Your Project". Two CLI sections on one
+page made both look redundant. The curated cards became **presets that seed the
+builder**, so browsing and building share one surface — and a preset is now a
+starting point rather than a dead end.
+
+**Consequence for future work**: the same component serves builder and variant
+pages via its `scope` prop (`{ commandId, args, lockCommand }`), which is what
+finally kills per-page command assembly. Until those pages are migrated they
+keep their own bars, and can still disagree with each other.
+
+---
+
 ## Section 2 — The "Hacks" Library
 
 > Each entry is a non-standard piece of code. If you’re an AI tempted to "clean it up" — read the rationale first. Most of these protect against silent regressions.

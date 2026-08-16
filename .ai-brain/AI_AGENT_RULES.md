@@ -410,6 +410,35 @@ No magic numbers or inline endpoint strings in generated `hooks.ts` /
 The point is a single obvious place to configure a variant, so re-tuning a
 cache window or swapping a base URL never means reading generated logic.
 
+### R-58 — A CLI change is not done until the playground knows about it
+The site ships an interactive CLI reference at
+`app/components/shared/cli-playground/`. It is a *model* of the CLI, so it can
+lie — and a reference that lies is worse than no reference, because people copy
+what it prints.
+
+**Whenever you add, rename, remove or re-scope a command, subcommand, flag or
+flag value in `afnoui-cli/src/cli/**`, update the playground in the same
+commit:**
+
+| What changed in the CLI | What to update |
+|---|---|
+| New command / subcommand | a `CliCommandSpec` in `commandSpecs.ts` (with `tagline`, `whenToUse`, `whatItDoes`) **and** an entry in `FILE_TO_COMMAND_IDS` in `scripts/verify-cli-playground-flags.ts` |
+| New flag | a `CliFlagSpec` on that command — or, if it is another spelling of an existing axis, an `aliasFlags` entry on that axis |
+| New global flag (`program.ts`) | `GLOBAL_FLAGS`, plus each command's `globalFlags` list where it is meaningful |
+| Flag now only applies in some cases | that flag's `relevantWhen` / `inertWhen` predicate |
+| A command's effects changed (where files land, what it installs) | `whatItDoes`, and `catalog.ts`'s category routing if the destination moved |
+| New variant category in the registry | `EXPLICIT_CATEGORIES` in `catalog.ts` — otherwise it falls back to the primitive-demo routing, which is silently wrong |
+
+`pnpm run verify:cli-playground` (part of `verify` and `verify:quick`) fails the
+build when the flag sets disagree, in either direction. It cannot check
+*semantics* — a wrong `whatItDoes` or a wrong `relevantWhen` passes — so read
+the flag's real behaviour, do not paraphrase its `--help` string.
+
+Slugs offered anywhere in the playground must come from the registry indexes,
+never a hand-written list. The static command cards this replaced shipped
+`charts/bar/charts-bar-grouped` and `button/variants`, neither of which exists;
+both 404'd for anyone who copied them. See DECISION 1.19.
+
 ---
 
 ## 5. Test / verify rules

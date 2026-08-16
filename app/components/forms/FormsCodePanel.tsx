@@ -1,13 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Copy, Check, Info } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-import { toast } from "@/hooks/use-toast";
+import { BuilderFilesPanel, BuilderInstallPanel } from "@/components/shared/builder-export";
 
-import { Button } from "@/components/ui/button";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+
 
 import type { FormConfig } from "@/forms/types/types";
 import { generateAllFiles } from "@/form-builder/utils/formCodeGenerator";
@@ -56,12 +53,6 @@ const libraryDeps: Record<
   return out;
 })();
 
-function stackFormInitHint(library: FormsCodePanelLibrary): string {
-  if (library === "rhf") return "npx afnoui form init";
-  if (library === "tanstack") return "npx afnoui form init --stack tanstack";
-  return "npx afnoui form init --stack action";
-}
-
 export function FormsCodePanel({
   code,
   config,
@@ -69,6 +60,8 @@ export function FormsCodePanel({
   exportedSchemaCode,
   implementationMode = "config",
   transport = DEFAULT_TRANSPORT,
+  onTransportChange,
+  variant,
 }: {
   code: string;
   config: FormConfig;
@@ -77,11 +70,19 @@ export function FormsCodePanel({
   implementationMode?: ImplementationMode;
   /** Which HTTP client / query strategy the shown code targets (R-56). */
   transport?: TransportChoice;
+  /** When passed, the transport axes render as step 1 of the install panel. */
+  onTransportChange?: (next: TransportChoice) => void;
+  /**
+   * Registry slug of the variant on show. Present on the gallery, where the
+   * whole bundle is installable — so the command is `add forms/<slug>`, which
+   * writes the shared files AND the variant's own. `form init` would be wrong
+   * here: it installs only the shared stack, leaving the variant behind.
+   */
+  variant?: string;
 }) {
   void code;
   void exportedSchemaCode;
   const [activeFile, setActiveFile] = useState(0);
-  const [copiedFile, setCopiedFile] = useState<string | null>(null);
 
   const files = useMemo<CodePanelFile[]>(() => {
     // const variantFiles: CodePanelFile[] = [
@@ -120,190 +121,65 @@ export function FormsCodePanel({
   }, [files]);
 
   const libInfo = libraryDeps[library];
-  const copyToClipboard = async (content: string, name: string) => {
-    await navigator.clipboard.writeText(content);
-    setCopiedFile(name);
-    setTimeout(() => setCopiedFile(null), 2000);
-    toast({ title: "Copied!", description: `${name} copied to clipboard` });
-  };
-
   const safeIndex =
     files.length === 0 ? 0 : Math.min(Math.max(0, activeFile), files.length - 1);
   const current = files[safeIndex];
 
+  if (files.length === 0) {
+    return (
+      <div className="rounded-lg border border-border px-4 py-8 text-center text-sm text-muted-foreground">
+        No files to show.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-border overflow-hidden">
-        <div className="px-4 py-3 bg-muted/40 border-b border-border flex items-center gap-2">
-          <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Info className="h-3.5 w-3.5 text-primary" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-foreground">Required Dependencies & Files</p>
-            <p className="text-[11px] text-muted-foreground">
-              Install packages and copy <span className="font-medium text-foreground">{files.length} files</span> to run this form
-            </p>
-          </div>
-        </div>
-        <div className="p-4 space-y-3">
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div className="rounded-lg border border-border p-3 space-y-2">
-              <p className="text-[11px] font-semibold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                Dependencies
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {libInfo.deps.map((dep) => (
-                  <span key={dep} className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/8 text-primary text-[10px] font-mono font-medium border border-primary/15">
-                    {dep}
-                  </span>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(libInfo.installCmd);
-                  toast({ title: "Copied!", description: "Install command copied" });
-                }}
-                className="w-full text-left text-[10px] font-mono bg-muted/60 rounded-md px-2.5 py-1.5 text-muted-foreground hover:bg-muted transition-colors cursor-pointer flex items-center gap-1.5 group"
-              >
-                <Copy className="h-3 w-3 opacity-50 group-hover:opacity-100 shrink-0" />
-                <span className="truncate">{libInfo.installCmd}</span>
-              </button>
-            </div>
-            <div className="rounded-lg border border-border p-3 space-y-2">
-              <p className="text-[11px] font-semibold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                Dev Dependencies
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {libInfo.devDeps.map((dep) => (
-                  <span key={dep} className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-[10px] font-mono font-medium border border-border">
-                    {dep}
-                  </span>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(libInfo.devInstallCmd);
-                  toast({ title: "Copied!", description: "Dev install command copied" });
-                }}
-                className="w-full text-left text-[10px] font-mono bg-muted/60 rounded-md px-2.5 py-1.5 text-muted-foreground hover:bg-muted transition-colors cursor-pointer flex items-center gap-1.5 group"
-              >
-                <Copy className="h-3 w-3 opacity-50 group-hover:opacity-100 shrink-0" />
-                <span className="truncate">{libInfo.devInstallCmd}</span>
-              </button>
-            </div>
-          </div>
-          {/* CLI init note */}
-          <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 px-3 py-2 text-[11px] text-muted-foreground space-y-1">
-            <p className="font-medium text-foreground">💡 Using CLI? Shared files are auto-installed</p>
-            <p>
-              Run <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono">{stackFormInitHint(library)}</code>{" "}
-              (or <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono">pnpm dlx</code> / <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono">yarn dlx</code> / <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono">bunx</code>)
-              to scaffold all <span className="inline-flex items-center gap-0.5 px-1 py-0 rounded bg-muted text-muted-foreground font-medium border border-border text-[9px]">● shared</span> files for this stack.
-              You only need to copy <span className="inline-flex items-center gap-0.5 px-1 py-0 rounded bg-primary/10 text-primary font-medium border border-primary/15 text-[9px]">● variant-specific</span> files for your form.
-            </p>
-          </div>
+      {/* Same two panels as every builder Export tab and every other variant
+          gallery — this panel used to render its own dependency header, its own
+          CLI hint and its own file browser, all worded differently. */}
+      <BuilderInstallPanel
+        subject="form"
+        transport={
+          onTransportChange
+            ? {
+                value: transport,
+                onChange: onTransportChange,
+                idPrefix: `forms-${library}-transport`,
+              }
+            : undefined
+        }
+        idPrefix={`forms-code-${library}`}
+        generatedCount={files.filter((f) => !f.isFixed).length}
+        sharedCount={files.filter((f) => f.isFixed).length}
+        runtimeCommand={libInfo.installCmd}
+        devCommand={libInfo.devDeps.length > 0 ? libInfo.devInstallCmd : undefined}
+        cliScope={
+          variant
+            ? {
+                commandId: "add",
+                lockCommand: true,
+                lockArgs: true,
+                args: [`forms/${variant}`],
+                flags: {
+                  stack: library,
+                  axios: transport.http === "axios",
+                  tanstackQuery: transport.query === "tanstack",
+                },
+              }
+            : { commandId: "form-init", lockCommand: true, lockArgs: true, flags: { stack: library } }
+        }
+      />
 
-          {/* File legend */}
-          <div className="flex flex-wrap items-center gap-3 text-[10px] pt-1">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 text-primary font-medium border border-primary/15">
-              ● Variant-specific
-            </span>
-            <span className="text-muted-foreground">formConfig.ts, MyFormPage.tsx, formSchema.ts — regenerated per form</span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-muted text-muted-foreground font-medium border border-border">
-              ● Shared
-            </span>
-            <span className="text-muted-foreground">
-              types.ts,{" "}
-              {library === "tanstack" ? (
-                <>TanstackForm.tsx, TanstackFormField.tsx, …</>
-              ) : library === "action" ? (
-                <>ActionForm.tsx, ActionFormField.tsx, …</>
-              ) : (
-                <>ReactHookForm.tsx, ReactHookFormField.tsx, …</>
-              )}{" "}
-              useBackendErrors.ts, field components — install via CLI or copy once
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="border border-border rounded-xl overflow-hidden bg-card">
-        {current ? (
-          <>
-            <div className="flex items-center justify-between px-1 py-1 bg-muted/40 border-b border-border gap-1">
-              <ScrollArea>
-                <ScrollBar orientation="horizontal" className="hidden" />
-                <div className="flex items-center gap-1 flex-1">
-                  {files.map((file, idx) => (
-                    <button
-                      key={`${file.path}-${file.name}`}
-                      type="button"
-                      onClick={() => setActiveFile(idx)}
-                      className={cn(
-                        "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-colors whitespace-nowrap",
-                        safeIndex === idx
-                          ? "bg-background text-foreground shadow-sm border border-border"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                      )}
-                    >
-                      <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", file.isFixed ? "bg-muted-foreground" : "bg-primary")} />
-                      {file.name}
-                    </button>
-                  ))}
-                </div>
-              </ScrollArea>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 gap-1 shrink-0 mr-1 text-xs"
-                onClick={() => copyToClipboard(current.code, current.name)}
-              >
-                {copiedFile === current.name ? (
-                  <>
-                    <Check className="h-3 w-3 text-primary" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-3 w-3" />
-                    Copy
-                  </>
-                )}
-              </Button>
-            </div>
-
-            <div className="px-4 py-2 bg-muted/20 border-b border-border text-xs space-y-0.5">
-              <div className="font-mono text-muted-foreground flex items-center gap-1.5">
-                <span>📁</span>
-                <span className="text-foreground font-medium">{current.path}</span>
-                <span
-                  className={cn(
-                    "text-[10px] px-1.5 py-0.5 rounded font-medium",
-                    current.isFixed
-                      ? "bg-muted text-muted-foreground border border-border"
-                      : "bg-primary/10 text-primary border border-primary/15"
-                  )}
-                >
-                  {current.isFixed ? "shared — install once" : "variant-specific"}
-                </span>
-              </div>
-              <div className="text-muted-foreground">{current.description}</div>
-            </div>
-
-            <ScrollArea className="h-72">
-              <pre className="p-4 text-xs font-mono leading-relaxed bg-muted/30 text-foreground">
-                <code>{current.code}</code>
-              </pre>
-            </ScrollArea>
-          </>
-        ) : (
-          <div className="px-4 py-8 text-sm text-muted-foreground text-center">No files to show.</div>
-        )}
-      </div>
+      <BuilderFilesPanel
+        subject="form"
+        files={files}
+        activeFile={current.name}
+        onActiveFileChange={(name) => {
+          const index = files.findIndex((file) => file.name === name);
+          if (index >= 0) setActiveFile(index);
+        }}
+      />
     </div>
   );
 }

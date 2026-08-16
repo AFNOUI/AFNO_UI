@@ -3,10 +3,7 @@
 import {
   Info,
   Code2,
-  Package,
   Sparkles,
-  FileCode,
-  ArrowRight,
   ChevronDown,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -26,10 +23,8 @@ import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
-import { CodeBlock, InstallCommand } from "@/components/shared/CodeBlock";
 import { VariantJsonConfigPanel } from "@/components/shared/VariantJsonConfigPanel";
 
 import { ComponentInstall } from "@/components/lab/ComponentInstall";
@@ -39,8 +34,8 @@ import {
   getSharedKanbanFiles,
 } from "@/kanban-builder/utils/kanbanSharedFiles";
 import { generateKanbanCode, generateKanbanFiles } from "@/kanban-builder/utils/kanbanCodeGenerator";
-import { TransportPicker } from "@/components/shared/TransportPicker";
-import { DEFAULT_TRANSPORT, transportFlags, transportNpmDependencies, type TransportChoice } from "@/lib/codegen/transport";
+import { BuilderFilesPanel, BuilderInstallPanel } from "@/components/shared/builder-export";
+import { DEFAULT_TRANSPORT, transportNpmDependencies, type TransportChoice } from "@/lib/codegen/transport";
 
 import {
   kanbanTemplates,
@@ -106,112 +101,46 @@ function FilesPanel({ config, cards, rendererSources, variantSlug, transport, on
   const [activeFile, setActiveFile] = useState<string>(allFiles[0]?.name ?? "");
   const current = allFiles.find((f) => f.name === activeFile) ?? allFiles[0];
   const npmInstall = `npm install ${[...KANBAN_DEPENDENCIES.runtime, ...transportNpmDependencies(transport)].join(" ")}`;
+  // Declared in KANBAN_DEPENDENCIES but never surfaced until the shared install panel.
+  const npmInstallDev = KANBAN_DEPENDENCIES.dev.length
+    ? `npm install -D ${[...KANBAN_DEPENDENCIES.dev].join(" ")}`
+    : undefined;
 
   return (
     <div className="space-y-4">
-      <TransportPicker
-        value={transport}
-        onChange={onTransportChange}
-        idPrefix={`kanban-${variantSlug}-transport`}
-        installCommand={`npx afnoui add kanban/${variantSlug}${transportFlags(transport).length ? " " + transportFlags(transport).join(" ") : ""}`}
-        className="border-border"
+
+      <BuilderInstallPanel
+        transport={{
+          value: transport,
+          onChange: onTransportChange,
+          idPrefix: `kanban-${variantSlug}-transport`,
+        }}
+        subject="board"
+        idPrefix={`kanban-${variantSlug}-cli`}
+        generatedCount={allFiles.filter((f) => !f.isFixed).length}
+        sharedCount={allFiles.filter((f) => f.isFixed).length}
+        runtimeCommand={npmInstall}
+        devCommand={npmInstallDev}
+        notes={[...KANBAN_DEPENDENCIES.notes]}
+        cliScope={{
+          commandId: "add",
+          lockCommand: true,
+          lockArgs: true,
+          args: [`kanban/${variantSlug}`],
+          flags: {
+            axios: transport.http === "axios",
+            tanstackQuery: transport.query === "tanstack",
+          },
+        }}
       />
 
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="py-4 px-5 space-y-3">
-          <div className="flex items-start gap-3">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Package className="h-4 w-4 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-sm">
-                Required Dependencies & Files
-              </h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Install packages and copy{" "}
-                <span className="font-semibold">{allFiles.length} files</span>{" "}
-                to get this kanban running.
-              </p>
-            </div>
-          </div>
-          <div className="grid sm:grid-cols-1 gap-2">
-            <InstallCommand command={npmInstall} label="Runtime deps" />
-          </div>
-          {KANBAN_DEPENDENCIES.notes.length > 0 && (
-            <ul className="text-[11px] text-muted-foreground list-disc ps-4 space-y-0.5">
-              {KANBAN_DEPENDENCIES.notes.map((n) => (
-                <li key={n}>{n}</li>
-              ))}
-            </ul>
-          )}
-          <div className="flex items-center gap-3 text-[11px] text-muted-foreground pt-1">
-            <span className="inline-flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />{" "}
-              Variant-specific (regenerated per board)
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />{" "}
-              Shared engine (copy once)
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+      <BuilderFilesPanel
+        subject="board"
+        files={allFiles}
+        activeFile={current.name}
+        onActiveFileChange={setActiveFile}
+      />
 
-      <Tabs value={current.name} onValueChange={setActiveFile}>
-        <ScrollArea className="w-full">
-          <TabsList className="h-auto flex-wrap gap-1 bg-muted/50 p-1">
-            {allFiles.map((file) => (
-              <TabsTrigger
-                key={file.name}
-                value={file.name}
-                className="text-xs gap-1.5 data-[state=active]:bg-background"
-              >
-                <span
-                  className={cn(
-                    "h-1.5 w-1.5 rounded-full",
-                    file.isFixed ? "bg-muted-foreground" : "bg-primary",
-                  )}
-                />
-                {file.isFixed ? (
-                  <Package className="h-3 w-3" />
-                ) : (
-                  <FileCode className="h-3 w-3" />
-                )}
-                {file.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </ScrollArea>
-
-        {allFiles.map((file) => (
-          <TabsContent key={file.name} value={file.name} className="mt-4">
-            <div className="space-y-3">
-              <div className="flex items-start gap-2 flex-wrap">
-                {file.isFixed ? (
-                  <Badge variant="secondary" className="text-[10px] shrink-0">
-                    <Package className="h-3 w-3 mr-1" /> Shared engine
-                  </Badge>
-                ) : (
-                  <Badge className="text-[10px] shrink-0 bg-primary/10 text-primary border-0">
-                    <FileCode className="h-3 w-3 mr-1" /> Variant-specific
-                  </Badge>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  {file.description}
-                </p>
-              </div>
-              <div className="text-xs text-muted-foreground font-mono flex items-center gap-1">
-                <ArrowRight className="h-3 w-3" /> {file.path}
-              </div>
-              <CodeBlock
-                code={file.code}
-                language={file.language}
-                filename={file.path}
-              />
-            </div>
-          </TabsContent>
-        ))}
-      </Tabs>
     </div>
   );
 }
@@ -444,7 +373,7 @@ export default function KanbanVariants() {
           title={active.title}
           code={activeSnippet}
           fullCode={activeSnippet}
-          installArgs={transportFlags(transport).map((f) => ` ${f}`).join("")}
+          hideInstallBar
         >
           <LivePreview
             key={active.key}

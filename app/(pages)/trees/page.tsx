@@ -2,12 +2,9 @@
 
 import {
   Info,
-  Package,
   Sparkles,
-  FileCode,
   Workflow,
   RotateCcw,
-  ArrowRight,
   ChevronDown,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -20,15 +17,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
 import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
-import { CodeBlock, InstallCommand } from "@/components/shared/CodeBlock";
 
 import {
   GraphToolbar,
@@ -46,8 +40,8 @@ import type { TreeNode } from "@/trees/types";
 import { TreeCanvas } from "@/trees/TreeCanvas";
 import { NodeDataTable } from "@/tree-builder/NodeDataTable";
 import { generateTreeFiles } from "@/tree-builder/utils/treeCodeGenerator";
-import { TransportPicker } from "@/components/shared/TransportPicker";
-import { DEFAULT_TRANSPORT, transportFlags, transportNpmDependencies, type TransportChoice } from "@/lib/codegen/transport";
+import { BuilderFilesPanel, BuilderInstallPanel } from "@/components/shared/builder-export";
+import { DEFAULT_TRANSPORT, transportNpmDependencies, type TransportChoice } from "@/lib/codegen/transport";
 import { SHARED_TREE_FILES, OPTIONAL_TREE_FILES, TREE_DEPENDENCIES } from "@/tree-builder/utils/treeSharedFiles";
 
 const complexityColors: Record<string, string> = {
@@ -113,110 +107,46 @@ function FilesPanel({
   const [activeFile, setActiveFile] = useState<string>(allFiles[0]?.name ?? "");
   const current = allFiles.find((f) => f.name === activeFile) ?? allFiles[0];
   const npmInstall = `npm install ${[...TREE_DEPENDENCIES.runtime, ...transportNpmDependencies(transport)].join(" ")}`;
+  // Declared in TREE_DEPENDENCIES but never surfaced until the shared install panel.
+  const npmInstallDev = TREE_DEPENDENCIES.dev.length
+    ? `npm install -D ${[...TREE_DEPENDENCIES.dev].join(" ")}`
+    : undefined;
 
   return (
     <div className="space-y-4">
-      <TransportPicker
-        value={transport}
-        onChange={setTransport}
-        idPrefix={`trees-${variantSlug}-transport`}
-        installCommand={`npx afnoui add tree/${variantSlug}${transportFlags(transport).length ? " " + transportFlags(transport).join(" ") : ""}`}
-        className="border-border"
+
+      <BuilderInstallPanel
+        transport={{
+          value: transport,
+          onChange: setTransport,
+          idPrefix: `trees-${variantSlug}-transport`,
+        }}
+        subject="tree"
+        idPrefix={`trees-${variantSlug}-cli`}
+        generatedCount={allFiles.filter((f) => !f.isFixed).length}
+        sharedCount={allFiles.filter((f) => f.isFixed).length}
+        runtimeCommand={npmInstall}
+        devCommand={npmInstallDev}
+        notes={[...TREE_DEPENDENCIES.notes]}
+        cliScope={{
+          commandId: "add",
+          lockCommand: true,
+          lockArgs: true,
+          args: [`tree/${variantSlug}`],
+          flags: {
+            axios: transport.http === "axios",
+            tanstackQuery: transport.query === "tanstack",
+          },
+        }}
       />
 
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="py-4 px-5 space-y-3">
-          <div className="flex items-start gap-3">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Package className="h-4 w-4 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-sm">
-                Required Dependencies & Files
-              </h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Install packages and copy{" "}
-                <span className="font-semibold">{allFiles.length} files</span>{" "}
-                to get this tree running.
-              </p>
-            </div>
-          </div>
-          <InstallCommand command={npmInstall} label="Runtime deps" />
-          {TREE_DEPENDENCIES.notes.length > 0 && (
-            <ul className="text-[11px] text-muted-foreground list-disc ps-4 space-y-0.5">
-              {TREE_DEPENDENCIES.notes.map((n) => (
-                <li key={n}>{n}</li>
-              ))}
-            </ul>
-          )}
-          <div className="flex items-center gap-3 text-[11px] text-muted-foreground pt-1">
-            <span className="inline-flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />{" "}
-              Variant-specific (regenerated per tree)
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />{" "}
-              Shared engine (copy once)
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+      <BuilderFilesPanel
+        subject="tree"
+        files={allFiles}
+        activeFile={current.name}
+        onActiveFileChange={setActiveFile}
+      />
 
-      <Tabs value={current.name} onValueChange={setActiveFile}>
-        <ScrollArea className="w-full">
-          <TabsList className="h-auto flex-wrap gap-1 bg-muted/50 p-1">
-            {allFiles.map((file) => (
-              <TabsTrigger
-                key={file.name}
-                value={file.name}
-                className="text-xs gap-1.5 data-[state=active]:bg-background"
-              >
-                <span
-                  className={cn(
-                    "h-1.5 w-1.5 rounded-full",
-                    file.isFixed ? "bg-muted-foreground" : "bg-primary",
-                  )}
-                />
-                {file.isFixed ? (
-                  <Package className="h-3 w-3" />
-                ) : (
-                  <FileCode className="h-3 w-3" />
-                )}
-                {file.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </ScrollArea>
-
-        {allFiles.map((file) => (
-          <TabsContent key={file.name} value={file.name} className="mt-4">
-            <div className="space-y-3">
-              <div className="flex items-start gap-2 flex-wrap">
-                {file.isFixed ? (
-                  <Badge variant="secondary" className="text-[10px] shrink-0">
-                    <Package className="h-3 w-3 mr-1" /> Shared engine
-                  </Badge>
-                ) : (
-                  <Badge className="text-[10px] shrink-0 bg-primary/10 text-primary border-0">
-                    <FileCode className="h-3 w-3 mr-1" /> Variant-specific
-                  </Badge>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  {file.description}
-                </p>
-              </div>
-              <div className="text-xs text-muted-foreground font-mono flex items-center gap-1">
-                <ArrowRight className="h-3 w-3" /> {file.path}
-              </div>
-              <CodeBlock
-                code={file.code}
-                language={file.language}
-                filename={file.path}
-              />
-            </div>
-          </TabsContent>
-        ))}
-      </Tabs>
     </div>
   );
 }

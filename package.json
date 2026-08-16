@@ -24,8 +24,8 @@
     "verify:tree-registry": "node scripts/verify-tree-registry-sync.mjs",
     "verify:dnd-registry": "node scripts/verify-dnd-registry-sync.mjs",
     "verify:charts-registry": "node scripts/verify-charts-registry-sync.mjs",
-    "verify": "npm run verify:forms-registry && npm run verify:tables-registry && npm run verify:kanban-registry && npm run verify:tree-registry && npm run verify:dnd-registry && npm run verify:charts-registry && npm run verify:theme-export-sync && npm run build:chart-ui-lab-sources && npx tsc --noEmit && npm run lint && npm run test && npm run build:cli && npm run validate:variants",
-    "verify:quick": "npm run verify:forms-registry && npm run verify:tables-registry && npm run verify:kanban-registry && npm run verify:tree-registry && npm run verify:dnd-registry && npm run verify:charts-registry && npm run verify:theme-export-sync && npm run build:chart-ui-lab-sources && npx tsc --noEmit && npm run lint && npm run test && npm run build:cli",
+    "verify": "npm run verify:forms-registry && npm run verify:tables-registry && npm run verify:kanban-registry && npm run verify:tree-registry && npm run verify:dnd-registry && npm run verify:charts-registry && npm run verify:theme-export-sync && npm run verify:cli-playground && npm run build:chart-ui-lab-sources && npx tsc --noEmit && npm run lint && npm run test && npm run build:cli && npm run validate:variants",
+    "verify:quick": "npm run verify:forms-registry && npm run verify:tables-registry && npm run verify:kanban-registry && npm run verify:tree-registry && npm run verify:dnd-registry && npm run verify:charts-registry && npm run verify:theme-export-sync && npm run verify:cli-playground && npm run build:chart-ui-lab-sources && npx tsc --noEmit && npm run lint && npm run test && npm run build:cli",
     "generate:forms-registry": "tsx scripts/generate-registry.ts --ts",
     "generate:tables-registry": "tsx scripts/build-tables-registry.ts",
     "generate:kanban-registry": "tsx scripts/build-kanban-registry.ts",
@@ -33,7 +33,8 @@
     "generate:dnd-registry": "tsx scripts/build-dnd-registry.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "verify:cli-playground": "tsx scripts/verify-cli-playground-flags.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

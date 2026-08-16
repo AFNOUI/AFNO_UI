@@ -34,6 +34,11 @@
    importing `services.ts` is a violation (§ R-55).
 9. **axios / TanStack Query are CLI-gated opt-ins**, marked `TODO(cli-gated)`;
    the generated default is `fetch` + local React state (§ R-56).
+10. **CLI change ⇒ playground change, same commit.** New/renamed/removed command
+    or flag in `afnoui-cli/src/cli/**` must land in
+    `app/components/shared/cli-playground/commandSpecs.ts` too — it is the site's
+    interactive CLI reference and it can lie. `pnpm run verify:cli-playground`
+    catches flag drift only (§ R-58).
 
 ## Quality gate before "done"
 

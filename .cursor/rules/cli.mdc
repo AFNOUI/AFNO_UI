@@ -12,14 +12,38 @@ alwaysApply: false
 
 The AfnoUI CLI is a thin shell over `public/registry/*.json`. Its contract:
 
-- **Commands:** `init`, `add`, `form init`, `update`, `list`, `doctor`,
-  `diagnose`, `clean`, `help`. (See `.ai-brain/CLI_REFERENCE.md` for the
-  full flag matrix.)
+- **Commands:** `init`, `add`, `form init`, `table init`, `kanban init`,
+  `tree init`, `dnd init`, `chart init`, `transport`, `update`, `list`,
+  `doctor`, `diagnose`, `clean`, `help`. (See `.ai-brain/CLI_REFERENCE.md` for
+  the full flag matrix.)
 - **Global flags:** `--dry-run`, `--debug`, `--force` — propagated by
   `cli/program.ts` to every sub-command.
 - **Form stacks:** `rhf` (default), `tanstack`, `action`. Set via
   `--stack <kind>` or the boolean shortcuts `--react-hook-form` / `--tanstack`
   / `--action`. Applies to `add forms/...` and `form init`.
+
+## R-58 — the site's CLI playground must move with you
+
+`app/components/shared/cli-playground/commandSpecs.ts` is a hand-written model
+of everything below, rendered as an interactive command builder on the AfnoUI
+homepage. **It is part of this CLI's contract.** Adding, renaming, removing or
+re-scoping a command, subcommand, flag or flag value here without updating that
+file makes the site print commands that do not work.
+
+In the same commit as your CLI change:
+
+- new command/subcommand → a `CliCommandSpec` **and** an entry in
+  `FILE_TO_COMMAND_IDS` in `scripts/verify-cli-playground-flags.ts`
+- new flag → a `CliFlagSpec`, or an `aliasFlags` entry if it is another
+  spelling of an existing axis (`--tanstack` ≡ `--stack tanstack`)
+- new global flag in `program.ts` → `GLOBAL_FLAGS` + each command's
+  `globalFlags` list
+- changed effects → that command's `whatItDoes`, and `catalog.ts` routing if
+  files land somewhere new
+
+`pnpm run verify:cli-playground` fails on flag-set drift in either direction.
+It cannot check descriptions — write those from the flag's real behaviour, not
+by paraphrasing its `--help` string.
 
 ## Where each piece lives
 

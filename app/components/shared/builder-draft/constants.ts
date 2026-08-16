@@ -1,5 +1,8 @@
 /**
- * Tuning constants for the builder draft (autosave) system.
+ * Tuning constants for legacy draft storage.
+ *
+ * Only the values the *reader* needs survive — the workspace owns writing, and
+ * carries its own size cap and debounce.
  */
 
 /** localStorage key prefix. One slot per builder id. */
@@ -12,13 +15,6 @@ export const DRAFT_KEY_PREFIX = "afnoui:builder-draft:";
  */
 export const DRAFT_SCHEMA_VERSION = 1;
 
-/**
- * Idle time before a write. Long enough that typing a column label is one
- * write rather than fifteen, short enough that an accidental refresh a second
- * after the last keystroke still finds the edit.
- */
-export const DRAFT_DEBOUNCE_MS = 800;
-
 /** How often the "saved 2m ago" caption recomputes its relative time. */
 export const DRAFT_TICK_MS = 30_000;
 
@@ -28,9 +24,3 @@ export const DRAFT_TICK_MS = 30_000;
  */
 export const DRAFT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
-/**
- * Refuse to write payloads past this size. localStorage caps around 5 MB per
- * origin and four builders share it; a 1,000-row stress table serializes well
- * past that, and a failed write on every keystroke is worse than no autosave.
- */
-export const DRAFT_MAX_BYTES = 1_000_000;

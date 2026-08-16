@@ -1,5 +1,9 @@
 /**
- * Pure helpers for the builder draft system. No React.
+ * Legacy draft storage — read-only.
+ *
+ * `builder-workspace/` owns writing now. What survives here is the reader used
+ * once per project to migrate a pre-workspace draft into the workspace, plus
+ * the relative-time formatter both systems share.
  *
  * Every storage call is wrapped: localStorage throws on quota exhaustion, and
  * simply reading it throws outright in Safari's private mode and in any
@@ -10,7 +14,6 @@
 import {
   DRAFT_KEY_PREFIX,
   DRAFT_MAX_AGE_MS,
-  DRAFT_MAX_BYTES,
   DRAFT_SCHEMA_VERSION,
 } from "./constants";
 import type { BuilderDraftEnvelope, BuilderDraftId, BuilderDraftOffer } from "./types";
@@ -27,59 +30,6 @@ function storage(): Storage | null {
     return window.localStorage;
   } catch {
     return null;
-  }
-}
-
-/** Serialize a snapshot, or `null` when it is not JSON-representable. */
-export function serializeDraft<T>(
-  value: T,
-  label?: string,
-  savedAt = 0,
-): string | null {
-  const envelope: BuilderDraftEnvelope<T> = {
-    version: DRAFT_SCHEMA_VERSION,
-    savedAt,
-    label,
-    value,
-  };
-  try {
-    return JSON.stringify(envelope);
-  } catch {
-    // A cyclic or non-serializable snapshot. Silently skipping is right: the
-    // alternative is a toast on every keystroke for a bug the user cannot fix.
-    return null;
-  }
-}
-
-/**
- * Write a draft. Returns `false` when nothing was stored — an oversized
- * payload, an unserializable snapshot, or a storage error.
- */
-export function writeDraft<T>(
-  id: BuilderDraftId,
-  value: T,
-  savedAt: number,
-  label?: string,
-): boolean {
-  const store = storage();
-  if (!store) return false;
-
-  const payload = serializeDraft(value, label, savedAt);
-  if (payload === null || payload.length > DRAFT_MAX_BYTES) return false;
-
-  try {
-    store.setItem(draftKey(id), payload);
-    return true;
-  } catch {
-    // Quota exceeded. Drop our own slot and retry once — a stale draft from
-    // another builder is the likeliest thing standing between us and space.
-    try {
-      store.removeItem(draftKey(id));
-      store.setItem(draftKey(id), payload);
-      return true;
-    } catch {
-      return false;
-    }
   }
 }
 

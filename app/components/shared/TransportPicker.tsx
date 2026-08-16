@@ -54,6 +54,12 @@ interface TransportPickerProps {
      * a live control that silently no-ops is worse than no control.
      */
     inactiveReason?: string;
+    /**
+     * Render the axes without the surrounding Card and heading. Set when the
+     * picker sits inside `BuilderInstallPanel`, which supplies its own numbered
+     * step header — a card inside a card reads as a separate concern.
+     */
+    bare?: boolean;
     className?: string;
 }
 
@@ -63,22 +69,14 @@ export function TransportPicker({
     installCommand,
     idPrefix = "transport",
     inactiveReason,
+    bare,
     className,
 }: TransportPickerProps) {
     const deps = transportNpmDependencies(value);
     const flags = transportFlags(value);
 
-    return (
-        <Card className={className}>
-            <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Transport</CardTitle>
-                <CardDescription className="text-xs">
-                    Both are optional and independent. The default adds{" "}
-                    <span className="font-medium text-foreground">no dependency at all</span> — axios and
-                    TanStack Query are opt-ins the CLI installs only when you ask for them.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+    const body = (
+            <div className="space-y-4">
                 {inactiveReason && (
                     <p className="text-[11px] rounded-lg border border-dashed border-border bg-muted/30 p-2.5 text-muted-foreground">
                         <span className="font-medium text-foreground">Nothing to send yet.</span> {inactiveReason}
@@ -192,7 +190,150 @@ export function TransportPicker({
                         <code className="bg-muted px-1 rounded">afnoui transport &lt;variant&gt; {flags.join(" ") || "--fetch --local-state"}</code>
                     </p>
                 </div>
-            </CardContent>
+            </div>
+    );
+
+    if (bare) {
+        return (
+            <div className={className}>
+                <CompactTransport
+                    value={value}
+                    onChange={onChange}
+                    idPrefix={idPrefix}
+                    inactiveReason={inactiveReason}
+                />
+            </div>
+        );
+    }
+
+    return (
+        <Card className={className}>
+            <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Transport</CardTitle>
+                <CardDescription className="text-xs">
+                    Both are optional and independent. The default adds{" "}
+                    <span className="font-medium text-foreground">no dependency at all</span> — axios and
+                    TanStack Query are opt-ins the CLI installs only when you ask for them.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>{body}</CardContent>
         </Card>
+    );
+}
+
+/**
+ * The compact form used inside `BuilderInstallPanel`.
+ *
+ * Same two independent axes, but as segmented controls rather than four option
+ * cards — inside a numbered step the surrounding panel already explains the
+ * choice, so the cards were repeating context and costing ~14 rows to say what
+ * fits in three. The axes stay side by side and separately labelled: collapsing
+ * them into one four-way control is what makes people read them as coupled.
+ */
+function CompactTransport({
+    value,
+    onChange,
+    idPrefix,
+    inactiveReason,
+}: Pick<TransportPickerProps, "value" | "onChange" | "idPrefix" | "inactiveReason">) {
+    const deps = transportNpmDependencies(value);
+
+    return (
+        <div className="space-y-2.5">
+            <div className="grid gap-3 sm:grid-cols-2">
+                <Segmented
+                    label="HTTP client"
+                    hint="used by services.ts"
+                    name={`${idPrefix}-http`}
+                    value={value.http}
+                    onChange={(next) => onChange({ ...value, http: next as HttpClient })}
+                    options={[
+                        { value: "fetch", label: "fetch" },
+                        { value: "axios", label: "axios" },
+                    ]}
+                />
+                <Segmented
+                    label="Where results live"
+                    hint="used by hooks.ts"
+                    name={`${idPrefix}-query`}
+                    value={value.query}
+                    onChange={(next) => onChange({ ...value, query: next as QueryStrategy })}
+                    options={[
+                        { value: "local", label: "React state" },
+                        { value: "tanstack", label: "TanStack Query" },
+                    ]}
+                />
+            </div>
+
+            <p className="text-[11px] text-muted-foreground">
+                {isDefaultTransport(value) ? (
+                    <>
+                        Adds <span className="font-medium text-foreground">no extra packages</span>.
+                    </>
+                ) : (
+                    <>
+                        Adds{" "}
+                        {deps.map((dep, index) => (
+                            <span key={dep}>
+                                {index > 0 && " and "}
+                                <code className="rounded bg-muted px-1">{dep}</code>
+                            </span>
+                        ))}
+                        .
+                    </>
+                )}
+            </p>
+
+            {inactiveReason && (
+                <p className="rounded-lg border border-dashed border-border bg-muted/30 p-2.5 text-[11px] text-muted-foreground">
+                    <span className="font-medium text-foreground">Nothing to send yet.</span>{" "}
+                    {inactiveReason}
+                </p>
+            )}
+        </div>
+    );
+}
+
+function Segmented({
+    label,
+    hint,
+    name,
+    value,
+    onChange,
+    options,
+}: {
+    label: string;
+    hint: string;
+    name: string;
+    value: string;
+    onChange: (next: string) => void;
+    options: { value: string; label: string }[];
+}) {
+    return (
+        <div className="space-y-1.5">
+            <p className="text-[11px] font-medium text-muted-foreground">
+                {label} <span className="font-normal opacity-70">— {hint}</span>
+            </p>
+            <RadioGroup
+                value={value}
+                onValueChange={onChange}
+                className="inline-flex w-full gap-0.5 rounded-lg border border-border bg-muted/30 p-0.5"
+            >
+                {options.map((option) => (
+                    <Label
+                        key={option.value}
+                        htmlFor={`${name}-${option.value}`}
+                        className="flex-1 cursor-pointer rounded-md px-3 py-1.5 text-center text-xs font-medium text-muted-foreground transition-colors hover:text-foreground [&:has([data-state=checked])]:bg-background [&:has([data-state=checked])]:text-foreground [&:has([data-state=checked])]:shadow-sm"
+                    >
+                        <RadioGroupItem
+                            id={`${name}-${option.value}`}
+                            value={option.value}
+                            className="sr-only"
+                        />
+                        {option.label}
+                    </Label>
+                ))}
+            </RadioGroup>
+        </div>
     );
 }

@@ -54,7 +54,12 @@ and installed into consumer projects via the `afnoui` CLI under
 7. **axios / TanStack Query are CLI-gated opt-ins.** Generated default is
    `fetch` + local React state; the other paths are selected by CLI flags, not
    hand-written. Mark them `TODO(cli-gated)` (§ R-56).
-8. **Production gate before "done":** `pnpm lint && pnpm test && pnpm run build:cli
+8. **A CLI change updates the site's CLI playground in the same commit.** Any
+   command, subcommand or flag added/renamed/removed in `afnoui-cli/src/cli/**`
+   must be reflected in `app/components/shared/cli-playground/commandSpecs.ts`.
+   `pnpm run verify:cli-playground` gates the flag sets; descriptions are on you
+   (§ R-58).
+9. **Production gate before "done":** `pnpm lint && pnpm test && pnpm run build:cli
    && pnpm run verify:quick && pnpm run validate:variants && cd test && pnpm build`.
 
 ## Quick commands by task

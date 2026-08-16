@@ -36,7 +36,7 @@ import {
   BuilderInsightsPanel,
   useBuilderInsights,
 } from "@/components/shared/builder-insights";
-import { useBuilderDraft } from "@/components/shared/builder-draft";
+import { useBuilderWorkspace } from "@/components/shared/builder-workspace";
 import { BuilderPreviewFrame } from "@/components/shared/builder-preview";
 import {
   BuilderDiffPanel,
@@ -95,11 +95,17 @@ export default function DataTableBuilder() {
     toast({ title: "Reset to template", description: `${entries.length} settings restored.` });
   }, [setConfig]);
 
-  const draft = useBuilderDraft<TableDraft>({
+  // Names a new saved build after the template it started from, so a
+  // workspace reads "Sprint Board" rather than "Untitled 3".
+  const workspaceLabel = selectedTemplateKey
+    ? tableTemplates[selectedTemplateKey]?.title
+    : undefined;
+
+  const workspace = useBuilderWorkspace<TableDraft>({
     id: "table",
     deps: [config, sampleData, rendererSources, selectedTemplateKey],
     snapshot: () => ({ config, sampleData, rendererSources, templateKey: selectedTemplateKey }),
-    label: selectedTemplateKey ? tableTemplates[selectedTemplateKey]?.title : undefined,
+    label: workspaceLabel,
     validate: isTableDraft,
     onRestore: (saved) => {
       setSelectedTemplateKey(saved.templateKey);
@@ -253,7 +259,8 @@ export default function DataTableBuilder() {
               />
             }
             history={history}
-            draft={draft.header}
+            workspace={workspace.header}
+            workspaceName={workspaceLabel}
           />
 
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "builder" | "preview" | "code" | "guide")} className="space-y-4">

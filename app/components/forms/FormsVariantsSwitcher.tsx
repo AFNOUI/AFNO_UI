@@ -25,7 +25,6 @@ import { ReactHookForm } from "@/forms/react-hook-form";
 import { FormsSubmissionPreview } from "./FormsSubmissionPreview";
 import type { ImplementationMode } from "@/registry/formRegistry";
 import { FormsCodePanel, type FormsCodePanelLibrary } from "./FormsCodePanel";
-import { TransportPicker } from "@/components/shared/TransportPicker";
 import { DEFAULT_TRANSPORT, transportFlags, type TransportChoice } from "@/lib/codegen/transport";
 import { generatePageComponentCode } from "@/form-builder/utils/formCodeGenerator";
 
@@ -224,6 +223,7 @@ export function FormsVariantsSwitcher() {
         fullCode={pageSource}
         variant={active.variant}
         title={active.meta.title}
+        hideInstallBar
         key={`${active.key}-${library}`}
         installArgs={[
           library === "rhf" ? "" : library === "tanstack" ? " --stack tanstack" : " --stack action",
@@ -249,12 +249,7 @@ export function FormsVariantsSwitcher() {
               <div className="h-px flex-1 bg-border" />
             </div>
 
-            <TransportPicker
-              value={transport}
-              onChange={setTransport}
-              idPrefix={`forms-${active.variant}-transport`}
-              className="border-border"
-            />
+
 
             <FormsCodePanel
               code={pageSource}
@@ -263,6 +258,8 @@ export function FormsVariantsSwitcher() {
               implementationMode={implementationMode}
               exportedSchemaCode={active.exportedSchemaCode}
               transport={transport}
+              onTransportChange={setTransport}
+              variant={active.variant}
             />
           </div>
         </div>

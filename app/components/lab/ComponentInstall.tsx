@@ -16,6 +16,13 @@ interface ComponentInstallProps {
   files?: { name: string; code: string }[];
   className?: string;
   installArgs?: string;
+  /**
+   * Drop the install bar and render only the preview. Set on pages that show
+   * the CLI playground instead — two command surfaces on one page can disagree,
+   * which is how the kanban gallery once printed two different install
+   * commands for the same variant.
+   */
+  hideInstallBar?: boolean;
   children: React.ReactNode;
 }
 
@@ -29,16 +36,19 @@ export function ComponentInstall({
   children,
   className,
   installArgs,
+  hideInstallBar,
 }: ComponentInstallProps) {
   const args = installArgs ?? "";
 
   return (
     <div className={cn("space-y-3 w-full min-w-0 max-w-full", className)}>
-      <CliInstallCommandBar
-        resolveCommand={(pm) =>
-          getAfnouiAddCommand(pm, category, variant, args)
-        }
-      />
+      {!hideInstallBar && (
+        <CliInstallCommandBar
+          resolveCommand={(pm) =>
+            getAfnouiAddCommand(pm, category, variant, args)
+          }
+        />
+      )}
 
       {/* CodePreview Component */}
       <CodePreview title={title} code={code} fullCode={fullCode} files={files}>
