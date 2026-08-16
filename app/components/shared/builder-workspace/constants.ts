@@ -6,17 +6,19 @@
  * would mean a change to one silently retiring the other's data.
  */
 
+/**
+ * Idle time before the "unsaved changes" caption is *verified*. It appears
+ * immediately on an edit; this delay only governs the serialize-and-compare
+ * that can take it back down again, because undoing to the saved state must
+ * stop reading as unsaved and a thousand-row table must not be stringified per
+ * keystroke to notice.
+ *
+ * Nothing is written on this timer. Saving is a button.
+ */
+export const WORKSPACE_DIRTY_DEBOUNCE_MS = 800;
+
 /** Namespace for every workspace key. */
 export const WORKSPACE_KEY_PREFIX = "afnoui:builder-workspace:";
-
-/**
- * Marks that this tab has already mounted a given builder. Written to
- * `sessionStorage`, so it dies with the tab — which is exactly the signal that
- * separates "you refreshed / came back tomorrow" from "you clicked to the docs
- * and back". The first deserves a prompt; the second deserves your work simply
- * being there.
- */
-export const WORKSPACE_SESSION_PREFIX = "afnoui:builder-session:";
 
 /**
  * Bump to retire every stored workspace at once. Do this whenever a builder's
@@ -24,9 +26,6 @@ export const WORKSPACE_SESSION_PREFIX = "afnoui:builder-session:";
  * type-checks produces a broken build, which is worse than losing it.
  */
 export const WORKSPACE_SCHEMA_VERSION = 1;
-
-/** Idle time before a write. Matches the draft system so autosave feels alike. */
-export const WORKSPACE_DEBOUNCE_MS = 800;
 
 /** How often relative timestamps ("saved 2m ago") recompute. */
 export const WORKSPACE_TICK_MS = 30_000;

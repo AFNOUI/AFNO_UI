@@ -105,13 +105,20 @@ export default function KanbanBuilder() {
     deps: [config, cards, rendererSources, selectedTemplateKey],
     snapshot: () => ({ config, cards, rendererSources, templateKey: selectedTemplateKey }),
     label: workspaceLabel,
+    // Picking a different template is starting over, so the saved build you
+    // had open is released rather than left open to a stray Update.
+    identity: selectedTemplateKey,
     validate: isKanbanDraft,
-    onRestore: (saved) => {
+    onRestore: (saved, source) => {
       setSelectedTemplateKey(saved.templateKey);
       reset(saved.config);
       setCards(saved.cards);
       setRendererSources(saved.rendererSources);
-      toast({ title: "Draft restored", description: "Picked up where you left off." });
+      // Reopening the last build is how the page loads now — only a click in
+      // the saved list is worth announcing.
+      if (source === "user") {
+        toast({ title: "Build opened", description: "Picked up where you left off." });
+      }
     },
   });
 

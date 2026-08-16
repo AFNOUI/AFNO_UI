@@ -6,10 +6,9 @@ import { cn } from "@/lib/utils";
 
 import { Separator } from "@/components/ui/separator";
 
-import { DraftSavedIndicator } from "@/components/shared/builder-draft";
 import {
   WorkspacePanel,
-  WorkspaceRestorePrompt,
+  WorkspaceSavedIndicator,
   type BuilderWorkspaceHeaderState,
 } from "@/components/shared/builder-workspace";
 
@@ -36,13 +35,14 @@ export interface BuilderHeaderProps {
 
 
   /**
-   * Saved builds. Pass `useBuilderWorkspace(...).header`; the header places both
-   * of its surfaces — the "Saved (N)" button in the toolbar and the restore
-   * strip below — so all four builders present saved work identically.
+   * Saved builds. Pass `useBuilderWorkspace(...).header`; the header places the
+   * "Saved (N)" button in the toolbar, so all four builders present saved work
+   * identically.
    *
-   * Autosave is reported here too — the "Saved 2m ago" caption beside the
-   * title comes from the same state, so a builder has one place that says
-   * whether the work is safe.
+   * Save state is reported here too — the "Unsaved changes" / "Saved 2m ago"
+   * caption beside the title comes from the same state, so a builder has one
+   * place that says whether the work is safe. Nothing autosaves, which is
+   * exactly why that caption is not decoration.
    */
   workspace?: BuilderWorkspaceHeaderState;
   /** Default name offered when saving the current build. */
@@ -90,9 +90,7 @@ export function BuilderHeader({
           meta={
             <>
               {meta}
-              {workspace ? (
-                <DraftSavedIndicator status={workspace.status} savedAt={workspace.savedAt} />
-              ) : null}
+              {workspace ? <WorkspaceSavedIndicator workspace={workspace} /> : null}
             </>
           }
         />
@@ -118,11 +116,6 @@ export function BuilderHeader({
           </BuilderToolbar>
         ) : null}
       </div>
-
-      {/* Full width, below the identity/toolbar row — a restore offer concerns
-          the whole build, so it should not have to compete with the toolbar for
-          horizontal space. Renders nothing when there is no draft to offer. */}
-      {workspace ? <WorkspaceRestorePrompt workspace={workspace} /> : null}
     </header>
   );
 }

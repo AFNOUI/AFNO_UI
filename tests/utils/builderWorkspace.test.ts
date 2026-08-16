@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
     deleteDoc,
     formatBytes,
-    markSessionVisited,
     migrateLegacyDraft,
     readDoc,
     readIndex,
@@ -132,28 +131,6 @@ describe("the index", () => {
             }),
         );
         expect(readIndex("table").map((doc) => doc.id)).toEqual(["good"]);
-    });
-});
-
-describe("session detection", () => {
-    // This bit is what separates "you came back tomorrow" (ask first) from
-    // "you clicked to the docs and back" (just restore it).
-    it("reads false on the first visit and true afterwards", () => {
-        expect(markSessionVisited("table")).toBe(false);
-        expect(markSessionVisited("table")).toBe(true);
-        expect(markSessionVisited("table")).toBe(true);
-    });
-
-    it("tracks each builder separately", () => {
-        expect(markSessionVisited("table")).toBe(false);
-        expect(markSessionVisited("kanban")).toBe(false);
-        expect(markSessionVisited("table")).toBe(true);
-    });
-
-    it("treats a cleared session (a new tab) as a first visit", () => {
-        markSessionVisited("table");
-        window.sessionStorage.clear();
-        expect(markSessionVisited("table")).toBe(false);
     });
 });
 

@@ -1359,8 +1359,11 @@ export default function FlowBuilder() {
     deps: [activeKey, tree, configPatch, layout],
     snapshot: () => ({ variant: activeKey, tree, configPatch, layout }),
     label: active.title,
+    // Switching variant is starting over, so the saved build you had open is
+    // released rather than left open to a stray Update.
+    identity: activeKey,
     validate: isTreeDraft,
-    onRestore: (saved) => {
+    onRestore: (saved, source) => {
       const known = saved.variant in treeTemplates;
 
       // Switching variant runs the reset effect above, which would clobber
@@ -1385,7 +1388,11 @@ export default function FlowBuilder() {
         setCanRedo(false);
       }
 
-      toast({ title: "Draft restored", description: "Picked up where you left off." });
+      // Reopening the last build is how the page loads now — only a click in
+      // the saved list is worth announcing.
+      if (source === "user") {
+        toast({ title: "Build opened", description: "Picked up where you left off." });
+      }
     },
   });
 

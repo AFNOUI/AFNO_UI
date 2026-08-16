@@ -1,25 +1,27 @@
 /**
- * Builder workspace — many saved builds per builder.
+ * Builder workspace — many saved builds per builder, written only on request.
  *
- * Layered like `builder-header/` and `builder-draft/`:
- *   controls/   — the saved-builds dialog and the restore strip
+ * Layered like `builder-header/`:
+ *   primitives/ — the save-state caption
+ *   controls/   — the saved-builds dialog, where saving actually happens
  *
  * There is no assembled component at the folder root on purpose: both surfaces
  * are placed by `<BuilderHeader />`, which keeps owning *where* builder chrome
  * lands.
  *
- * Relationship to `builder-draft/`: the draft system keeps one autosaved
- * snapshot per builder, which is enough to survive a refresh but means the
- * second thing you build overwrites the first. The workspace keeps a list, and
- * reuses the draft system's `formatSavedAgo` so both report time the same way.
+ * Nothing autosaves. `builder-draft/` — the system this replaced — debounced
+ * every edit to storage; what survives of it here is `formatSavedAgo`, so both
+ * report time the same way, and the legacy reader used once for migration.
  */
+
+// ── Primitives ────────────────────────────────────────────────────────────
+export {
+    WorkspaceSavedIndicator,
+    type WorkspaceSavedIndicatorProps,
+} from "./primitives/WorkspaceSavedIndicator";
 
 // ── Controls ──────────────────────────────────────────────────────────────
 export { WorkspacePanel, type WorkspacePanelProps } from "./controls/WorkspacePanel";
-export {
-    WorkspaceRestorePrompt,
-    type WorkspaceRestorePromptProps,
-} from "./controls/WorkspaceRestorePrompt";
 
 // ── Logic & contracts ─────────────────────────────────────────────────────
 export { useBuilderWorkspace } from "./hooks";
@@ -36,26 +38,24 @@ export {
     formatBytes,
     serializeDoc,
     storageAvailable,
-    markSessionVisited,
     migrateLegacyDraft,
 } from "./utils";
 export {
     WORKSPACE_KEY_PREFIX,
     WORKSPACE_MAX_DOCS,
     WORKSPACE_MAX_BYTES,
-    WORKSPACE_DEBOUNCE_MS,
+    WORKSPACE_DIRTY_DEBOUNCE_MS,
     WORKSPACE_SCHEMA_VERSION,
-    WORKSPACE_SESSION_PREFIX,
     WORKSPACE_UNTITLED,
 } from "./constants";
 export type {
     WorkspaceIndex,
-    WorkspaceOffer,
+    WorkspaceIdentity,
     WorkspaceDocMeta,
+    WorkspaceRestoreSource,
     BuilderWorkspaceId,
     BuilderWorkspaceApi,
     WorkspaceDocEnvelope,
-    BuilderWorkspaceStatus,
     BuilderWorkspaceHeaderState,
     UseBuilderWorkspaceOptions,
 } from "./types";

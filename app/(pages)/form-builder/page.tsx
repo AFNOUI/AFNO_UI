@@ -83,8 +83,11 @@ export default function FormBuilder() {
     deps: [formConfig, currentLayout, selectedTemplateKey],
     snapshot: () => ({ config: formConfig, layout: currentLayout, templateKey: selectedTemplateKey }),
     label: workspaceLabel,
+    // Picking a different template is starting over, so the saved build you
+    // had open is released rather than left open to a stray Update.
+    identity: selectedTemplateKey,
     validate: isFormDraft,
-    onRestore: (saved) => {
+    onRestore: (saved, source) => {
       setSelectedTemplateKey(saved.templateKey);
       setCurrentLayout(saved.layout);
       resetHistory(saved.config);
@@ -92,7 +95,11 @@ export default function FormBuilder() {
       // reset both cursors rather than leaving them pointing past the end.
       setSelectedFieldIndex(null);
       setSelectedSectionIndex(0);
-      toast({ title: "Draft restored", description: "Picked up where you left off." });
+      // Reopening the last build is how the page loads now — only a click in
+      // the saved list is worth announcing.
+      if (source === "user") {
+        toast({ title: "Build opened", description: "Picked up where you left off." });
+      }
     },
   });
 

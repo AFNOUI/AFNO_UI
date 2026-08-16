@@ -1,22 +1,28 @@
 /**
- * Contracts for the builder workspace — many saved documents per builder.
+ * Contracts for the builder workspace — many saved builds per builder, written
+ * only when the user asks.
  *
- * `builder-draft/` persists exactly one autosaved snapshot per builder: enough
- * to survive a refresh, but it means the second thing you build overwrites the
- * first. The workspace keeps a *list*: every build you save stays until you
- * delete it, the newest is offered back when you return, and the rest are one
- * click away.
+ * Nothing here autosaves. `update()` and `saveAs()` are the only calls that
+ * write a payload, which is what makes an unsaved build genuinely unsaved and
+ * a saved one genuinely stable.
  *
- * Same domain-blind seam as the draft system. This layer never learns what a
- * column, a card or a node is — each builder hands over a plain-JSON snapshot
- * and receives that same value back on restore.
+ * Domain-blind throughout: this layer never learns what a column, a card or a
+ * node is — each builder hands over a plain-JSON snapshot and receives that
+ * same value back when a build is opened.
  */
 
 /** Which builder a workspace belongs to. One index per id. */
 export type BuilderWorkspaceId = "form" | "table" | "kanban" | "tree";
 
-/** Autosave lifecycle, mirroring `BuilderDraftStatus`. */
-export type BuilderWorkspaceStatus = "idle" | "pending" | "saved" | "error";
+/**
+ * Which build a document *is* — a template key, a variant key, whatever the
+ * builder switches between. Opaque here: the workspace only ever compares two
+ * of them, and stays as domain-blind as the rest of this layer.
+ */
+export type WorkspaceIdentity = string | number | null | undefined;
+
+/** Why `onRestore` fired: the page reopening, or a click in the saved list. */
+export type WorkspaceRestoreSource = "mount" | "user";
 
 /**
  * What the index holds for each document. Deliberately payload-free: listing a
@@ -33,8 +39,17 @@ export interface WorkspaceDocMeta {
     /** Serialized size, so the panel can show it and the cap can be enforced. */
     bytes: number;
     /**
-     * True for the document autosave is currently writing to. Exactly one
-     * document is active; saving under a new name moves the flag.
+     * Which build this document holds, as the builder reported it at save
+     * time. Switching to a different one releases the document rather than
+     * leaving it open to be overwritten by a stray Update.
+     *
+     * `undefined` means "written before this was recorded" — those documents
+     * are adopted by the next save rather than orphaned.
+     */
+    identity?: string | null;
+    /**
+     * True for the document currently open. Exactly one is, and it is the one
+     * reopened on the next visit; saving under a new name moves the flag.
      */
     active?: boolean;
 }
@@ -52,20 +67,13 @@ export interface WorkspaceDocEnvelope<T> {
     value: T;
 }
 
-/** The document offered back when you return in a new session. */
-export interface WorkspaceOffer {
-    docId: string;
-    name: string;
-    savedAt: number;
-}
-
 export interface UseBuilderWorkspaceOptions<T> {
     /** Storage namespace. One per builder. */
     id: BuilderWorkspaceId;
     /**
      * Builds the snapshot to persist. Must be JSON-serializable. Called only
      * when `deps` change — the table builder's snapshot can hold 1,000 rows,
-     * and stringifying those per keystroke is the lag autosave should prevent.
+     * and rebuilding those per keystroke is the lag this seam prevents.
      */
     snapshot: () => T;
     /** What the snapshot is derived from. Same seam as `useBuilderInsights()`. */
@@ -75,8 +83,22 @@ export interface UseBuilderWorkspaceOptions<T> {
      * title, so a workspace reads "Sprint Board", not "Untitled 3".
      */
     label?: string;
-    /** Applies a restored snapshot. Only the page knows how to spread it back. */
-    onRestore: (value: T) => void;
+    /**
+     * Which build is on screen — normally the selected template or variant key.
+     * When it changes, the open document is released, because loading a
+     * different template is starting over rather than editing what you opened.
+     * Your work stays on screen; it just has to be saved somewhere explicitly.
+     */
+    identity?: WorkspaceIdentity;
+    /**
+     * Applies a restored snapshot. Only the page knows how to spread it back.
+     *
+     * `source` separates the two reasons this fires: `"mount"` is the builder
+     * reopening the build you were last in, which is the expected way a page
+     * loads and wants no announcement; `"user"` is a click in the saved list,
+     * which does.
+     */
+    onRestore: (value: T, source: WorkspaceRestoreSource) => void;
     /** Reject payloads written by an older build rather than restoring them. */
     validate?: (value: unknown) => value is T;
     disabled?: boolean;
@@ -88,15 +110,29 @@ export interface UseBuilderWorkspaceOptions<T> {
  * and buttons, and handing it a snapshot would invite it to inspect one.
  */
 export interface BuilderWorkspaceHeaderState {
-    status: BuilderWorkspaceStatus;
-    savedAt: number | null;
     docs: WorkspaceDocMeta[];
+    /** The build being edited, or `null` when the work belongs to no document. */
     activeDocId: string | null;
-    offer: WorkspaceOffer | null;
+    /** That build's name, so captions and confirms can say what they mean. */
+    activeName: string | null;
+    /** When the open build was last written. */
+    savedAt: number | null;
+    /**
+     * The build on screen no longer matches what is stored — the whole reason
+     * the header says "Unsaved changes" and opening another build asks first.
+     */
+    dirty: boolean;
+    /** The last save was refused (quota, or a payload past the size cap). */
+    error: boolean;
     /** Storage is unavailable (private mode, blocked third-party storage). */
     unavailable: boolean;
+    /** At `WORKSPACE_MAX_DOCS`; saving a new build needs a deletion first. */
+    atCapacity: boolean;
+    /** Open a saved build, replacing whatever is on screen. */
     restore: (docId: string) => void;
-    dismissOffer: () => void;
+    /** Write the current work into the open build. No-op when none is open. */
+    update: () => void;
+    /** Save the current work as a new build under `name`. */
     saveAs: (name: string) => void;
     rename: (docId: string, name: string) => void;
     remove: (docId: string) => void;

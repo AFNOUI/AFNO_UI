@@ -14,7 +14,6 @@ import {
     WORKSPACE_KEY_PREFIX,
     WORKSPACE_MAX_BYTES,
     WORKSPACE_SCHEMA_VERSION,
-    WORKSPACE_SESSION_PREFIX,
     WORKSPACE_UNTITLED,
 } from "./constants";
 import type {
@@ -41,38 +40,9 @@ function storage(): Storage | null {
     }
 }
 
-function session(): Storage | null {
-    if (typeof window === "undefined") return null;
-    try {
-        return window.sessionStorage;
-    } catch {
-        return null;
-    }
-}
-
 /** Is persistence available at all? Drives the panel's "not available" notice. */
 export function storageAvailable(): boolean {
     return storage() !== null;
-}
-
-/**
- * Has this tab already opened this builder?
- *
- * Returns the answer *and* records the visit, so the first mount in a tab reads
- * `false` and every later one reads `true`. That single bit is what lets a
- * same-tab return restore silently while a genuine new session still asks.
- */
-export function markSessionVisited(id: BuilderWorkspaceId): boolean {
-    const store = session();
-    if (!store) return false;
-    const key = `${WORKSPACE_SESSION_PREFIX}${id}`;
-    try {
-        const seen = store.getItem(key) !== null;
-        store.setItem(key, "1");
-        return seen;
-    } catch {
-        return false;
-    }
 }
 
 /** `crypto.randomUUID` where available, with a plain fallback. */
