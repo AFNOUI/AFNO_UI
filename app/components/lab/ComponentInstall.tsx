@@ -3,8 +3,7 @@
 import { cn } from "@/lib/utils";
 
 import CodePreview from "@/components/lab/CodePreview";
-import { getAfnouiAddCommand } from "@/components/shared/cliInstallCommands";
-import { CliInstallCommandBar } from "@/components/shared/CliInstallCommandBar";
+import { CliPlayground } from "@/components/shared/cli-playground";
 
 interface ComponentInstallProps {
   code: string;
@@ -15,7 +14,6 @@ interface ComponentInstallProps {
   /** Multi-file bundles pass their files instead of `fullCode` — see CodePreview. */
   files?: { name: string; code: string }[];
   className?: string;
-  installArgs?: string;
   /**
    * Drop the install bar and render only the preview. Set on pages that show
    * the CLI playground instead — two command surfaces on one page can disagree,
@@ -35,18 +33,16 @@ export function ComponentInstall({
   files,
   children,
   className,
-  installArgs,
   hideInstallBar,
 }: ComponentInstallProps) {
-  const args = installArgs ?? "";
+  const slug = `${category}/${variant}`;
 
   return (
     <div className={cn("space-y-3 w-full min-w-0 max-w-full", className)}>
       {!hideInstallBar && (
-        <CliInstallCommandBar
-          resolveCommand={(pm) =>
-            getAfnouiAddCommand(pm, category, variant, args)
-          }
+        <CliPlayground
+          idPrefix={`install-${slug}`.replace(/[^a-zA-Z0-9-]/g, "-")}
+          scope={{ commandId: "add", args: [slug], lockCommand: true, lockArgs: true }}
         />
       )}
 

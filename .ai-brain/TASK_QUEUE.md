@@ -8,30 +8,28 @@
 > - Move an item to **Done** in the same commit that finishes it, with the commit SHA.
 > - Never delete an item silently. If it's dropped, move it to **Dropped** with a reason.
 > - Items marked **ASK FIRST** must not be started without the user saying go.
+> - **When Now / Next / Blocked on the user are all empty** (nothing queued,
+>   nothing in flight), delete this whole file rather than leaving a Done-only
+>   husk around. Decided 2026-08-19 — the user wants this doc to exist only
+>   while there is open work, not as a permanent history log (that's what git
+>   history / `THE_DECISION_LOG.md` are for). Re-create it fresh next time
+>   something needs queuing.
 >
-> Last updated: 2026-08-09 (post Wave-9)
-
----
-
-## Now
-
-*(nothing in flight — pick the top item from Next)*
-
----
-
-## Next
-
-*(nothing — item 3 is fully done, see Done below)*
+> Last updated: 2026-08-19 (post charts/dnd/lab consistency pass)
 
 ---
 
 ## Blocked on the user
 
-### 4. CLI command playground — **DISCUSS THE DESIGN FIRST**
-A command playground in each builder + variant page. The user explicitly asked
-that the design be discussed before any implementation starts.
+### 5. Optional global error handling — **on hold 2026-08-19, user doesn't know what they want here yet**
+The task was authorized to start, but when asked what the UX should actually
+be (a reporter port with no UI? a default toast? per-variant flag vs
+project-wide `init` flag?), the user said to leave it — they don't know yet.
+Do not restart this without the user bringing it back up with an actual
+answer to "what should happen when a hook-boundary error fires." The shape
+below is still the agreed *architecture*; what's missing is the UX decision on
+top of it.
 
-### 5. Optional global error handling — **ASK BEFORE STARTING**
 Agreed shape (do not redesign from scratch):
 - A **third orthogonal axis**, wrapping at the **hook boundary**, so it composes
   with any transport combo. Without orthogonality this is
@@ -75,7 +73,53 @@ npm view afnoui version                    # vs afnoui-cli/package.json
 
 ---
 
-## Done (Wave-9 follow-ups)
+## Done (post Wave-9)
+
+### `ComponentInstall` now renders the interactive `CliPlayground`, not a static bar
+Closes the "charts/dnd/lab pages still use the old bar" gap from the
+2026-08-16 handoff. `ComponentInstall` (charts, DnD, all ~140 lab component
+demos) rendered `CliInstallCommandBar` — copy button + package-manager tabs,
+one fixed command string built by hand in `getAfnouiAddCommand`.
+
+Swapped its internals for a scoped `CliPlayground`
+(`{ commandId: "add", args: [`${category}/${variant}`], lockCommand: true,
+lockArgs: true }`) — the same scope shape every builder page already uses.
+Consumers changed nothing; `category`/`variant`/`hideInstallBar` props are
+identical. Now every one of those install bars gets the copy button, the
+package-manager tabs, `--dry-run`/`--force`/`--debug`, and the "Explain this
+command" disclosure for free.
+
+**Why this didn't need a transport picker or per-category filtering:** charts
+and DnD have no data-fetching layer, and the `add` command's `--axios` /
+`--tanstack-query` flags already declare `relevantWhen:
+argsIncludeTransportCapable(ctx.args)` in `commandSpecs.ts` — they self-hide
+for non-transport-capable slugs. Nothing extra to build.
+
+Dropped `ComponentInstall`'s `installArgs` string prop — its only caller
+(`FormsVariantsSwitcher`) passed it under `hideInstallBar`, so the resolved
+string was never rendered; `CliPlayground`'s scope takes typed
+`flags`/`args`, not a free-form string, so there was nothing to port forward.
+
+`LabPrereqBanner` (the `afnoui init` / `afnoui init --dnd` prerequisite
+banners) and the homepage hero were **not** touched — those show one fixed
+setup command, a different question from "install this specific variant,"
+the same reasoning as the `app/page.tsx` exception already in
+`commandSurfaces.test.ts`.
+
+Verified: lint 0 errors, 381/381 (incl. `commandSurfaces.test.ts`), `tsc
+--noEmit` clean, `verify:quick` green, `validate:variants` (358 variants,
+9 batches) green, `cd test && pnpm build` clean.
+
+### Bad slugs in CLI docs/examples — diagnosed, not yet fixed
+Confirmed this is **example-string drift, not a resolver bug** —
+`charts/bar/grouped.json` and `button/button-variants.json` both resolve
+correctly. The wrong strings (`charts/bar/charts-bar-grouped`,
+`button/variants`) are copy-paste examples in `program.ts`, `help.ts`,
+`add.ts` (CLI repo), `.ai-brain/CLI_REFERENCE.md`, and — the one live
+consequence — `app/lib/seo/content.ts:111`, which renders on the homepage
+(`app/page.tsx`) and would 404 for anyone who copies it. Still needs the
+nested CLI repo + a rebuild; ask before starting (touches the CLI's own
+docs/output, not just this repo).
 
 ### Variant galleries + multi-file gallery display (item 3b)
 `TransportPicker` also wired into all four galleries —
