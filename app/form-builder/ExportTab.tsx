@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Code2, Download, FileCode, Package, ArrowRight, Info, Zap, Clock, Database } from "lucide-react";
+import { Code2, Info, Zap, Clock, Database } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { FormConfig } from "@/forms/react-hook-form";
@@ -10,12 +10,11 @@ import { formStackInstall, ImplementationMode } from "@/registry/formRegistry";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { CodeBlock, InstallCommand } from "@/components/shared/CodeBlock";
+import { BuilderFilesPanel, BuilderInstallPanel, type ConfigStep } from "@/components/shared/builder-export";
+import { DEFAULT_TRANSPORT, transportNpmDependencies, type TransportChoice } from "@/lib/codegen/transport";
 import {
   generateAllFiles, generateInstallCommand,
   getRequiredComponents, getUsedFieldTypes, getHydratableFields, SchemaMode,
@@ -50,12 +49,24 @@ export function ExportTab({ formConfig }: ExportTabProps) {
   const [codeFileTab, setCodeFileTab] = useState<string>("formConfig.ts");
   const [schemaMode, setSchemaMode] = useState<SchemaMode>("compile-time");
   const [implementationMode, setImplementationMode] = useState<ImplementationMode>("config");
+  const [transport, setTransport] = useState<TransportChoice>(DEFAULT_TRANSPORT);
 
   const hasFields = formConfig.sections.some(s => s.fields.length > 0);
   // All fields can be hydrated — not just option-based ones
   const hydratableFields = useMemo(() => getHydratableFields(formConfig), [formConfig]);
 
-  const generatedFiles = generateAllFiles(formConfig, schemaMode, hydratedFields, formLibrary, implementationMode);
+  const generatedFiles = generateAllFiles(formConfig, schemaMode, {
+    hydratedFieldNames: hydratedFields,
+    library: formLibrary,
+    implementationMode,
+    transport,
+  });
+  // transport opt-ins ride on top of the stack's own deps (R-56)
+  const coreDeps = [
+    ...formStackInstall[formLibrary].npmDependencies,
+    ...transportNpmDependencies(transport),
+  ].sort();
+  const coreDepsCommand = `npm install ${coreDeps.join(" ")}`;
   const installCmd = generateInstallCommand(formConfig);
   const requiredComponents = getRequiredComponents(formConfig);
   const usedTypes = getUsedFieldTypes(formConfig);
@@ -88,15 +99,20 @@ export function ExportTab({ formConfig }: ExportTabProps) {
     );
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Library Selector */}
-      <Card className="border-border">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Form Library</CardTitle>
-          <CardDescription className="text-xs">Choose which form library to generate code for</CardDescription>
-        </CardHeader>
-        <CardContent>
+  // Form Library changes the printed command — `form init --stack tanstack`
+  // and the packages step both follow it — so it lives *inside* "Install &
+  // set up" as a config step, same rule as transport. Implementation Style,
+  // Schema Approach and Backend Hydration only change what's generated in
+  // the files below and never touch the command, so they stay as their own
+  // cards below the panel instead.
+  const configSteps: ConfigStep[] = [
+    {
+      id: "library",
+      icon: Code2,
+      title: "Form Library",
+      hint: "Choose which form library to generate code for.",
+      content: (
+        <div>
           <div className="flex flex-wrap gap-2">
             {(Object.keys(libraryMeta) as FormLibrary[]).map(lib => {
               const meta = libraryMeta[lib];
@@ -120,9 +136,46 @@ export function ExportTab({ formConfig }: ExportTabProps) {
           <p className="text-[10px] text-muted-foreground mt-2">
             {libraryMeta[formLibrary].desc}
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      ),
+    },
+  ];
 
+  return (
+    <div className="space-y-6">
+      <BuilderInstallPanel
+        subject="form"
+        configSteps={configSteps}
+        transport={{
+          value: transport,
+          onChange: setTransport,
+          idPrefix: "form-transport",
+        }}
+        idPrefix="form-builder"
+        generatedCount={generatedFiles.filter((f) => !f.isFixed).length}
+        sharedCount={generatedFiles.filter((f) => f.isFixed).length}
+        runtimeCommand={coreDepsCommand}
+        extraCommands={[{ label: "UI components (Radix UI)", command: installCmd }]}
+        notes={[
+          `Uses ${usedTypes.length} field type${usedTypes.length === 1 ? "" : "s"} and ${requiredComponents.fieldComponents.length} field component${requiredComponents.fieldComponents.length === 1 ? "" : "s"}: ${requiredComponents.fieldComponents.map((c) => c.file).join(", ")}.`,
+          "Copy the field components from the tabs below into `@/components/forms/fields/`.",
+          schemaMode === "runtime"
+            ? "Schema is built automatically at runtime from formConfig.ts."
+            : "Schema is pre-compiled in formSchema.ts for type safety.",
+          ...(hydratedFields.length > 0
+            ? [`${hydratedFields.length} field(s) are hydrated from the backend via applyHydration().`]
+            : []),
+        ]}
+        cliScope={{
+          commandId: "form-init",
+          lockCommand: true,
+          lockArgs: true,
+          flags: { stack: formLibrary },
+        }}
+      />
+
+      {/* Source-code-only choices live below "Install & set up" — they never
+          change the command above, only the generated files further down. */}
       <Card className="border-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm">Implementation Style</CardTitle>
@@ -235,105 +288,12 @@ export function ExportTab({ formConfig }: ExportTabProps) {
         </Card>
       )}
 
-      {/* Quick Setup Summary */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="py-4 px-5">
-          <div className="flex items-start gap-3">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Download className="h-4 w-4 text-primary" />
-            </div>
-            <div className="flex-1 space-y-3">
-              <div>
-                <h3 className="font-semibold text-sm">Export Your Form ({libraryMeta[formLibrary].label})</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Uses <strong>{usedTypes.length}</strong> field type{usedTypes.length !== 1 ? 's' : ''} and <strong>{requiredComponents.fieldComponents.length}</strong> field component{requiredComponents.fieldComponents.length !== 1 ? 's' : ''}.
-                  {schemaMode === 'runtime' ? " Schema is built automatically at runtime." : " Schema is pre-compiled in formSchema.ts."}
-                  {hydratedFields.length > 0 ? ` ${hydratedFields.length} field(s) hydrated from backend via applyHydration().` : ""}
-                </p>
-              </div>
-              <div className="grid sm:grid-cols-3 gap-2">
-                <InstallCommand command={libraryMeta[formLibrary].deps} label="Step 1: Install core deps" />
-                <InstallCommand command={installCmd} label="Step 2: Install UI components (Radix UI)" />
-                <InstallCommand command={`# Required field components:\n# ${requiredComponents.fieldComponents.map(c => c.file).join(', ')}`} label="Step 3: Copy field components" />
-              </div>
-              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                <Info className="h-3 w-3" />
-                <span>Field components are provided below — copy them into <code className="bg-muted px-1 rounded">@/components/forms/fields/</code></span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Code Files */}
-      <Card className="border-border">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <FileCode className="h-5 w-5 text-primary" />
-            <CardTitle>Generated Files</CardTitle>
-          </div>
-          <CardDescription>All files needed to run this form in your project</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={codeFileTab} onValueChange={setCodeFileTab}>
-            <ScrollArea className="w-full">
-              <TabsList className="h-auto flex-wrap gap-1 bg-muted/50 p-1">
-                {generatedFiles.map((file) => (
-                  <TabsTrigger key={file.name} value={file.name} className="text-xs gap-1.5 data-[state=active]:bg-background">
-                    {file.isFixed ? <Package className="h-3 w-3" /> : <FileCode className="h-3 w-3" />}
-                    {file.name}
-                    {file.isFixed && <Badge variant="outline" className="text-[8px] h-3.5 px-1 ml-0.5">fixed</Badge>}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </ScrollArea>
-
-            <div className="mt-4 rounded-lg border border-border bg-muted/20 p-4 space-y-3">
-              <div className="flex items-start gap-2">
-                <Package className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                <div className="space-y-1.5 min-w-0">
-                  <p className="text-sm font-medium">Install fixed form files with the CLI (optional)</p>
-                  <div className="text-xs text-muted-foreground leading-relaxed">
-                    AfnoUI can write the reusable form stack (types, <code className="bg-muted px-1 rounded">ReactHookForm</code>, hooks, shared utilities) into your repo in one step.
-                    Run one of the commands below at your project root instead of copying every tab marked{" "}
-                    <Badge variant="outline" className="text-[8px] h-3.5 px-1 align-middle">fixed</Badge>.
-                    For <strong>this form only</strong>, copy the tabs labeled <strong>Generated per form</strong> (e.g. config and page) and any <strong>field</strong> components you still need — you do not have to duplicate the fixed files if the CLI already installed them.
-                  </div>
-                </div>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-2">
-                <InstallCommand command="npx afnoui form init" label="npm (npx)" />
-                <InstallCommand command="pnpm dlx afnoui form init" label="pnpm" />
-                <InstallCommand command="yarn dlx afnoui form init" label="yarn" />
-                <InstallCommand command="bunx afnoui form init" label="bun" />
-              </div>
-            </div>
-
-            {generatedFiles.map((file) => (
-              <TabsContent key={`${file.path}:${file.name}`} value={file.name} className="mt-4">
-                <div className="space-y-3">
-                  <div className="flex items-start gap-2">
-                    {file.isFixed ? (
-                      <Badge variant="secondary" className="text-[10px] shrink-0">
-                        <Package className="h-3 w-3 mr-1" /> Reusable — install once
-                      </Badge>
-                    ) : (
-                      <Badge className="text-[10px] shrink-0 bg-primary/10 text-primary border-0">
-                        <FileCode className="h-3 w-3 mr-1" /> Generated per form
-                      </Badge>
-                    )}
-                    <p className="text-xs text-muted-foreground">{file.description}</p>
-                  </div>
-                  <div className="text-xs text-muted-foreground font-mono flex items-center gap-1">
-                    <ArrowRight className="h-3 w-3" /> {file.path}
-                  </div>
-                  <CodeBlock code={file.code} filename={file.path} />
-                </div>
-              </TabsContent>
-            ))}
-          </Tabs>
-        </CardContent>
-      </Card>
+      <BuilderFilesPanel
+        subject="form"
+        files={generatedFiles}
+        activeFile={codeFileTab}
+        onActiveFileChange={setCodeFileTab}
+      />
 
       {/* Quick Start Guide */}
       <Card className="border-border">

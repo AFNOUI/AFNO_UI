@@ -36,7 +36,7 @@ import {
   BuilderInsightsPanel,
   useBuilderInsights,
 } from "@/components/shared/builder-insights";
-import { useBuilderDraft } from "@/components/shared/builder-draft";
+import { useBuilderWorkspace } from "@/components/shared/builder-workspace";
 import { BuilderPreviewFrame } from "@/components/shared/builder-preview";
 import {
   BuilderDiffPanel,
@@ -95,18 +95,31 @@ export default function DataTableBuilder() {
     toast({ title: "Reset to template", description: `${entries.length} settings restored.` });
   }, [setConfig]);
 
-  const draft = useBuilderDraft<TableDraft>({
+  // Names a new saved build after the template it started from, so a
+  // workspace reads "Sprint Board" rather than "Untitled 3".
+  const workspaceLabel = selectedTemplateKey
+    ? tableTemplates[selectedTemplateKey]?.title
+    : undefined;
+
+  const workspace = useBuilderWorkspace<TableDraft>({
     id: "table",
     deps: [config, sampleData, rendererSources, selectedTemplateKey],
     snapshot: () => ({ config, sampleData, rendererSources, templateKey: selectedTemplateKey }),
-    label: selectedTemplateKey ? tableTemplates[selectedTemplateKey]?.title : undefined,
+    label: workspaceLabel,
+    // Picking a different template is starting over, so the saved build you
+    // had open is released rather than left open to a stray Update.
+    identity: selectedTemplateKey,
     validate: isTableDraft,
-    onRestore: (saved) => {
+    onRestore: (saved, source) => {
       setSelectedTemplateKey(saved.templateKey);
       resetHistory(saved.config);
       setSampleData(saved.sampleData);
       setRendererSources(saved.rendererSources);
-      toast({ title: "Draft restored", description: "Picked up where you left off." });
+      // Reopening the last build is how the page loads now — only a click in
+      // the saved list is worth announcing.
+      if (source === "user") {
+        toast({ title: "Build opened", description: "Picked up where you left off." });
+      }
     },
   });
 
@@ -253,7 +266,8 @@ export default function DataTableBuilder() {
               />
             }
             history={history}
-            draft={draft.header}
+            workspace={workspace.header}
+            workspaceName={workspaceLabel}
           />
 
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "builder" | "preview" | "code" | "guide")} className="space-y-4">

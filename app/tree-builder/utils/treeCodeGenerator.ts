@@ -5,6 +5,12 @@
  */
 import type { TreeCanvasConfig, TreeNode } from "@/trees/types";
 import type { TreeRendererSources } from "@/tree-builder/data/treeBuilderTemplates";
+import { DEFAULT_TRANSPORT, type TransportChoice } from "@/lib/codegen/transport";
+import {
+  emitTreeConstants,
+  emitServicesFile,
+  emitHooksFile,
+} from "./codegen/dataFiles";
 
 export interface GeneratedTreeFile {
   name: string;
@@ -130,40 +136,6 @@ ${entries}
   return parts.join("\n");
 }
 
-function emitHandlersFile(componentName: string): string {
-  return `import { useCallback } from "react";
-import type {
-  TreeNodeAddEvent,
-  TreeNodeUpdateEvent,
-  TreeNodeRemoveEvent,
-  TreeNodeMoveEvent,
-} from "@/components/tree/types";
-
-/**
- * One handler per mutation — wire each to your backend.
- */
-export function use${componentName}Handlers() {
-  const handleNodeAdd = useCallback((event: TreeNodeAddEvent) => {
-    console.log("[tree] node added", event);
-  }, []);
-
-  const handleNodeUpdate = useCallback((event: TreeNodeUpdateEvent) => {
-    console.log("[tree] node updated", event);
-  }, []);
-
-  const handleNodeRemove = useCallback((event: TreeNodeRemoveEvent) => {
-    console.log("[tree] node removed", event);
-  }, []);
-
-  const handleNodeMove = useCallback((event: TreeNodeMoveEvent) => {
-    console.log("[tree] node moved", event);
-  }, []);
-
-  return { handleNodeAdd, handleNodeUpdate, handleNodeRemove, handleNodeMove };
-}
-`;
-}
-
 function emitComponentFile(componentName: string, hasToolbar: boolean): string {
   if (!hasToolbar) {
     return `import { useState } from "react";
@@ -171,7 +143,7 @@ import { TreeCanvas } from "@/components/tree/TreeCanvas";
 import type { TreeNode } from "@/components/tree/types";
 import { initialTree } from "./data";
 import { treeConfig } from "./config";
-import { use${componentName}Handlers } from "./handlers";
+import { use${componentName}Handlers } from "./hooks";
 
 /**
  * ${componentName} — a fully-typed, self-contained tree.
@@ -179,7 +151,7 @@ import { use${componentName}Handlers } from "./handlers";
  * Drop into any page:
  *   <${componentName} />
  *
- * To plug into a backend, edit the handlers in \`./handlers.ts\`.
+ * To plug into a backend, put requests in \`./services.ts\` and glue them in \`./hooks.ts\`.
  */
 export function ${componentName}() {
   const [tree, setTree] = useState<TreeNode>(initialTree);
@@ -206,7 +178,7 @@ import type { TreeNode } from "@/components/tree/types";
 import { GraphToolbar, useGraphFilter, defaultGraphFilter } from "@/components/graph";
 import { initialTree } from "./data";
 import { treeConfig } from "./config";
-import { use${componentName}Handlers } from "./handlers";
+import { use${componentName}Handlers } from "./hooks";
 
 /**
  * ${componentName} — a fully-typed, self-contained tree with a search / sort /
@@ -215,7 +187,7 @@ import { use${componentName}Handlers } from "./handlers";
  * Drop into any page:
  *   <${componentName} />
  *
- * To plug into a backend, edit the handlers in \`./handlers.ts\`. To remove the
+ * To plug into a backend, put requests in \`./services.ts\` and glue them in \`./hooks.ts\`. To remove the
  * toolbar, delete the \`GraphToolbar\`/\`useGraphFilter\` wiring below and set
  * \`showToolbar: false\` in \`./config.ts\`.
  */
@@ -255,6 +227,8 @@ export function generateTreeFiles(
   tree: TreeNode,
   rendererSources?: TreeRendererSources,
   componentNameOverride?: string,
+  /** Which HTTP client / query strategy to generate against (R-56). */
+  transport: TransportChoice = DEFAULT_TRANSPORT,
 ): GeneratedTreeFile[] {
   const componentName = componentNameOverride
     ? pascalize(componentNameOverride)
@@ -299,12 +273,31 @@ export function generateTreeFiles(
       code: emitDataFile(tree, perNodeIds),
     },
     {
-      name: "handlers.ts",
-      path: `src/components/tree-instances/handlers.ts`,
-      description: "Separate handlers fired on add / update / remove operations.",
+      name: "hooks.ts",
+      path: `src/components/tree-instances/hooks.ts`,
+      description:
+        "React glue — one handler per mutation, and the only caller of services.ts.",
       isFixed: false,
       language: "ts",
-      code: emitHandlersFile(componentName),
+      code: emitHooksFile(componentName, transport),
+    },
+    {
+      name: "services.ts",
+      path: `src/components/tree-instances/services.ts`,
+      description:
+        "Network layer — the only file that talks to your backend. Swap the stubs for real requests.",
+      isFixed: false,
+      language: "ts",
+      code: emitServicesFile(transport),
+    },
+    {
+      name: "constants.ts",
+      path: `src/components/tree-instances/constants.ts`,
+      description:
+        "Tunables for this tree — API base, node path, headers, cache windows (R-57).",
+      isFixed: false,
+      language: "ts",
+      code: emitTreeConstants(config.title || "MyTree", transport),
     },
   ];
 

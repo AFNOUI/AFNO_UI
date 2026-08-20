@@ -1,3 +1,5 @@
+import { buildFieldVariantFiles } from "../fieldVariantBundle";
+
 export const data = {
   title: "Async Field Combobox",
   description: "Async combobox with searchable remote options.",
@@ -7,9 +9,17 @@ export const data = {
   defaultApi: "Posts",
 };
 
-export const code = `import axios from "axios";
+export const componentName = "AsyncFieldCombobox";
+
+/**
+ * Renders only — it reaches the network through `./hooks`, never `./services`
+ * (AI_AGENT_RULES § R-55). Emitted unchanged for every transport combination,
+ * which is what lets the registry ship per-flag overrides instead of duplicate
+ * bundles (§ R-56).
+ */
+export const componentCode = `"use client";
+
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -18,47 +28,8 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
-export interface Option {
-  label: string;
-  value: string;
-}
-
-export interface AsyncApiPreset {
-  url: string;
-  name: string;
-  labelKey: string;
-  valueKey: string;
-  dataPath: string;
-}
-
-export const ASYNC_API_PRESETS: AsyncApiPreset[] = [
-  { name: "Users", url: "https://jsonplaceholder.typicode.com/users", labelKey: "name", valueKey: "id", dataPath: "" },
-  { name: "Posts", url: "https://jsonplaceholder.typicode.com/posts", labelKey: "title", valueKey: "id", dataPath: "" },
-  { name: "Todos", url: "https://jsonplaceholder.typicode.com/todos", labelKey: "title", valueKey: "id", dataPath: "" },
-];
-
-export function getPresetByName(name: string | undefined): AsyncApiPreset {
-  if (!name) return ASYNC_API_PRESETS[0];
-  return ASYNC_API_PRESETS.find((p) => p.name === name) ?? ASYNC_API_PRESETS[0];
-}
-
-export function useAsyncOptions(url: string, labelKey: string, valueKey: string, dataPath: string) {
-  return useQuery({
-    queryKey: ["async-preview", url, labelKey, valueKey, dataPath],
-    queryFn: async () => {
-      const { data } = await axios.get(url);
-      const items = dataPath ? dataPath.split(".").reduce((o: unknown, k: string) => (o as Record<string, unknown>)?.[k], data as unknown) : data;
-      return (Array.isArray(items) ? items : []).map((item: unknown) => {
-        const rec = item as Record<string, unknown>;
-        return {
-          label: String(rec[labelKey] || ""),
-          value: String(rec[valueKey] || ""),
-        };
-      }) as Option[];
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-}
+import { ASYNC_API_PRESETS, getPresetByName } from "./constants";
+import { useAsyncOptions } from "./hooks";
 
 export function AsyncFieldCombobox() {
   const [open, setOpen] = useState(false);
@@ -118,3 +89,17 @@ export function AsyncFieldCombobox() {
   );
 }
 `;
+
+/**
+ * The installed bundle, one entry per file, for the gallery's Component tab.
+ * Shown as real per-file tabs — concatenating them hid the
+ * component -> hooks -> services layering the bundle exists to teach.
+ */
+export const files = buildFieldVariantFiles("async-field", "async-field-combobox", {
+    data,
+    componentName,
+    componentCode,
+  }).map((f) => ({
+  name: f.path.split("/").pop() as string,
+  code: f.content,
+}));

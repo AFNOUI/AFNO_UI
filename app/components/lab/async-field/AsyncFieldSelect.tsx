@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
-import { code, data } from "@/registry/async-field/async-field-select";
+import { files, data } from "@/registry/async-field/async-field-select";
 
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -43,7 +43,7 @@ export function AsyncFieldSelect() {
       variant="async-field-select"
       title={data.title}
       code={snippet}
-      fullCode={code}
+      files={files}
     >
       <div className="space-y-3">
         <div className="flex flex-wrap gap-2">

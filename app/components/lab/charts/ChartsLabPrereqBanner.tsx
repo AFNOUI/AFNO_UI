@@ -1,7 +1,6 @@
 "use client";
 
 import { LabPrereqBanner } from "@/components/shared/LabPrereqBanner";
-import { getAfnouiInitCommand } from "@/components/shared/cliInstallCommands";
 
 /**
  * Shown at the top of every `/charts/*` lab page: explains when `afnoui init` is
@@ -11,7 +10,7 @@ export function ChartsLabPrereqBanner() {
   return (
     <LabPrereqBanner
       title="CLI setup for chart code on this page"
-      resolveCommand={getAfnouiInitCommand}
+      idPrefix="charts-prereq-init"
       description={
         <>
           <p dir="auto">

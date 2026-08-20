@@ -1,3 +1,4 @@
+import { DEFAULT_TRANSPORT, type TransportChoice } from "@/lib/codegen/transport";
 import type { FormConfig } from "@/forms/types/types";
 
 import { generateAllFiles } from "./generateAllFiles";
@@ -56,12 +57,19 @@ export function buildFormVariantStackFiles(
   config: FormConfig,
   library: FormLibrary,
   variantSlug: string,
+  /** Which HTTP client / query strategy to generate against (R-56). */
+  transport: TransportChoice = DEFAULT_TRANSPORT,
 ): FormVariantStackFile[] {
   const pageComponent = variantPageComponentName(variantSlug);
   const pageFileName = `${pageComponent}.tsx`;
   const rootPrefix = `forms/${variantSlug}`;
 
-  const bundle = generateAllFiles(config, "compile-time", [], library, "config", "alias").filter((f) => !f.isFixed);
+  const bundle = generateAllFiles(config, "compile-time", {
+    library,
+    implementationMode: "config",
+    importStyle: "alias",
+    transport,
+  }).filter((f) => !f.isFixed);
 
   return bundle.map((file) => {
     let diskRel = file.path.replace(/^forms\//, "");

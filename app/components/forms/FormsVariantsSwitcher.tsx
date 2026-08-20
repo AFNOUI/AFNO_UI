@@ -25,6 +25,7 @@ import { ReactHookForm } from "@/forms/react-hook-form";
 import { FormsSubmissionPreview } from "./FormsSubmissionPreview";
 import type { ImplementationMode } from "@/registry/formRegistry";
 import { FormsCodePanel, type FormsCodePanelLibrary } from "./FormsCodePanel";
+import { DEFAULT_TRANSPORT, type TransportChoice } from "@/lib/codegen/transport";
 import { generatePageComponentCode } from "@/form-builder/utils/formCodeGenerator";
 
 import { formConfig as loginConfig, exportedSchemaCode as loginExportedSchemaCode, schema as loginSchema, data as loginMeta } from "@/registry/forms/forms-login";
@@ -72,6 +73,7 @@ const libraryLabels: Record<FormsCodePanelLibrary, string> = {
 export function FormsVariantsSwitcher() {
   const [activeKey, setActiveKey] = useState("job");
   const [library, setLibrary] = useState<FormsCodePanelLibrary>("rhf");
+  const [transport, setTransport] = useState<TransportChoice>(DEFAULT_TRANSPORT);
   const [implementationMode, setImplementationMode] = useState<ImplementationMode>("config");
   const [submissions, setSubmissions] = useState<Record<string, SubmissionEntry>>({});
 
@@ -221,10 +223,8 @@ export function FormsVariantsSwitcher() {
         fullCode={pageSource}
         variant={active.variant}
         title={active.meta.title}
+        hideInstallBar
         key={`${active.key}-${library}`}
-        installArgs={
-          library === "rhf" ? undefined : library === "tanstack" ? " --stack tanstack" : " --stack action"
-        }
       >
         <div className="space-y-6 w-full max-w-full min-w-0">
           <div className="max-w-3xl">{renderLiveForm()}</div>
@@ -245,12 +245,17 @@ export function FormsVariantsSwitcher() {
               <div className="h-px flex-1 bg-border" />
             </div>
 
+
+
             <FormsCodePanel
               code={pageSource}
               library={library}
               config={active.formConfig}
               implementationMode={implementationMode}
               exportedSchemaCode={active.exportedSchemaCode}
+              transport={transport}
+              onTransportChange={setTransport}
+              variant={active.variant}
             />
           </div>
         </div>

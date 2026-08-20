@@ -1,5 +1,10 @@
-import type { AxiosRequestConfig } from "axios";
-
+/**
+ * Pure `{value}` / `/:id` / `/:value` substitution for dependent API configs.
+ *
+ * ENGINE-OWNED and transport-free — the request that these helpers feed is
+ * assembled in `../transport/requestBuilder.ts` and *sent* by the variant's
+ * `services.ts`. No HTTP client may be imported here (AI_AGENT_RULES § R-53).
+ */
 import type { AsyncApiConfig } from "../types/types";
 
 /** Placeholder replaced with the serialized watched field value (dependent API). */
@@ -48,14 +53,14 @@ function deepSubstitute(value: unknown, replacement: string): unknown {
   return out;
 }
 
-function hasMeaningfulPayload(payload: unknown): boolean {
+export function hasMeaningfulPayload(payload: unknown): boolean {
   if (payload === undefined || payload === null) return false;
   if (typeof payload !== "object") return true;
   if (Array.isArray(payload)) return payload.length > 0;
   return Object.keys(payload as Record<string, unknown>).length > 0;
 }
 
-/** Flatten a JSON-like object into axios query params (primitives only; objects JSON-stringified). */
+/** Flatten a JSON-like object into query params (primitives only; objects JSON-stringified). */
 export function flattenPayloadToQueryParams(
   payload: Record<string, unknown>
 ): Record<string, string | number | boolean> {
@@ -73,7 +78,7 @@ export function flattenPayloadToQueryParams(
 
 /**
  * Applies `{value}` substitution from `_watchValue` to url, headers, and payload.
- * Call before building the axios config; keep `_watchValue` on the returned object for query keys.
+ * Call before building the request; keep `_watchValue` on the returned object for query keys.
  */
 export function resolveAsyncApiConfigForFetch(api: AsyncApiConfig): AsyncApiConfig {
   const replacement = serializeWatchValue(api._watchValue);
@@ -95,69 +100,4 @@ export function resolveAsyncApiConfigForFetch(api: AsyncApiConfig): AsyncApiConf
       : (deepSubstitute(api.payload, replacement) as Record<string, unknown> | unknown[]);
 
   return { ...api, url, headers, payload: payload as AsyncApiConfig["payload"] };
-}
-
-const BODY_METHODS = new Set(["POST", "PUT", "PATCH"]);
-
-function methodUsesJsonBody(
-  method: AsyncApiConfig["method"],
-  originalPayload: AsyncApiConfig["payload"],
-): boolean {
-  if (BODY_METHODS.has(method)) return true;
-  if (method === "DELETE" && hasMeaningfulPayload(originalPayload)) return true;
-  return false;
-}
-
-/**
- * Builds axios config for async/infinite option fetches.
- * - GET (and DELETE without a meaningful payload): `payload` is merged into **query params** with `dynamicParams`.
- * - POST / PUT / PATCH, and DELETE with a payload: JSON body = substituted `payload` + `dynamicParams`.
- *   If there was no user payload, injects `{ value: <watch> }` so POST dependent calls work without an explicit body.
- */
-export function buildAxiosConfigForAsyncApi(
-  apiConfig: AsyncApiConfig,
-  dynamicParams: Record<string, string | number> = {},
-): AxiosRequestConfig {
-  const resolved = resolveAsyncApiConfigForFetch(apiConfig);
-  const method = resolved.method;
-  const repl = serializeWatchValue(apiConfig._watchValue);
-  const hadUserPayload = hasMeaningfulPayload(apiConfig.payload);
-
-  if (methodUsesJsonBody(method, apiConfig.payload)) {
-    if (Array.isArray(resolved.payload)) {
-      return {
-        url: resolved.url,
-        method,
-        headers: resolved.headers,
-        data: resolved.payload,
-      };
-    }
-    let body: Record<string, unknown> =
-      resolved.payload && typeof resolved.payload === "object" && !Array.isArray(resolved.payload)
-        ? { ...(resolved.payload as Record<string, unknown>) }
-        : {};
-    if (!hadUserPayload && repl) {
-      body = { value: repl, ...body };
-    }
-    return {
-      url: resolved.url,
-      method,
-      headers: resolved.headers,
-      data: { ...body, ...dynamicParams },
-    };
-  }
-
-  const queryFromPayload =
-    resolved.payload &&
-    typeof resolved.payload === "object" &&
-    !Array.isArray(resolved.payload)
-      ? flattenPayloadToQueryParams(resolved.payload as Record<string, unknown>)
-      : {};
-
-  return {
-    url: resolved.url,
-    method,
-    headers: resolved.headers,
-    params: { ...queryFromPayload, ...dynamicParams },
-  };
 }

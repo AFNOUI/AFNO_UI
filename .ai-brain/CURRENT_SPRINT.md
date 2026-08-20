@@ -29,7 +29,7 @@
 | **Dashboard** (reference) | `app/(pages)/dashboard/page.tsx` | Stats cards + table + activity feed + quick actions. Demonstrates layouts. |
 | **i18n** | `app/lib/i18n.ts` | 7 locales: en, es, fr, de, zh, ja, ar. RTL handling for ar via `RtlLayoutProvide`. |
 | **Theme system** | `app/contexts/ThemeContext.tsx`, `app/data/*` | Light / dark + uploadable presets. Live CSS-variable mutation. |
-| **`afnoui` CLI** | `afnoui-cli/` | 9 commands: `add`, `init`, `form init`, `update`, `list`, `diagnose`, `doctor`, `clean`, `help`. **105/105** unit tests. Sandbox-helper paths (`utils/cellJsRunner.ts`, `utils/rowDialogTemplate.ts`) routed via a dedicated `resolveUtilsHelperPath` to a sibling `<libBase>/utils/` folder so they don't collide with the `utils` alias (which points at `lib/utils.ts`) and don't pollute `components/tables/` for kanban-only installs. |
+| **`afnoui` CLI** | `afnoui-cli/` | 10 commands: `add`, `init`, `form init`, `update`, `transport`, `list`, `diagnose`, `doctor`, `clean`, `help`. **130/130** unit tests. Sandbox-helper paths (`utils/cellJsRunner.ts`, `utils/rowDialogTemplate.ts`) routed via a dedicated `resolveUtilsHelperPath` to a sibling `<libBase>/utils/` folder so they don't collide with the `utils` alias (which points at `lib/utils.ts`) and don't pollute `components/tables/` for kanban-only installs. |
 | **Registry pipeline** | `scripts/build-*-registry.ts`, `scripts/verify-*-registry-sync.mjs` | Forms / tables / kanban / components / variants. `build-variants-registry.ts` now emits charts + tables + kanban variants from in-app template tables (single source of truth). Verifier scripts gate CI. |
 
 ### 1.2 Partially baked (works but has known sharp edges)
@@ -63,7 +63,60 @@
 
 > These are immediate-priority moves in the order they should be tackled. Each step has explicit start/finish criteria.
 
-### Step 0 — DONE in Wave 8 (recorded for traceability — 2026-05-15)
+### Step 0 — IN PROGRESS in Wave 9 — engine/variant transport seam (2026-08-08)
+
+Wave-9 removes user-changeable code from the engine layer. Rules R-53 → R-56 and
+DECISION 1.17 are the canonical write-up; this is the status board.
+
+**Landed (gate green: verify:quick exit 0, 287/287 tests, lint 0 errors):**
+- `app/forms/transport/*` (5 files) — `OptionsRequest` / `OptionsTransport` /
+  `OptionsQueryAdapter` contracts, pure request builder, fetch default,
+  React-state adapter reproducing react-query's 5-min/10-min cache, provider.
+- `app/forms/hooks/useInfiniteOptions.ts` rewritten transport-agnostic. Names and
+  return shapes unchanged, so all **20** field files that import it changed by
+  zero lines.
+- The **4** `action-forms` Combobox fields that called `axios` inline now use the
+  shared hooks like their rhf/tanstack twins (~90 duplicated lines each removed).
+- `app/tables/transport/*` (4 files) + `useRowApiActions.ts` — row-action fetch,
+  toast policy and rollback now injected. `tableServices.ts` deleted (pure half →
+  `transport/requestBuilder.ts`, fetch half → `transport/defaultTransport.ts`).
+- Renames: `app/tables/useRowApiActions.hook.ts` → `useRowApiActions.ts`
+  (`.hook.ts` suffix used nowhere else); `app/trees/types.d.ts` → `types.ts`
+  (a `.d.ts` was being used as a source module).
+- `grep -rn "axios\|@tanstack/react-query" app/forms app/tables app/kanban app/trees`
+  now prints nothing.
+- Rules propagated to `AI_AGENT_RULES.md` (§ 4b), `THE_DECISION_LOG.md` § 1.17,
+  `ARCHITECTURE_OVERVIEW.md` § 7b, `STRUCTURAL_MAP.md`, `AGENTS.md`, `CLAUDE.md`,
+  `.cursor/rules/afnoui.mdc`, `.github/copilot-instructions.md`.
+
+**Landed — variant layering (R-55), all four families:**
+- **tables** — `generateHook` split into `generateDataFiles`, emitting
+  `services.ts` (every `fetch`) + `useTableData.ts` (state, optimistic updates,
+  rollback). `useRowInteractions.ts` kept as a second hook file by design.
+- **kanban** — `useCardChange.ts` → `hooks.ts`, new `services.ts`.
+- **tree** — `handlers.ts` → `hooks.ts`, new `services.ts`.
+- **forms** — added the missing hook layer (`hooks.ts` / `useFormSubmit`); the
+  page called `formService.submitForm` directly before. `formService.ts` →
+  `services.ts`, and it now uses `fetch` instead of axios, so shipped form
+  variants dropped `axios` from `npmDependencies` (`["axios","zod"]` → `["zod"]`).
+- Generated hooks deliberately do **not** catch: errors propagate so projects
+  apply their own error class / status mapping. Fire-and-forget handlers are
+  `async` + `await` rather than `void`-ed, so nothing floats.
+- Conformance: 383 generated components scanned, **0** import `./services`;
+  77 `services.ts` emitted (21 tables + 16 kanban + 30 tree + 10 forms).
+- One source of truth confirmed: the variant galleries, the builder Export tabs
+  and the registry JSONs all call the same generator functions.
+
+**Remaining in Wave 9:**
+1. CLI-gated axios / TanStack generation (R-56) + per-variant `npmDependencies`,
+   with all tunables in a generated `constants.ts` (R-57).
+2. Optional global error-handling layer — a third *orthogonal* axis wrapping at
+   the hook boundary, default OFF (see task list; ask before starting).
+3. Full R-52 gate incl. `validate:variants` and `cd test && pnpm build`
+   (needs a dev server on :3000; `verify:quick` is green at exit 0).
+4. CLI command playground in each builder + variant page (deferred, own step).
+
+### Step 0a — DONE in Wave 8 (recorded for traceability — 2026-05-15)
 
 Wave-8 was a **CLI verifiability + cross-tool AI-rule** pass. Goal: every `afnoui` command discoverable, documented, and verifiable; every AI tool (Cursor, Codex, Claude Code, Copilot, Antigravity) reading from one canonical rule set.
 
@@ -201,8 +254,8 @@ pnpm run verify:quick
   └─ verify:theme-export-sync   ← scripts/verify-theme-export-sync.mjs
   └─ pnpm exec tsc --noEmit     (workspace, excludes afnoui-cli)
   └─ pnpm lint                   (workspace ESLint v9 flat config — floor: 0 errors)
-  └─ pnpm test                   (workspace Vitest — 213 tests)
-  └─ pnpm run build:cli          (afnoui-cli tsc, also runs its 105 tests)
+  └─ pnpm test                   (workspace Vitest — 314 tests, incl. tests/components/* via happy-dom + @testing-library/react)
+  └─ pnpm run build:cli          (afnoui-cli tsc; `cd afnoui-cli && npm test` runs its 130 tests)
 
 # Variant pipeline (must rerun after touching template files or shared engine sources)
 pnpm run build:tables-registry && pnpm run build:kanban-registry && pnpm run build:dnd-registry && pnpm run build:variants-registry

@@ -1,3 +1,4 @@
+import { DEFAULT_TRANSPORT, type TransportChoice } from "@/lib/codegen/transport";
 import { FormConfig } from "@/forms/types/types";
 
 import { applyImportStyle, ImportStyle } from "./importAliases";
@@ -12,9 +13,11 @@ export function generatePageComponentCode(
   implementationMode: ImplementationMode = 'config',
   importStyle: ImportStyle = "relative",
   outputPath = "pages/MyFormPage.tsx",
+  /** Which HTTP client / query strategy this bundle was generated against (R-56). */
+  transport: TransportChoice = DEFAULT_TRANSPORT,
 ): string {
   if (implementationMode === 'static') {
-    const staticPage = generateStaticPageCode(config, library);
+    const staticPage = generateStaticPageCode(config, library, transport);
     return applyImportStyle(staticPage, outputPath, importStyle);
   }
 
@@ -32,7 +35,14 @@ export function generatePageComponentCode(
     `import { useMemo } from "react";`,
     `import { ${FormComponent} } from "${importPath}";`,
     `import { BackendErrorResponse } from "@/hooks/useBackendErrors";`,
-    `import { formService } from "./formService";`,
+    `import { useFormSubmit } from "./hooks";`,
+    ...(transport.http === "axios" || transport.query === "tanstack"
+      ? [
+          `import { FormTransportProvider } from "@/components/forms/transport/context";`,
+          ...(transport.http === "axios" ? [`import { optionsTransport } from "./services";`] : []),
+          ...(transport.query === "tanstack" ? [`import { optionsQueryAdapter } from "./hooks";`] : []),
+        ]
+      : []),
     `import { formConfig } from "./formConfig";`,
   ];
 
@@ -48,9 +58,21 @@ export function generatePageComponentCode(
     imports.push(`import { applyHydration } from "@/components/forms/hydration";`);
   }
 
+  // Mount the engine's transport port when a non-default client was chosen, so
+  // async / infinite option loading uses the same client as the rest of the
+  // bundle. Without this the engine keeps its fetch + React-state default (R-56).
+  const providerProps = [
+    transport.http === "axios" ? "transport={optionsTransport}" : "",
+    transport.query === "tanstack" ? "adapter={optionsQueryAdapter}" : "",
+  ].filter(Boolean).join(" ");
+  const openProvider = providerProps ? `<FormTransportProvider ${providerProps}>\n      ` : "";
+  const closeProvider = providerProps ? `\n      </FormTransportProvider>` : "";
+
   const submitHandler = `
+  const { submit } = useFormSubmit();
+
   const handleSubmit = async (data: Record<string, unknown>) => {
-    await formService.submitForm(data);
+    await submit(data);
   };`;
 
   let body: string;
@@ -75,7 +97,7 @@ ${submitHandler}
 
   return (
     <div className="container mx-auto py-8 max-w-3xl">
-      <${FormComponent} config={config} schema={schema} onSubmit={handleSubmit} />
+      ${openProvider}<${FormComponent} config={config} schema={schema} onSubmit={handleSubmit} />${closeProvider}
     </div>
   );
 }`;
@@ -89,7 +111,7 @@ ${submitHandler}
 
   return (
     <div className="container mx-auto py-8 max-w-3xl">
-      <${FormComponent} config={formConfig} schema={schema} onSubmit={handleSubmit} />
+      ${openProvider}<${FormComponent} config={formConfig} schema={schema} onSubmit={handleSubmit} />${closeProvider}
     </div>
   );
 }`;

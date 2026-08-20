@@ -18,7 +18,7 @@ const TREE_JSON = path.join(ROOT, "public", "registry", "tree.json");
 const TARGET_TO_SOURCE = {
   "components/tree/TreeCanvas.tsx": "app/trees/TreeCanvas.tsx",
   "components/tree/treeLayout.ts": "app/trees/treeLayout.ts",
-  "components/tree/types.ts": "app/trees/types.d.ts",
+  "components/tree/types.ts": "app/trees/types.ts",
   "components/graph/index.ts": "app/components/ui/graph/index.ts",
   "components/graph/types.ts": "app/components/ui/graph/types.ts",
   "components/graph/GraphToolbar.tsx": "app/components/ui/graph/GraphToolbar.tsx",

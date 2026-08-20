@@ -3,10 +3,9 @@
 import {
   Info,
   Code2,
-  Package,
-  FileCode,
+  Zap,
+  Clock,
   Sparkles,
-  ArrowRight,
   ChevronDown,
 } from "lucide-react";
 import { useState, useMemo } from "react";
@@ -24,16 +23,19 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
-import { CodeBlock, InstallCommand } from "@/components/shared/CodeBlock";
+import { BuilderFilesPanel, BuilderInstallPanel } from "@/components/shared/builder-export";
+import { DEFAULT_TRANSPORT, type TransportChoice } from "@/lib/codegen/transport";
 
 import {
   generateAllFiles,
+  generatesDataLayer,
   getDependencyReport,
+  type DataMode,
 } from "@/table-builder/utils/tableCodeGenerator";
 import { TablePreview } from "@/table-builder/TablePreview";
 import { tableTemplates } from "@/table-builder/data/tableBuilderTemplates";
@@ -54,23 +56,56 @@ const complexityColors: Record<string, string> = {
     "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
 };
 
+/**
+ * Mirrors `TABLE_VARIANT_SLUG_OVERRIDES` + `tableTemplateKeyToVariantSlug` in
+ * scripts/build-variants-registry.ts. The template record key is camelCase
+ * (`simpleList`); the registry slug is kebab-case (`tables-simple-list`).
+ * Printing the raw key here produced an install command that 404s.
+ */
+const tableVariantSlugOverrides: Partial<Record<string, string>> = {
+  serverSideCRM: "tables-server-crm",
+};
+
+function toKebabCase(value: string): string {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .replace(/[\s_]+/g, "-")
+    .toLowerCase();
+}
+
+function tableTemplateKeyToRegistryVariant(key: string): string {
+  return tableVariantSlugOverrides[key] ?? `tables-${toKebabCase(key)}`;
+}
+
 function CodePanel({ variantKey }: { variantKey: string }) {
   const t = tableTemplates[variantKey];
-  const dataMode =
-    t.config.sortMode === "api" || t.config.paginationMode === "api"
-      ? "api"
-      : "static";
+  // Seeded from the template, but user-selectable — same Data Source choice
+  // as the table builder. `key={variantKey}` on the call site remounts this
+  // (and resets the choice) whenever the active variant changes.
+  const [dataMode, setDataMode] = useState<DataMode>(
+    t.config.sortMode === "api" || t.config.paginationMode === "api" ? "api" : "static",
+  );
+  const [transport, setTransport] = useState<TransportChoice>(DEFAULT_TRANSPORT);
 
-  // Plain derivation — the React Compiler memoizes this; a manual useMemo here
-  // could not be preserved (the body reads `t.rendererSources`, not in the deps).
-  const generatedFiles = generateAllFiles(
-    t.config,
-    dataMode,
-    t.rendererSources,
-  ).map((f) => ({ ...f, isFixed: false }));
+  // Picking "API / Server-side" is meant to be the one switch that matters —
+  // force sort to source from the API rather than requiring a separate trip
+  // to Builder tab → Settings → Data Source first (same reasoning as
+  // `TableExportTab`).
+  const effectiveConfig = useMemo(
+    () =>
+      dataMode === "api" && t.config.sortMode !== "api"
+        ? { ...t.config, sortMode: "api" as const }
+        : t.config,
+    [t.config, dataMode],
+  );
+
+  const generatedFiles = generateAllFiles(effectiveConfig, dataMode, {
+    rendererSources: t.rendererSources,
+    transport,
+  }).map((f) => ({ ...f, isFixed: false }));
   const sharedFiles = [
     ...SHARED_TABLE_FILES,
-    ...getOptionalEngineFiles(t.config),
+    ...getOptionalEngineFiles(effectiveConfig),
   ].map((f) => ({
     code: f.code,
     name: f.name,
@@ -81,116 +116,88 @@ function CodePanel({ variantKey }: { variantKey: string }) {
   }));
   const allFiles = [...generatedFiles, ...sharedFiles];
 
-  const depReport = useMemo(() => getDependencyReport(t.config), [t.config]);
+  const hasDataLayer = generatesDataLayer(effectiveConfig, dataMode);
+  const effectiveTransport = hasDataLayer ? transport : DEFAULT_TRANSPORT;
+  const depReport = useMemo(
+    () => getDependencyReport(effectiveConfig, effectiveTransport),
+    [effectiveConfig, effectiveTransport],
+  );
   const [activeFile, setActiveFile] = useState<string>(allFiles[0]?.name ?? "");
   const current = allFiles.find((f) => f.name === activeFile) ?? allFiles[0];
 
   return (
     <div className="space-y-4">
-      {/* Install summary */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="py-4 px-5 space-y-3">
-          <div className="flex items-start gap-3">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Package className="h-4 w-4 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-sm">
-                Required Dependencies & Files
-              </h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Install packages and copy{" "}
-                <span className="font-semibold">{allFiles.length} files</span>{" "}
-                to get this table running.
-              </p>
-            </div>
-          </div>
-          <div className="grid sm:grid-cols-2 gap-2">
-            <InstallCommand
-              command={depReport.npmInstall}
-              label="Runtime deps"
-            />
-            <InstallCommand
-              command={depReport.npmInstallDev}
-              label="Dev deps"
-            />
-          </div>
-          {depReport.notes.length > 0 && (
-            <ul className="text-[11px] text-muted-foreground list-disc ps-4 space-y-0.5">
-              {depReport.notes.map((n) => (
-                <li key={n}>{n}</li>
-              ))}
-            </ul>
-          )}
-          <div className="flex items-center gap-3 text-[11px] text-muted-foreground pt-1">
-            <span className="inline-flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />{" "}
-              Variant-specific (regenerated per table)
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />{" "}
-              Shared (copy once)
-            </span>
-          </div>
+
+      <BuilderInstallPanel
+        // Static variants generate no services.ts / useTableData.ts, so
+        // transport would change neither the command nor a generated file —
+        // omit the slot rather than show a control that no-ops.
+        transport={
+          hasDataLayer
+            ? { value: transport, onChange: setTransport, idPrefix: `tables-${variantKey}-transport` }
+            : undefined
+        }
+        subject="table"
+        idPrefix={`tables-${variantKey}-cli`}
+        generatedCount={allFiles.filter((f) => !f.isFixed).length}
+        sharedCount={allFiles.filter((f) => f.isFixed).length}
+        runtimeCommand={depReport.npmInstall}
+        devCommand={depReport.npmInstallDev}
+        notes={depReport.notes}
+        cliScope={{
+          commandId: "add",
+          lockCommand: true,
+          lockArgs: true,
+          args: [`tables/${tableTemplateKeyToRegistryVariant(variantKey)}`],
+          flags: {
+            axios: effectiveTransport.http === "axios",
+            tanstackQuery: effectiveTransport.query === "tanstack",
+          },
+        }}
+      />
+
+      {/* Data Source only changes what's generated below — `add` already
+          carries axios/tanstack-query as flags (above), but the static/API
+          choice itself isn't a flag on any command, so it lives next to the
+          file browser it affects instead of inside the install card. */}
+      <Card className="border-border">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Data Source</CardTitle>
+          <CardDescription className="text-xs">
+            Choose how data is loaded — only the matching helpers are generated.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RadioGroup value={dataMode} onValueChange={(v) => setDataMode(v as DataMode)} className="grid sm:grid-cols-2 gap-3">
+            <Label htmlFor={`tables-${variantKey}-dm-static`} className="flex items-start gap-3 p-3 rounded-lg border border-border cursor-pointer hover:bg-muted/30 transition-colors [&:has([data-state=checked])]:border-primary [&:has([data-state=checked])]:bg-primary/5">
+              <RadioGroupItem value="static" id={`tables-${variantKey}-dm-static`} className="mt-0.5" />
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Zap className="h-3.5 w-3.5 text-primary" /><span className="text-sm font-semibold">Static Data</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">Pass <code className="bg-muted px-1 rounded">Row[]</code> as a prop. Sort/filter/paginate happens client-side.</p>
+              </div>
+            </Label>
+            <Label htmlFor={`tables-${variantKey}-dm-api`} className="flex items-start gap-3 p-3 rounded-lg border border-border cursor-pointer hover:bg-muted/30 transition-colors [&:has([data-state=checked])]:border-primary [&:has([data-state=checked])]:bg-primary/5">
+              <RadioGroupItem value="api" id={`tables-${variantKey}-dm-api`} className="mt-0.5" />
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Clock className="h-3.5 w-3.5 text-primary" /><span className="text-sm font-semibold">API / Server-side</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">Generates <code className="bg-muted px-1 rounded">useTableData</code> with refetch + feature-aware mutators.</p>
+              </div>
+            </Label>
+          </RadioGroup>
         </CardContent>
       </Card>
 
-      {/* File tabs (mirrors form-builder ExportTab look) */}
-      <Tabs value={current.name} onValueChange={setActiveFile}>
-        <ScrollArea className="w-full">
-          <TabsList className="h-auto flex-wrap gap-1 bg-muted/50 p-1">
-            {allFiles.map((file) => (
-              <TabsTrigger
-                key={file.name}
-                value={file.name}
-                className="text-xs gap-1.5 data-[state=active]:bg-background"
-              >
-                <span
-                  className={cn(
-                    "h-1.5 w-1.5 rounded-full",
-                    file.isFixed ? "bg-muted-foreground" : "bg-primary",
-                  )}
-                />
-                {file.isFixed ? (
-                  <Package className="h-3 w-3" />
-                ) : (
-                  <FileCode className="h-3 w-3" />
-                )}
-                {file.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </ScrollArea>
+      <BuilderFilesPanel
+        subject="table"
+        files={allFiles}
+        activeFile={current.name}
+        onActiveFileChange={setActiveFile}
+      />
 
-        {allFiles.map((file) => (
-          <TabsContent key={file.name} value={file.name} className="mt-4">
-            <div className="space-y-3">
-              <div className="flex items-start gap-2 flex-wrap">
-                {file.isFixed ? (
-                  <Badge variant="secondary" className="text-[10px] shrink-0">
-                    <Package className="h-3 w-3 mr-1" /> Shared engine
-                  </Badge>
-                ) : (
-                  <Badge className="text-[10px] shrink-0 bg-primary/10 text-primary border-0">
-                    <FileCode className="h-3 w-3 mr-1" /> Variant-specific
-                  </Badge>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  {file.description}
-                </p>
-              </div>
-              <div className="text-xs text-muted-foreground font-mono flex items-center gap-1">
-                <ArrowRight className="h-3 w-3" /> {file.path}
-              </div>
-              <CodeBlock
-                code={file.code}
-                language={file.language}
-                filename={file.path}
-              />
-            </div>
-          </TabsContent>
-        ))}
-      </Tabs>
     </div>
   );
 }
@@ -353,7 +360,7 @@ export default function DataTableVariants() {
               </span>
               <div className="h-px flex-1 bg-border" />
             </div>
-            <CodePanel variantKey={activeKey} />
+            <CodePanel key={activeKey} variantKey={activeKey} />
           </div>
         </div>
       </div>

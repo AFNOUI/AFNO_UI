@@ -268,6 +268,179 @@ the two.
 
 ---
 
+## 4b. Engine / variant layering rules (Wave-9)
+
+> These four rules exist because the engine layer had leaked user-changeable
+> code. A project that wanted axios instead of `fetch`, or its own toast, had to
+> edit an afnoui-managed file — which `afnoui add --force` then overwrote.
+> DECISION 1.17 has the full write-up.
+
+### R-53 — No transport library in the engine layer
+No file that ships as an **engine/shared** file may import `axios`,
+`@tanstack/react-query`, or any other HTTP / data-fetching library. This is a
+hard gate, not a preference: a default install must pull in **zero** transport
+dependencies.
+
+Applies to every engine source: `app/forms/**`, `app/tables/**`, `app/kanban/**`,
+`app/trees/**`, `app/components/ui/dnd/**`, `app/components/ui/charts/**`,
+`app/utils/{cellJsRunner,rowDialogTemplate}.ts`, and anything listed in a build
+script's `*_SHARED_SOURCES` / `buildShared()`.
+
+Check before committing:
+```
+grep -rn "from \"axios\"\|@tanstack/react-query" app/forms app/tables app/kanban app/trees
+# must print nothing
+```
+
+### R-54 — Split by purity, not by file
+When a file mixes "can never change" with "every project wants to own this",
+**do not move the whole file**. Split it along the purity line:
+
+| Stays in the ENGINE (pure, deterministic) | Moves to the VARIANT (policy) |
+|---|---|
+| Token grammar / interpolation (`:id`, `{{value}}`, `{value}`) | Which HTTP client sends the request |
+| Building a request **descriptor** | Headers, auth, interceptors, retries |
+| Response→option mapping driven by config | Caching strategy / query keys |
+| Loading + pagination state machines | Toasts, error copy, rollback policy |
+
+The seam is an **injected port**: the engine describes, a context supplies the
+implementation, and the default implementation is the zero-dependency one
+(`fetch` + React state). Reference implementations:
+
+- forms — `app/forms/transport/{types,requestBuilder,defaultTransport,localStateAdapter,context}.ts(x)`
+- tables — `app/tables/transport/{types,requestBuilder,defaultTransport,context}.ts(x)`
+
+An adapter object whose members are **hooks** (e.g. `OptionsQueryAdapter`) MUST
+be a module-level constant — never rebuilt in a component body, or it violates
+the rules of hooks on re-render.
+
+### R-55 — `component → hooks.ts → services.ts` in every variant
+Every variant bundle layers its logic in exactly one direction:
+
+```
+<Variant>.tsx     ← renders. Never imports services.ts.
+   ↓
+hooks.ts          ← React state, optimistic updates, rollback. The ONLY caller of services.
+   ↓
+services.ts       ← transport. The only file that talks to the network.
+```
+
+- A **component importing `services.ts` directly is a rule violation**, even for
+  a one-line submit handler.
+- `services.ts` is emitted for **every** variant in tables / kanban / tree /
+  forms / async-field / infinite-field — including variants with no backend
+  yet, where the service body is a documented TODO stub. Uniform shape now
+  beats restructuring later.
+- `async-field` / `infinite-field` are bundles too, not single files: they ship
+  `ui-variants/<family>/<slug>/{<Component>.tsx,hooks.ts,services.ts,constants.ts}`
+  built by `app/registry/fieldVariantBundle.ts` (DECISION 1.18). A snippet
+  module there exports `data` + `componentName` + `componentCode`, never a
+  hand-written full-file `code` string.
+- The hook layer is `hooks.ts` by default. A family with genuinely separate
+  concerns may use descriptive `use*.ts` files instead (tables ships
+  `useTableData.ts` + `useRowInteractions.ts`) — but the one-direction rule and
+  the "only the hook layer calls services" rule still hold.
+- API calls for **kanban, tree, dnd and charts** live in variant files only.
+  Their engines are transport-free today; keep them that way.
+
+### R-56 — axios / TanStack Query are CLI-gated opt-ins
+The generated default is always **`fetch` + local React state**, so a plain
+install has no transport dependency.
+
+The axios and TanStack Query code paths still exist and are still generated —
+they are *selected*, not written from scratch:
+
+- **default (no flags)** → `services.ts` uses `fetch`, the hook uses React state,
+  `npmDependencies` gains nothing.
+- **`--axios`** → `services.ts` emits the axios transport; `axios` is added to
+  the variant's `npmDependencies` and installed by the CLI.
+- **`--tanstack-query`** → the hook emits the react-query adapter (and
+  `constants.ts` gains the cache windows); `@tanstack/react-query` is installed.
+- **both flags** → both of the above.
+
+> **Flag naming trap:** it is `--tanstack-query`, NOT `--tanstack`. `--tanstack`
+> was already taken years earlier as the shortcut for `--stack tanstack`
+> (TanStack **Form**) on forms variants. Reusing it would silently change which
+> form stack a user gets.
+
+**The two axes are orthogonal, and the generated code must keep them that way.**
+Do not write four templates. Collapse each axis to a single seam so the two
+choices compose:
+
+- `services.ts` funnels every call through one small `request()` helper, so the
+  ~12 lines inside it are the *only* difference between fetch and axios — every
+  service function is byte-identical across both.
+- the TanStack hook shims `setData` / `setTotal` onto the query cache, so every
+  mutator and row-action handler is byte-identical across both strategies.
+
+The registry therefore ships **overrides, not bundles**: a variant's `transport`
+block carries only the files each flag actually changes (`axios` → `services.ts`;
+`tanstack` → hook + `constants.ts`). There is no combined key — passing both
+flags applies both override sets.
+
+This only stays cheap while the **hook's name, arguments and return shape are
+identical** across the local-state and react-query implementations — that is
+what keeps the component file byte-identical across all four combos and out of
+every override set. Check it the blunt way after changing a generator:
+
+```
+# install a variant four ways; the component must hash the same every time
+shasum <installed>/<Component>.tsx
+```
+
+If the component starts differing per combo, the override payload silently
+triples. Treat that as a regression, not a new baseline.
+
+Mark every such block with a `TODO(cli-gated)` comment naming the flag that
+selects it, so it is obvious the code is inert until the CLI installs it. The
+engine must remain agnostic: it never branches on which option was chosen.
+
+### R-57 — Generated tunables live in the variant's `constants.ts`
+No magic numbers or inline endpoint strings in generated `hooks.ts` /
+`services.ts`. Every knob a user will realistically want to change goes in one
+`constants.ts` beside them, and both files import from it:
+
+| Knob | Applies to |
+|---|---|
+| `STALE_TIME_MS`, `GC_TIME_MS` | TanStack Query combos |
+| `API_BASE`, `BASE_HEADERS` | every combo |
+| `PAGE_SIZE`, `DEBOUNCE_MS` | paginated / searchable variants |
+| endpoint paths | every combo |
+
+The point is a single obvious place to configure a variant, so re-tuning a
+cache window or swapping a base URL never means reading generated logic.
+
+### R-58 — A CLI change is not done until the playground knows about it
+The site ships an interactive CLI reference at
+`app/components/shared/cli-playground/`. It is a *model* of the CLI, so it can
+lie — and a reference that lies is worse than no reference, because people copy
+what it prints.
+
+**Whenever you add, rename, remove or re-scope a command, subcommand, flag or
+flag value in `afnoui-cli/src/cli/**`, update the playground in the same
+commit:**
+
+| What changed in the CLI | What to update |
+|---|---|
+| New command / subcommand | a `CliCommandSpec` in `commandSpecs.ts` (with `tagline`, `whenToUse`, `whatItDoes`) **and** an entry in `FILE_TO_COMMAND_IDS` in `scripts/verify-cli-playground-flags.ts` |
+| New flag | a `CliFlagSpec` on that command — or, if it is another spelling of an existing axis, an `aliasFlags` entry on that axis |
+| New global flag (`program.ts`) | `GLOBAL_FLAGS`, plus each command's `globalFlags` list where it is meaningful |
+| Flag now only applies in some cases | that flag's `relevantWhen` / `inertWhen` predicate |
+| A command's effects changed (where files land, what it installs) | `whatItDoes`, and `catalog.ts`'s category routing if the destination moved |
+| New variant category in the registry | `EXPLICIT_CATEGORIES` in `catalog.ts` — otherwise it falls back to the primitive-demo routing, which is silently wrong |
+
+`pnpm run verify:cli-playground` (part of `verify` and `verify:quick`) fails the
+build when the flag sets disagree, in either direction. It cannot check
+*semantics* — a wrong `whatItDoes` or a wrong `relevantWhen` passes — so read
+the flag's real behaviour, do not paraphrase its `--help` string.
+
+Slugs offered anywhere in the playground must come from the registry indexes,
+never a hand-written list. The static command cards this replaced shipped
+`charts/bar/charts-bar-grouped` and `button/variants`, neither of which exists;
+both 404'd for anyone who copied them. See DECISION 1.19.
+
+---
+
 ## 5. Test / verify rules
 
 ### R-50 — Snapshots are the contract
@@ -337,6 +510,8 @@ installed, `pnpm build` in `test/` cleanly emits all static pages.
 | Rename / move a consumer-visible directory | build script `targetPath` + verifier `TARGET_TO_SOURCE` + CLI probe (if any) + tip text + `.ai-brain/` updates + DECISION entry + Wave-N sprint entry |
 | Fix a build error inside a snippet template literal | the snippet TSX in `app/registry/` or `app/components/lab/.../variants/` + `pnpm run build:variants-registry` (or `build:registry`) + rerun `validate:variants` + `cd test && pnpm build` |
 | Add a new CLI subcommand | `afnoui-cli/src/cli/commands/<cmd>.ts` + `program.ts` register call + tests + `STRUCTURAL_MAP.md` § 5 update |
+| Add anything that makes a network call | variant `services.ts` ONLY (R-55) — never an engine file, never a component, never `hooks.ts` itself |
+| Want axios / react-query in generated code | the CLI-gated branch in the variant generator (R-56) + per-variant `npmDependencies` — never an engine import (R-53) |
 
 If your touch matrix is empty, your change is likely a no-op or a documentation tweak.
 Add the doc.

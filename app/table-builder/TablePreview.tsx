@@ -76,6 +76,7 @@ import {
 import {
   useTablePreview,
   aggregate as aggregateValues,
+  NUMERIC_COLUMN_TYPES,
 } from "@/table-builder/hooks/useTablePreview";
 import {
   TableColumnConfig,
@@ -99,8 +100,8 @@ import {
 // ───── Expandable row content ─────
 // Layout switch lives in `src/components/tables/defaultExpandedRowRenderer.tsx`
 // so user-supplied `renderExpandedRow` can compose with the built-in layouts.
+import { useRowApiActions } from "@/tables/useRowApiActions";
 import { DefaultRowDialogBody } from "@/tables/defaultRowDialog";
-import { useRowApiActions } from "@/tables/useRowApiActions.hook";
 import { DefaultPaginationBar } from "@/tables/defaultPaginationBar";
 import { DefaultExpandedRow } from "@/tables/defaultExpandedRowRenderer";
 
@@ -968,9 +969,11 @@ export function TablePreview({
   const effectivePageSize = pageSize;
 
   // ─── Row-action API wiring ───
-  // All the optimistic-update / fetch / rollback / toast logic lives in the
-  // `useRowApiActions` hook (so this component stays presentational) and the
-  // raw network calls live in `tableServices.ts`.
+  // All the optimistic-update / rollback / notification logic lives in the
+  // `useRowApiActions` hook (so this component stays presentational). Requests
+  // are described by `transport/requestBuilder` and sent by whatever transport
+  // is in context — `fetch` by default, overridable from a variant's
+  // `services.ts`. See AI_AGENT_RULES § R-53.
   const { wrappedCellUpdate, getRowActionButtons } = useRowApiActions({
     config,
     rows,
@@ -1159,6 +1162,7 @@ export function TablePreview({
                   <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
                     placeholder="Search…"
+                    title="Plain text matches as before. Numeric columns also accept >80, <80, =80, !=80. Any column accepts /regex/ (e.g. /^a/i)."
                     className="ps-8 h-8 text-xs w-44"
                     value={search}
                     onChange={(e) => {
@@ -1406,7 +1410,7 @@ export function TablePreview({
                           ? {
                               ...sticky,
                               zIndex: 3,
-                              background: "hsl(var(--muted) / 0.4)",
+                              background: "hsl(var(--background))",
                             }
                           : undefined;
                         return (
@@ -1457,24 +1461,67 @@ export function TablePreview({
                           // render placeholders; don't repeat content (checkbox should not show again)
                           <TableHead key={`fp-${i}`} className="w-9" />
                         ))}
-                        {visibleCols.map((col) => (
-                          <TableHead key={col.id} className="py-1.5 px-2">
-                            {col.filterable ? (
-                              <Input
-                                value={columnFilters[col.key] || ""}
-                                onChange={(e) => {
-                                  setColumnFilters((p) => ({
-                                    ...p,
-                                    [col.key]: e.target.value,
-                                  }));
-                                  setPage(0);
-                                }}
-                                placeholder="Filter…"
-                                className="h-7 text-[11px]"
-                              />
-                            ) : null}
-                          </TableHead>
-                        ))}
+                        {visibleCols.map((col) => {
+                          const width = columnWidths[col.id] || col.width;
+                          const startCols = config.enablePinnedColumns
+                            ? visibleCols.filter((c) => c.pinned === "start")
+                            : [];
+                          const endCols = config.enablePinnedColumns
+                            ? visibleCols.filter((c) => c.pinned === "end")
+                            : [];
+                          const startOffsets = computePinOffsets(startCols, columnWidths);
+                          const endOffsets = computePinOffsets([...endCols].reverse(), columnWidths);
+                          const pinIdx =
+                            col.pinned === "start"
+                              ? startCols.findIndex((c) => c.id === col.id)
+                              : col.pinned === "end"
+                                ? endCols.findIndex((c) => c.id === col.id)
+                                : -1;
+                          const pinOffset =
+                            col.pinned === "start" && pinIdx >= 0
+                              ? startOffsets[pinIdx]
+                              : col.pinned === "end" && pinIdx >= 0
+                                ? endOffsets[endCols.length - 1 - pinIdx]
+                                : undefined;
+                          const sticky = config.enablePinnedColumns
+                            ? pinStyle(
+                                col.pinned ?? null,
+                                pinOffset,
+                                config.direction,
+                                col.pinned === "start" && pinIdx === startCols.length - 1,
+                                col.pinned === "end" && pinIdx === 0,
+                              )
+                            : undefined;
+                          const widthStyle = width
+                            ? { width: `${width}px`, minWidth: `${width}px` }
+                            : undefined;
+                          const filterSticky = sticky
+                            ? { ...sticky, background: "hsl(var(--background))" }
+                            : undefined;
+                          return (
+                            <TableHead key={col.id} style={{ ...widthStyle, ...filterSticky }} className="py-1.5 px-2">
+                              {col.filterable ? (
+                                <Input
+                                  value={columnFilters[col.key] || ""}
+                                  onChange={(e) => {
+                                    setColumnFilters((p) => ({
+                                      ...p,
+                                      [col.key]: e.target.value,
+                                    }));
+                                    setPage(0);
+                                  }}
+                                  placeholder="Filter…"
+                                  title={
+                                    NUMERIC_COLUMN_TYPES.has(col.type)
+                                      ? "Plain text matches as before. Also accepts >80, <80, =80, !=80, or /regex/."
+                                      : "Plain text matches as before. Also accepts /regex/ (e.g. /^a/i)."
+                                  }
+                                  className="h-7 text-[11px]"
+                                />
+                              ) : null}
+                            </TableHead>
+                          );
+                        })}
                       </TableRow>
                     )}
                   </TableHeader>

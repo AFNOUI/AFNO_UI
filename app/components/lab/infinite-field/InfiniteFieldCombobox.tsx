@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { code, data } from "@/registry/infinite-field/infinite-field-combobox";
+import { files, data } from "@/registry/infinite-field/infinite-field-combobox";
 
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { ComponentInstall } from "@/components/lab/ComponentInstall";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
-import { INFINITE_SOURCES, getInfiniteSourceByName, useInfiniteOptions } from "./shared";
+import { getInfiniteSourceByName, INFINITE_SOURCES, SEARCH_DEBOUNCE_MS, useInfiniteOptions } from "./shared";
 
 export function InfiniteFieldCombobox() {
   const [source, setSource] = useState(getInfiniteSourceByName(data.defaultSource));
@@ -25,16 +25,15 @@ export function InfiniteFieldCombobox() {
   const handleSearch = (v: string) => {
     setSearch(v);
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setDebouncedSearch(v), 300);
+    timerRef.current = setTimeout(() => setDebouncedSearch(v), SEARCH_DEBOUNCE_MS);
   };
 
-  const { data: qData, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteOptions(
+  const { options: allOptions, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteOptions(
     source.baseUrl,
     source.labelKey,
     source.valueKey,
     debouncedSearch
   );
-  const allOptions = qData?.pages.flatMap((p) => p.options) ?? [];
 
   const snippet = `import { InfiniteComboboxField } from "@/forms/react-hook-form";
 
@@ -60,7 +59,7 @@ export function InfiniteFieldCombobox() {
       variant="infinite-field-combobox"
       title={data.title}
       code={snippet}
-      fullCode={code}
+      files={files}
     >
       <div className="space-y-3">
         <div className="flex flex-wrap gap-2">

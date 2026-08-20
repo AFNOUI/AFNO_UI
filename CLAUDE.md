@@ -24,7 +24,20 @@ shipped to consumer projects via `afnoui add`.
    `playwright`, `cypress`. See § R-04.
 4. DnD drag-data: `type X = { id: string } & Record<string, unknown>`, never
    `interface X { id: string }` (§ R-32).
-5. Production gate before "done":
+5. **No transport in the engine layer.** No engine/shared file may import `axios`,
+   `@tanstack/react-query`, or any HTTP client. Requests are *described* by the
+   engine and *sent* by the variant's `services.ts` (§ R-53, R-54).
+6. **`component → hooks.ts → services.ts`** in every variant. A component never
+   imports `services.ts`; only the hook layer calls services. `services.ts` is
+   emitted for every variant, stub body included (§ R-55).
+7. axios / TanStack Query are **CLI-gated opt-ins** — generated default is
+   `fetch` + local state; the other paths are selected, not written (§ R-56).
+8. **A CLI change updates the playground in the same commit.** Any new/renamed/
+   removed command, subcommand or flag in `afnoui-cli/src/cli/**` must be
+   reflected in `app/components/shared/cli-playground/commandSpecs.ts` — the
+   site's interactive CLI reference. `pnpm run verify:cli-playground` fails the
+   build on flag drift, but cannot check descriptions (§ R-58).
+9. Production gate before "done":
    `pnpm lint && pnpm test && pnpm run build:cli && pnpm run verify:quick &&
     pnpm run validate:variants && cd test && pnpm build`.
 
@@ -33,7 +46,7 @@ shipped to consumer projects via `afnoui add`.
 - `.ai-brain/ARCHITECTURE_OVERVIEW.md` — source-verified walkthrough of the
   source→registry→CLI→consumer pipeline (the three layers, injection passes,
   topology mirror, file:symbol anchors). Read this to get oriented fast.
-- `.ai-brain/AI_AGENT_RULES.md` — every rule, numbered (R-00 — R-52, F-01 — F-16).
+- `.ai-brain/AI_AGENT_RULES.md` — every rule, numbered (R-00 — R-58, F-01 — F-16).
 - `.ai-brain/CLI_REFERENCE.md` — exhaustive CLI docs.
 - `.ai-brain/STRUCTURAL_MAP.md` — the directory map.
 - `.ai-brain/THE_DECISION_LOG.md` — decisions + past mistakes (don't repeat).

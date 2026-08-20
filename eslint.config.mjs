@@ -35,6 +35,29 @@ const eslintConfig = defineConfig([
       "react/no-unescaped-entities": "warn",
     },
   },
+  {
+    // Engine sources ship to consumer projects via the registry, so they must
+    // not depend on a bundler rewriting `./x.js` back to `./x.ts`. Every
+    // relative import stays extensionless.
+    //
+    // Scoped to `app/**` on purpose: `afnoui-cli/dist/**` is compiled ESM,
+    // where the `.js` extension is required and correct.
+    files: ["app/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["./*.js", "../*.js", "./**/*.js", "../**/*.js"],
+              message:
+                "Use an extensionless relative import (`./types`, not `./types.js`). Engine files ship to consumer projects and must not rely on bundler .js→.ts resolution.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

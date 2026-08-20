@@ -18,30 +18,3 @@ export function getAfnouiCommand(pm: PackageManager, args: string): string {
   return `${PACKAGE_RUNNERS[pm]} afnoui ${args}`;
 }
 
-/** `afnoui add <category>/<variant>` across package managers (matches ComponentInstall). */
-export function getAfnouiAddCommand(
-  pm: PackageManager,
-  category: string,
-  variant: string,
-  installArgs = "",
-): string {
-  const componentPath = `${category}/${variant}`;
-  return getAfnouiCommand(pm, `add ${componentPath}${installArgs}`);
-}
-
-/** Scaffold `afnoui.json` + base AfnoUI primitives the chart snippets assume (`cn`, button, card, …). */
-export function getAfnouiInitCommand(pm: PackageManager): string {
-  return getAfnouiCommand(pm, "init");
-}
-
-/**
- * `afnoui init --dnd` — full project init AND the Pointer DnD primitives
- * (`components/dnd/*`) so DnD lab snippets compile after a single command.
- *
- * Use this on the DnD lab pages so a user who copies code from the Component
- * tab has everything required (DnD lib, `cn`, lucide-react, clsx,
- * tailwind-merge) without having to run `afnoui add dnd/<variant>` first.
- */
-export function getAfnouiDndInitCommand(pm: PackageManager): string {
-  return getAfnouiCommand(pm, "init --dnd");
-}

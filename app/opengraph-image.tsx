@@ -42,7 +42,7 @@ export default function OpengraphImage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={markDataUri(96)} width={68} height={68} alt="AfnoUI" />
           </div>
-          <div style={{ fontSize: "46px", fontWeight: 800, letterSpacing: -1 }}>
+          <div style={{ display: "flex", fontSize: "46px", fontWeight: 800, letterSpacing: -1 }}>
             <span>Afno</span>
             <span style={{ color: "#818cf8" }}>UI</span>
           </div>

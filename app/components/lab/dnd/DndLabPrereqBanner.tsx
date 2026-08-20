@@ -1,7 +1,6 @@
 "use client";
 
 import { LabPrereqBanner } from "@/components/shared/LabPrereqBanner";
-import { getAfnouiDndInitCommand } from "@/components/shared/cliInstallCommands";
 
 /**
  * Shown at the top of every `/dnd/*` lab page.
@@ -16,7 +15,8 @@ export function DndLabPrereqBanner() {
   return (
     <LabPrereqBanner
       title="CLI setup for DnD code on this page"
-      resolveCommand={getAfnouiDndInitCommand}
+      idPrefix="dnd-prereq-init"
+      flags={{ dnd: true }}
       description={
         <>
           <p dir="auto">

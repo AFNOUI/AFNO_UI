@@ -1,15 +1,11 @@
-import axios from "axios";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 
-import type {
-  FieldOption,
-  AsyncComboboxFieldConfig,
-} from "@/forms/types/types";
-import { buildAxiosConfigForAsyncApi } from "@/forms/utils/dependentApiRequest";
+import type { AsyncComboboxFieldConfig } from "@/forms/types/types";
 import { mergeGhostOptionForSingle } from "@/forms/utils/watchPopulate";
 import { cn } from "@/lib/utils";
 import { getExtraKeyValues } from "../../utils/fieldExtraKeys";
+import { useAsyncOptions } from "../../hooks/useInfiniteOptions";
 import { useActionFormContext } from "../ActionFormContext";
 
 import {
@@ -38,38 +34,11 @@ export function AsyncComboboxField({
   const v = values[config.name] as string | undefined;
 
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [options, setOptions] = useState<FieldOption[]>(config.options || []);
-
-  const fetchOptions = useCallback(async () => {
-    if (!config.apiConfig?.url) {
-      setOptions(config.options || []);
-      return;
-    }
-    setLoading(true);
-    try {
-      const { responseMapping } = config.apiConfig;
-      const res = await axios(buildAxiosConfigForAsyncApi(config.apiConfig));
-      const raw = responseMapping.dataPath
-        .split(".")
-        .reduce((o, k: string) => o?.[k], res.data);
-      const items = Array.isArray(raw) ? raw : [];
-      setOptions(
-        items.map((item) => ({
-          label: String(item[responseMapping.labelKey] || ""),
-          value: String(item[responseMapping.valueKey] || ""),
-        })),
-      );
-    } catch {
-      /* keep existing */
-    }
-    setLoading(false);
-  }, [config.apiConfig, config.options]);
-
-  useEffect(() => {
-    fetchOptions();
-  }, [fetchOptions]);
+  const { options, isLoading: loading } = useAsyncOptions({
+    apiConfig: config.apiConfig,
+    initialOptions: config.options,
+  });
 
   const allOptions = useMemo(
     () => mergeGhostOptionForSingle(options, v),

@@ -176,21 +176,49 @@ const TABLE_SHARED_SOURCES: TableSharedSource[] = [
     description:
       "Default row-detail dialog body — fallback when rowClickAction.renderDialog / dialogTemplate are not provided.",
   },
+  // ── transport seam (engine-owned, dependency-free) ────────────────────────
+  // Requests are DESCRIBED here and SENT by the variant's services.ts, so a
+  // project can swap fetch for axios without editing an afnoui-managed file.
+  // See AI_AGENT_RULES § R-53 / § R-54.
   {
-    sourcePath: "app/tables/tableServices.ts",
-    targetPath: "components/tables/tableServices.ts",
-    name: "tableServices.ts",
+    sourcePath: "app/tables/transport/types.ts",
+    targetPath: "components/tables/transport/types.ts",
+    name: "transport/types.ts",
     language: "typescript",
     description:
-      "Network layer for row-action API calls — token interpolation + fetch + result envelope. No React.",
+      "Transport contracts: TableRequest, TableTransport, TableNotifier, RowActionResult.",
   },
   {
-    sourcePath: "app/tables/useRowApiActions.hook.ts",
-    targetPath: "components/tables/useRowApiActions.hook.ts",
-    name: "useRowApiActions.hook.ts",
+    sourcePath: "app/tables/transport/requestBuilder.ts",
+    targetPath: "components/tables/transport/requestBuilder.ts",
+    name: "transport/requestBuilder.ts",
     language: "typescript",
     description:
-      "Hook gluing tableServices to React state — optimistic cell update, rollback, toast, button row-actions.",
+      "Pure row-action → TableRequest translation (token interpolation, body defaults). No React, no HTTP.",
+  },
+  {
+    sourcePath: "app/tables/transport/defaultTransport.ts",
+    targetPath: "components/tables/transport/defaultTransport.ts",
+    name: "transport/defaultTransport.ts",
+    language: "typescript",
+    description:
+      "Built-in fetch transport — the zero-dependency default. Swap via services.ts, do not edit.",
+  },
+  {
+    sourcePath: "app/tables/transport/context.tsx",
+    targetPath: "components/tables/transport/context.tsx",
+    name: "transport/context.tsx",
+    language: "tsx",
+    description:
+      "TableTransportProvider / useTableTransport — injection seam for the HTTP client and the notifier.",
+  },
+  {
+    sourcePath: "app/tables/useRowApiActions.ts",
+    targetPath: "components/tables/useRowApiActions.ts",
+    name: "useRowApiActions.ts",
+    language: "typescript",
+    description:
+      "Hook gluing row actions to React state — optimistic cell update, rollback, notifications, button row-actions.",
   },
   {
     sourcePath: "app/tables/attachRenderers.ts",

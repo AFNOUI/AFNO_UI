@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Check, ChevronsUpDown, Loader2, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { code, data } from "@/registry/async-field/async-field-multi-combobox";
+import { files, data } from "@/registry/async-field/async-field-multi-combobox";
 
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -59,7 +59,7 @@ export function AsyncFieldMultiCombobox() {
       variant="async-field-multi-combobox"
       title={data.title}
       code={snippet}
-      fullCode={code}
+      files={files}
     >
       <div className="space-y-3">
         <div className="flex flex-wrap gap-2">

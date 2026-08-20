@@ -93,6 +93,13 @@ exports[`tableCodeGenerator / generateAllFiles (per template × per dataMode) > 
 exports[`tableCodeGenerator / generateAllFiles (per template × per dataMode) > serverSideCRM (api-rich) / api — file shape locked 1`] = `
 [
   {
+    "codeBytes": 675,
+    "isFixed": false,
+    "language": "ts",
+    "name": "constants.ts",
+    "path": "src/components/tables/constants.ts",
+  },
+  {
     "codeBytes": 1451,
     "isFixed": false,
     "language": "tsx",
@@ -100,21 +107,28 @@ exports[`tableCodeGenerator / generateAllFiles (per template × per dataMode) > 
     "path": "src/components/tables/DataTable.tsx",
   },
   {
-    "codeBytes": 5129,
+    "codeBytes": 5426,
+    "isFixed": false,
+    "language": "ts",
+    "name": "services.ts",
+    "path": "src/components/tables/services.ts",
+  },
+  {
+    "codeBytes": 5127,
     "isFixed": false,
     "language": "ts",
     "name": "tableConfig.ts",
     "path": "src/components/tables/tableConfig.ts",
   },
   {
-    "codeBytes": 2444,
+    "codeBytes": 3571,
     "isFixed": false,
     "language": "ts",
     "name": "useRowInteractions.ts",
     "path": "src/components/tables/useRowInteractions.ts",
   },
   {
-    "codeBytes": 7935,
+    "codeBytes": 5108,
     "isFixed": false,
     "language": "ts",
     "name": "useTableData.ts",
@@ -133,14 +147,14 @@ exports[`tableCodeGenerator / generateAllFiles (per template × per dataMode) > 
     "path": "src/components/tables/DataTable.tsx",
   },
   {
-    "codeBytes": 5129,
+    "codeBytes": 5127,
     "isFixed": false,
     "language": "ts",
     "name": "tableConfig.ts",
     "path": "src/components/tables/tableConfig.ts",
   },
   {
-    "codeBytes": 2444,
+    "codeBytes": 3571,
     "isFixed": false,
     "language": "ts",
     "name": "useRowInteractions.ts",

@@ -11,7 +11,7 @@ export interface TableRegistryFile {
   description: string;
 }
 
-export const tableRegistryGeneratedAt = "2026-08-07T06:24:25.631Z";
+export const tableRegistryGeneratedAt = "2026-08-20T06:05:32.906Z";
 
 export const tableInstall = {
   "npmDependencies": [
@@ -127,6 +127,7 @@ import {
 import {
   useTablePreview,
   aggregate as aggregateValues,
+  NUMERIC_COLUMN_TYPES,
 } from "./useTablePreview";
 import {
   TableColumnConfig,
@@ -150,8 +151,8 @@ import {
 // ───── Expandable row content ─────
 // Layout switch lives in \`src/components/tables/defaultExpandedRowRenderer.tsx\`
 // so user-supplied \`renderExpandedRow\` can compose with the built-in layouts.
+import { useRowApiActions } from "./useRowApiActions";
 import { DefaultRowDialogBody } from "./defaultRowDialog";
-import { useRowApiActions } from "./useRowApiActions.hook";
 import { DefaultPaginationBar } from "./defaultPaginationBar";
 import { DefaultExpandedRow } from "./defaultExpandedRowRenderer";
 
@@ -1019,9 +1020,11 @@ export function TablePreview({
   const effectivePageSize = pageSize;
 
   // ─── Row-action API wiring ───
-  // All the optimistic-update / fetch / rollback / toast logic lives in the
-  // \`useRowApiActions\` hook (so this component stays presentational) and the
-  // raw network calls live in \`tableServices.ts\`.
+  // All the optimistic-update / rollback / notification logic lives in the
+  // \`useRowApiActions\` hook (so this component stays presentational). Requests
+  // are described by \`transport/requestBuilder\` and sent by whatever transport
+  // is in context — \`fetch\` by default, overridable from a variant's
+  // \`services.ts\`. See AI_AGENT_RULES § R-53.
   const { wrappedCellUpdate, getRowActionButtons } = useRowApiActions({
     config,
     rows,
@@ -1210,6 +1213,7 @@ export function TablePreview({
                   <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
                     placeholder="Search…"
+                    title="Plain text matches as before. Numeric columns also accept >80, <80, =80, !=80. Any column accepts /regex/ (e.g. /^a/i)."
                     className="ps-8 h-8 text-xs w-44"
                     value={search}
                     onChange={(e) => {
@@ -1457,7 +1461,7 @@ export function TablePreview({
                           ? {
                               ...sticky,
                               zIndex: 3,
-                              background: "hsl(var(--muted) / 0.4)",
+                              background: "hsl(var(--background))",
                             }
                           : undefined;
                         return (
@@ -1508,24 +1512,67 @@ export function TablePreview({
                           // render placeholders; don't repeat content (checkbox should not show again)
                           <TableHead key={\`fp-\${i}\`} className="w-9" />
                         ))}
-                        {visibleCols.map((col) => (
-                          <TableHead key={col.id} className="py-1.5 px-2">
-                            {col.filterable ? (
-                              <Input
-                                value={columnFilters[col.key] || ""}
-                                onChange={(e) => {
-                                  setColumnFilters((p) => ({
-                                    ...p,
-                                    [col.key]: e.target.value,
-                                  }));
-                                  setPage(0);
-                                }}
-                                placeholder="Filter…"
-                                className="h-7 text-[11px]"
-                              />
-                            ) : null}
-                          </TableHead>
-                        ))}
+                        {visibleCols.map((col) => {
+                          const width = columnWidths[col.id] || col.width;
+                          const startCols = config.enablePinnedColumns
+                            ? visibleCols.filter((c) => c.pinned === "start")
+                            : [];
+                          const endCols = config.enablePinnedColumns
+                            ? visibleCols.filter((c) => c.pinned === "end")
+                            : [];
+                          const startOffsets = computePinOffsets(startCols, columnWidths);
+                          const endOffsets = computePinOffsets([...endCols].reverse(), columnWidths);
+                          const pinIdx =
+                            col.pinned === "start"
+                              ? startCols.findIndex((c) => c.id === col.id)
+                              : col.pinned === "end"
+                                ? endCols.findIndex((c) => c.id === col.id)
+                                : -1;
+                          const pinOffset =
+                            col.pinned === "start" && pinIdx >= 0
+                              ? startOffsets[pinIdx]
+                              : col.pinned === "end" && pinIdx >= 0
+                                ? endOffsets[endCols.length - 1 - pinIdx]
+                                : undefined;
+                          const sticky = config.enablePinnedColumns
+                            ? pinStyle(
+                                col.pinned ?? null,
+                                pinOffset,
+                                config.direction,
+                                col.pinned === "start" && pinIdx === startCols.length - 1,
+                                col.pinned === "end" && pinIdx === 0,
+                              )
+                            : undefined;
+                          const widthStyle = width
+                            ? { width: \`\${width}px\`, minWidth: \`\${width}px\` }
+                            : undefined;
+                          const filterSticky = sticky
+                            ? { ...sticky, background: "hsl(var(--background))" }
+                            : undefined;
+                          return (
+                            <TableHead key={col.id} style={{ ...widthStyle, ...filterSticky }} className="py-1.5 px-2">
+                              {col.filterable ? (
+                                <Input
+                                  value={columnFilters[col.key] || ""}
+                                  onChange={(e) => {
+                                    setColumnFilters((p) => ({
+                                      ...p,
+                                      [col.key]: e.target.value,
+                                    }));
+                                    setPage(0);
+                                  }}
+                                  placeholder="Filter…"
+                                  title={
+                                    NUMERIC_COLUMN_TYPES.has(col.type)
+                                      ? "Plain text matches as before. Also accepts >80, <80, =80, !=80, or /regex/."
+                                      : "Plain text matches as before. Also accepts /regex/ (e.g. /^a/i)."
+                                  }
+                                  className="h-7 text-[11px]"
+                                />
+                              ) : null}
+                            </TableHead>
+                          );
+                        })}
                       </TableRow>
                     )}
                   </TableHeader>
@@ -1872,6 +1919,62 @@ export function resolveSource<TKey extends "search" | "filter" | "sort" | "pagin
   return config.sortMode;
 }
 
+/** Column types whose values are meaningfully comparable as numbers. */
+export const NUMERIC_COLUMN_TYPES = new Set<TableColumnConfig["type"]>(["number", "currency", "progress", "rating"]);
+
+const COMPARISON_QUERY = /^(>=|<=|!=|==|=|>|<)\\s*(-?\\d+(?:\\.\\d+)?)$/;
+
+/**
+ * One search/filter query, matched against one cell's raw value. Both the
+ * global search box and per-column filters call this — same rules
+ * everywhere, so a query behaves identically whichever box it's typed into.
+ *
+ * - \`/pattern/flags\` — a regular expression. An invalid pattern (e.g. a
+ *   stray \`/\`) falls back to a plain substring match rather than throwing or
+ *   silently hiding every row.
+ * - \`>80\`, \`<80\`, \`>=80\`, \`<=80\`, \`=80\`, \`==80\`, \`!=80\` — numeric comparison,
+ *   only recognized when \`columnType\` is one of \`NUMERIC_COLUMN_TYPES\`; on
+ *   any other column these read as literal text instead (so a "text" column
+ *   containing the literal string "=80" still matches on it).
+ * - Anything else — case-insensitive substring match, same as before this
+ *   existed. A bare "80" against a number column still substring-matches
+ *   (so it also catches "1800"), rather than requiring "=80".
+ */
+export function matchesFilter(rawValue: unknown, query: string, columnType?: TableColumnConfig["type"]): boolean {
+  const q = query.trim();
+  if (!q) return true;
+
+  const regexLiteral = /^\\/(.+)\\/([a-z]*)$/i.exec(q);
+  if (regexLiteral) {
+    try {
+      const re = new RegExp(regexLiteral[1], regexLiteral[2]);
+      return re.test(String(rawValue ?? ""));
+    } catch {
+      // Invalid pattern — fall through to a plain substring match below.
+    }
+  }
+
+  if (columnType && NUMERIC_COLUMN_TYPES.has(columnType)) {
+    const comparison = COMPARISON_QUERY.exec(q);
+    if (comparison) {
+      const [, op, numStr] = comparison;
+      const value = Number(rawValue);
+      if (Number.isNaN(value)) return false;
+      const target = Number(numStr);
+      switch (op) {
+        case ">": return value > target;
+        case "<": return value < target;
+        case ">=": return value >= target;
+        case "<=": return value <= target;
+        case "!=": return value !== target;
+        default: return value === target; // "=" or "=="
+      }
+    }
+  }
+
+  return String(rawValue ?? "").toLowerCase().includes(q.toLowerCase());
+}
+
 /** Pure aggregation utility — no dom, no react. */
 export function aggregate<TRow extends TableRow>(
   rows: TRow[],
@@ -1950,17 +2053,15 @@ export function useTablePreview<TRow extends TableRow>({
   const filtered = useMemo<TRow[]>(() => {
     let data = rows;
     if (config.enableSearch && search) {
-      const q = search.toLowerCase();
       data = data.filter(row =>
-        visibleCols.some(col => String(row[col.key] ?? "").toLowerCase().includes(q)),
+        visibleCols.some(col => matchesFilter(row[col.key], search, col.type)),
       );
     }
     if (config.enableColumnFilters) {
       Object.entries(columnFilters).forEach(([key, val]) => {
         if (val) {
-          data = data.filter(row =>
-            String(row[key] ?? "").toLowerCase().includes(val.toLowerCase()),
-          );
+          const col = visibleCols.find(c => c.key === key);
+          data = data.filter(row => matchesFilter(row[key], val, col?.type));
         }
       });
     }
@@ -3751,16 +3852,75 @@ export function DefaultRowDialogBody({ row }: { row: TableRow }) {
   );
 }
 `;
-const components_tables_tableServicesRaw = `/**
- * Network layer for row-action API calls. Kept dependency-free (no React, no
- * UI imports) so the same helpers can be reused from tests, server-side
- * code, or alternative renderers.
+const components_tables_transport_typesRaw = `/**
+ * Transport contracts for table row actions.
  *
- * All token interpolation (\`:id\`, \`:{field}\`, \`{{value}}\`, \`{{rowId}}\`,
- * \`{{row.field}}\`) lives here — components and hooks call the high-level
- * \`runRowActionRequest\` / \`runRowActionButton\` functions.
+ * ENGINE-OWNED and dependency-free. Mirrors the forms transport seam so both
+ * engines are reasoned about the same way: the engine builds a request and
+ * tracks state, the project's \`services.ts\` decides how it is sent.
+ *
+ * No HTTP client may be imported here — see AI_AGENT_RULES § R-53.
  */
-import type { TableApiConfig, TableRowActionConfig } from "./types";
+
+/** A library-agnostic description of one row-action request. */
+export interface TableRequest {
+  url: string;
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  headers?: Record<string, string>;
+  /** Serialized JSON body. \`undefined\` for GET / DELETE without a body. */
+  body?: string;
+  /** \`METHOD /interpolated/path\` — the human-readable label used in toasts. */
+  label: string;
+}
+
+export interface RowActionResult {
+  ok: boolean;
+  status: number;
+  error?: Error;
+  /** Method + interpolated path — handy for toast messages. */
+  label: string;
+}
+
+/**
+ * Sends one row-action request.
+ *
+ * Implemented in the VARIANT layer (\`services.ts\`) so projects can use axios,
+ * attach auth headers, or route through their own API client. The engine ships
+ * a \`fetch\` implementation as the default.
+ */
+export type TableTransport = (request: TableRequest) => Promise<RowActionResult>;
+
+export interface TableNotification {
+  title: string;
+  description?: string;
+  variant?: "default" | "destructive";
+}
+
+/**
+ * How the engine surfaces row-action success / failure.
+ *
+ * Defaults to the bundled toast. Projects that use a different notification
+ * system (or want silence) override it rather than editing the engine.
+ */
+export type TableNotifier = (notification: TableNotification) => void;
+
+export interface TableTransportValue {
+  transport: TableTransport;
+  notify: TableNotifier;
+}
+`;
+const components_tables_transport_requestBuilderRaw = `/**
+ * Pure row-action → \`TableRequest\` translation.
+ *
+ * ENGINE-OWNED and intentionally un-editable: the token grammar (\`:id\`,
+ * \`:{field}\`, \`{{value}}\`, \`{{rowId}}\`, \`{{row.field}}\`) is part of the table
+ * builder's contract, not a per-project preference. Sending the resulting
+ * request is the variant's job — see \`../transport/types.ts\`.
+ *
+ * No HTTP client may be imported here — see AI_AGENT_RULES § R-53.
+ */
+import type { TableApiConfig, TableRowActionConfig } from "../types";
+import type { TableRequest } from "./types";
 
 function interpolatePath(path: string, row: Record<string, unknown>): string {
   return path
@@ -3773,112 +3933,208 @@ function buildQuery(query?: Record<string, string>): string {
   return "?" + new URLSearchParams(query).toString();
 }
 
-function interpolateBody(template: string, row: Record<string, unknown>, value: unknown): string {
+function interpolateBody(
+  template: string,
+  row: Record<string, unknown>,
+  value: unknown,
+): string {
   return template
     .replace(/{{value}}/g, JSON.stringify(value))
     .replace(/{{rowId}}/g, JSON.stringify(row.id))
     .replace(/{{row\\.(\\w+)}}/g, (_, k: string) => JSON.stringify(row[k]));
 }
 
-export interface RowActionResult {
-  ok: boolean;
-  status: number;
-  error?: Error;
-  /** Method + interpolated path — handy for toast messages. */
-  label: string;
+/** Method + interpolated path, used as the human-readable action label. */
+export function rowActionLabel(
+  action: TableRowActionConfig,
+  row: Record<string, unknown>,
+): string {
+  return \`\${action.method} \${interpolatePath(action.path, row)}\`;
 }
 
-/**
- * Fire the configured request for an interactive cell change
- * (switch / dropdown / radio / rating). Returns a result object — callers
- * decide whether to rollback / surface a toast.
- */
-export async function runRowActionRequest(
+function buildRequest(
   action: TableRowActionConfig,
   api: TableApiConfig,
   row: Record<string, unknown>,
   value: unknown,
-): Promise<RowActionResult> {
+  defaultBody: Record<string, unknown>,
+): TableRequest {
   const path = interpolatePath(action.path, row);
   const url = \`\${api.baseUrl}\${path}\${buildQuery(action.query)}\`;
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(api.headers ?? {}),
   };
+
   let body: string | undefined;
   if (action.method !== "GET" && action.method !== "DELETE") {
     body = action.body
       ? interpolateBody(action.body, row, value)
-      : JSON.stringify({ [action.columnKey]: value });
+      : JSON.stringify(defaultBody);
   }
-  const label = \`\${action.method} \${path}\`;
-  try {
-    const res = await fetch(url, { method: action.method, headers, body });
-    if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
-    return { ok: true, status: res.status, label };
-  } catch (e) {
-    return {
-      ok: false,
-      status: 0,
-      error: e instanceof Error ? e : new Error("network error"),
-      label,
-    };
-  }
+
+  return {
+    url,
+    method: action.method,
+    headers,
+    body,
+    label: \`\${action.method} \${path}\`,
+  };
 }
 
 /**
- * Fire a button-trigger row action (action column buttons). Same semantics
- * as \`runRowActionRequest\`, but no \`value\` is involved — body interpolation
- * skips \`{{value}}\` and defaults to \`{ id: row.id }\`.
+ * Request for an interactive cell change (switch / dropdown / radio / rating).
+ * Defaults the body to \`{ [columnKey]: value }\`.
  */
-export async function runRowActionButton(
+export function buildRowActionRequest(
   action: TableRowActionConfig,
   api: TableApiConfig,
   row: Record<string, unknown>,
-): Promise<RowActionResult> {
-  const path = interpolatePath(action.path, row);
-  const url = \`\${api.baseUrl}\${path}\${buildQuery(action.query)}\`;
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(api.headers ?? {}),
-  };
-  let body: string | undefined;
-  if (action.method !== "GET" && action.method !== "DELETE") {
-    body = action.body
-      ? interpolateBody(action.body, row, null)
-      : JSON.stringify({ id: row.id });
-  }
-  const label = \`\${action.method} \${path}\`;
-  try {
-    const res = await fetch(url, { method: action.method, headers, body });
-    if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
-    return { ok: true, status: res.status, label };
-  } catch (e) {
-    return {
+  value: unknown,
+): TableRequest {
+  return buildRequest(action, api, row, value, { [action.columnKey]: value });
+}
+
+/**
+ * Request for a button-trigger row action (action-column buttons). No \`value\`
+ * is involved, so \`{{value}}\` interpolates to \`null\` and the body defaults to
+ * \`{ id: row.id }\`.
+ */
+export function buildRowActionButtonRequest(
+  action: TableRowActionConfig,
+  api: TableApiConfig,
+  row: Record<string, unknown>,
+): TableRequest {
+  return buildRequest(action, api, row, null, { id: row.id });
+}
+`;
+const components_tables_transport_defaultTransportRaw = `/**
+ * The engine's built-in \`fetch\` transport for row actions — zero runtime
+ * dependencies. This is what every install gets by default.
+ *
+ * Projects that need axios, interceptors or auth-refresh supply their own from
+ * the variant's \`services.ts\` via \`TableTransportProvider\`; they never edit
+ * this file. See AI_AGENT_RULES § R-53 / § R-54.
+ */
+import type { RowActionResult, TableRequest, TableTransport } from "./types";
+
+/**
+ * Never rejects — row actions report failure through \`RowActionResult\` so the
+ * caller can decide whether to roll back and how loudly to complain.
+ */
+export function runTableRequest(request: TableRequest): Promise<RowActionResult> {
+  const { label } = request;
+  return fetch(request.url, {
+    method: request.method,
+    headers: request.headers,
+    body: request.body,
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
+      return { ok: true, status: res.status, label };
+    })
+    .catch((e: unknown) => ({
       ok: false,
       status: 0,
       error: e instanceof Error ? e : new Error("network error"),
       label,
-    };
-  }
+    }));
+}
+
+export const fetchTableTransport: TableTransport = runTableRequest;
+`;
+const components_tables_transport_contextRaw = `"use client";
+
+/**
+ * Dependency-injection seam for table row actions.
+ *
+ * \`TablePreview\` is an ENGINE file, so it cannot import a project's HTTP
+ * client or notification system. Both arrive through this context, supplied by
+ * the variant layer:
+ *
+ *   component  →  hooks.ts  →  services.ts
+ *   (renders)     (state)      (transport)
+ *
+ * With no provider the engine falls back to \`fetch\` + the bundled toast, which
+ * is what an install with no extra dependencies should do.
+ *
+ * See AI_AGENT_RULES § R-53 / § R-54.
+ */
+import { createContext, useContext, useMemo, type ReactNode } from "react";
+
+import { toast } from "@/hooks/use-toast";
+import { fetchTableTransport } from "./defaultTransport";
+import type { TableNotifier, TableTransport, TableTransportValue } from "./types";
+
+const defaultNotifier: TableNotifier = (notification) => {
+  toast({
+    title: notification.title,
+    variant: notification.variant,
+    description: notification.description,
+  });
+};
+
+export const defaultTableTransport: TableTransportValue = {
+  notify: defaultNotifier,
+  transport: fetchTableTransport,
+};
+
+const TableTransportContext = createContext<TableTransportValue>(defaultTableTransport);
+
+export interface TableTransportProviderProps {
+  children: ReactNode;
+  /** Surfaces success / failure. Defaults to the bundled toast. */
+  notify?: TableNotifier;
+  /** Sends row-action requests. Defaults to the built-in \`fetch\` transport. */
+  transport?: TableTransport;
+}
+
+export function TableTransportProvider({
+  notify,
+  children,
+  transport,
+}: TableTransportProviderProps) {
+  const value = useMemo<TableTransportValue>(
+    () => ({
+      notify: notify ?? defaultTableTransport.notify,
+      transport: transport ?? defaultTableTransport.transport,
+    }),
+    [transport, notify],
+  );
+
+  return (
+    <TableTransportContext.Provider value={value}>{children}</TableTransportContext.Provider>
+  );
+}
+
+export function useTableTransport(): TableTransportValue {
+  return useContext(TableTransportContext);
 }
 `;
-const components_tables_useRowApiActions_hookRaw = `/**
+const components_tables_useRowApiActionsRaw = `"use client";
+
+/**
  * Encapsulates every API-bound piece of row-action logic the engine needs:
  *
  *   • \`wrappedCellUpdate(rowId, key, value)\` — optimistic local update +
- *     user \`onCellInteract\` dispatch + matching \`apiConfig.rowActions\` fetch
+ *     user \`onCellInteract\` dispatch + matching \`apiConfig.rowActions\` request
  *     with rollback on failure.
  *   • \`getRowActionButtons(row, col)\` — builds the click handlers for any
  *     \`trigger:"button"\` row actions targeting an \`actions\` column.
  *
- * Network calls themselves live in \`./tableServices\` — this hook just glues
- * them to React state + the user's callback.
+ * ENGINE-OWNED, and deliberately transport-free: requests are *described* by
+ * \`./transport/requestBuilder\` and *sent* by whatever \`TableTransport\` is in
+ * context, defaulting to \`fetch\`. Notifications go through the injected
+ * notifier, defaulting to the bundled toast. Override both from your variant's
+ * \`services.ts\` — do not edit this file. See AI_AGENT_RULES § R-53 / § R-54.
  */
 import { useCallback } from "react";
 
-import { toast } from "@/hooks/use-toast";
-import { runRowActionRequest, runRowActionButton } from "./tableServices";
+import {
+  buildRowActionRequest,
+  buildRowActionButtonRequest,
+} from "./transport/requestBuilder";
+import { useTableTransport } from "./transport/context";
 import type { TableBuilderConfig, TableColumnConfig, TableRow } from "./types";
 
 import type { DefaultCellRowAction } from "./defaultCellRenderer";
@@ -3911,31 +4167,29 @@ export function useRowApiActions({
   applyLocalUpdate,
   onCellInteract,
 }: UseRowApiActionsArgs): UseRowApiActionsReturn {
+  const { transport, notify } = useTableTransport();
+
   const wrappedCellUpdate = useCallback(
     (rowId: string, key: string, value: unknown) => {
       const prev = rows.find((r) => r.id === rowId);
       const prevValue = prev ? prev[key] : undefined;
       applyLocalUpdate(rowId, key, value);
 
-      // ── user-supplied dispatcher (errors surfaced via toast; never rollback) ──
+      // ── user-supplied dispatcher (errors surfaced via notifier; never rollback) ──
       if (onCellInteract && prev && prevValue !== value) {
-        try {
-          const result = onCellInteract(prev, key, prevValue, value);
-          if (result && typeof (result as Promise<void>).catch === "function") {
-            (result as Promise<void>).catch((e: unknown) => {
-              toast({
-                title: "Interaction handler failed",
-                description: e instanceof Error ? e.message : "Unknown error",
-                variant: "destructive",
-              });
-            });
-          }
-        } catch (e) {
-          toast({
+        const report = (e: unknown) =>
+          notify({
             title: "Interaction handler failed",
             description: e instanceof Error ? e.message : "Unknown error",
             variant: "destructive",
           });
+        try {
+          const result = onCellInteract(prev, key, prevValue, value);
+          if (result && typeof (result as Promise<void>).catch === "function") {
+            (result as Promise<void>).catch(report);
+          }
+        } catch (e) {
+          report(e);
         }
       }
 
@@ -3946,19 +4200,17 @@ export function useRowApiActions({
       const api = config.apiConfig;
       if (!action || !api?.baseUrl || !prev) return;
 
-      void runRowActionRequest(action, api, prev, value).then((result) => {
-        if (!result.ok) {
-          if (action.optimistic !== false)
-            applyLocalUpdate(rowId, key, prevValue);
-          toast({
-            title: "Update failed",
-            description: \`\${result.label} — \${result.error?.message ?? "network error"}\`,
-            variant: "destructive",
-          });
-        }
+      void transport(buildRowActionRequest(action, api, prev, value)).then((result) => {
+        if (result.ok) return;
+        if (action.optimistic !== false) applyLocalUpdate(rowId, key, prevValue);
+        notify({
+          title: "Update failed",
+          description: \`\${result.label} — \${result.error?.message ?? "network error"}\`,
+          variant: "destructive",
+        });
       });
     },
-    [config.apiConfig, applyLocalUpdate, rows, onCellInteract],
+    [config.apiConfig, applyLocalUpdate, rows, onCellInteract, transport, notify],
   );
 
   const getRowActionButtons = useCallback(
@@ -3974,20 +4226,21 @@ export function useRowApiActions({
         id: action.id,
         title: \`\${action.method} \${action.path}\`,
         onClick: () => {
-          void runRowActionButton(action, api, row).then((result) => {
-            if (result.ok)
-              toast({ title: "Action complete", description: result.label });
-            else
-              toast({
+          void transport(buildRowActionButtonRequest(action, api, row)).then((result) => {
+            if (result.ok) {
+              notify({ title: "Action complete", description: result.label });
+            } else {
+              notify({
                 title: "Action failed",
                 description: \`\${result.label} — \${result.error?.message ?? "network error"}\`,
                 variant: "destructive",
               });
+            }
           });
         },
       }));
     },
-    [config.apiConfig],
+    [config.apiConfig, transport, notify],
   );
 
   return { wrappedCellUpdate, getRowActionButtons };
@@ -5132,18 +5385,39 @@ export const generatedSharedTableFiles: TableRegistryFile[] = [
     description: "Default row-detail dialog body — fallback when rowClickAction.renderDialog / dialogTemplate are not provided.",
   },
   {
-    name: "tableServices.ts",
-    path: "components/tables/tableServices.ts",
-    code: components_tables_tableServicesRaw,
+    name: "transport/types.ts",
+    path: "components/tables/transport/types.ts",
+    code: components_tables_transport_typesRaw,
     language: "typescript",
-    description: "Network layer for row-action API calls — token interpolation + fetch + result envelope. No React.",
+    description: "Transport contracts: TableRequest, TableTransport, TableNotifier, RowActionResult.",
   },
   {
-    name: "useRowApiActions.hook.ts",
-    path: "components/tables/useRowApiActions.hook.ts",
-    code: components_tables_useRowApiActions_hookRaw,
+    name: "transport/requestBuilder.ts",
+    path: "components/tables/transport/requestBuilder.ts",
+    code: components_tables_transport_requestBuilderRaw,
     language: "typescript",
-    description: "Hook gluing tableServices to React state — optimistic cell update, rollback, toast, button row-actions.",
+    description: "Pure row-action → TableRequest translation (token interpolation, body defaults). No React, no HTTP.",
+  },
+  {
+    name: "transport/defaultTransport.ts",
+    path: "components/tables/transport/defaultTransport.ts",
+    code: components_tables_transport_defaultTransportRaw,
+    language: "typescript",
+    description: "Built-in fetch transport — the zero-dependency default. Swap via services.ts, do not edit.",
+  },
+  {
+    name: "transport/context.tsx",
+    path: "components/tables/transport/context.tsx",
+    code: components_tables_transport_contextRaw,
+    language: "tsx",
+    description: "TableTransportProvider / useTableTransport — injection seam for the HTTP client and the notifier.",
+  },
+  {
+    name: "useRowApiActions.ts",
+    path: "components/tables/useRowApiActions.ts",
+    code: components_tables_useRowApiActionsRaw,
+    language: "typescript",
+    description: "Hook gluing row actions to React state — optimistic cell update, rollback, notifications, button row-actions.",
   },
   {
     name: "attachRenderers.ts",

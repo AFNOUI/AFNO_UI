@@ -4,13 +4,10 @@ import {
   Eye,
   Info,
   Code2,
-  Package,
   BookOpen,
-  FileCode,
   GitBranch,
   RotateCcw,
   X as XIcon,
-  ArrowRight,
   HelpCircle,
   ArrowUpDown,
   ExternalLink,
@@ -51,13 +48,14 @@ import {
   TooltipContent,
   TooltipProvider,
 } from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
@@ -70,7 +68,7 @@ import {
   BuilderInsightsPanel,
   useBuilderInsights,
 } from "@/components/shared/builder-insights";
-import { useBuilderDraft } from "@/components/shared/builder-draft";
+import { useBuilderWorkspace } from "@/components/shared/builder-workspace";
 import {
   BuilderDiffPanel,
   useBuilderDiff,
@@ -85,7 +83,8 @@ import {
   type GraphPredicate,
 } from "@/components/ui/graph";
 
-import { CodeBlock, InstallCommand } from "@/components/shared/CodeBlock";
+import { BuilderFilesPanel, BuilderInstallPanel } from "@/components/shared/builder-export";
+import { DEFAULT_TRANSPORT, transportNpmDependencies, type TransportChoice } from "@/lib/codegen/transport";
 
 import type {
   TreeNode,
@@ -137,11 +136,14 @@ function FilesPanel({
   template: TreeTemplate;
   tree: TreeNode;
 }) {
+  const [transport, setTransport] = useState<TransportChoice>(DEFAULT_TRANSPORT);
   const allFiles = useMemo(() => {
     const generated = generateTreeFiles(
       template.config,
       tree,
       template.rendererSources,
+      undefined,
+      transport,
     );
     const shared = SHARED_TREE_FILES.map((f) => ({
       name: f.name,
@@ -163,88 +165,42 @@ function FilesPanel({
           }))
         : [];
     return [...generated, ...shared, ...toolbar];
-  }, [template, tree]);
+  }, [template, tree, transport]);
 
   const [activeFile, setActiveFile] = useState<string>(allFiles[0]?.name ?? "");
   const current = allFiles.find((f) => f.name === activeFile) ?? allFiles[0];
-  const npmInstall = `npm install ${TREE_DEPENDENCIES.runtime.join(" ")}`;
+  // transport opt-ins are additive on top of the engine deps (R-56)
+  const npmInstall = `npm install ${[...TREE_DEPENDENCIES.runtime, ...transportNpmDependencies(transport)].join(" ")}`;
+  // Declared in TREE_DEPENDENCIES but never rendered before the shared panel.
+  const npmInstallDev = TREE_DEPENDENCIES.dev.length
+    ? `npm install -D ${[...TREE_DEPENDENCIES.dev].join(" ")}`
+    : undefined;
 
   return (
     <div className="space-y-4">
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="py-4 px-5 space-y-3">
-          <div className="flex items-start gap-3">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Package className="h-4 w-4 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-sm">
-                Required Dependencies & Files
-              </h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Install packages and copy{" "}
-                <span className="font-semibold">{allFiles.length} files</span>.
-              </p>
-            </div>
-          </div>
-          <InstallCommand command={npmInstall} label="Runtime deps" />
-        </CardContent>
-      </Card>
 
-      <Tabs value={current.name} onValueChange={setActiveFile}>
-        <ScrollArea className="w-full">
-          <TabsList className="h-auto flex-wrap gap-1 bg-muted/50 p-1">
-            {allFiles.map((file) => (
-              <TabsTrigger
-                key={file.name}
-                value={file.name}
-                className="text-xs gap-1.5 data-[state=active]:bg-background"
-              >
-                <span
-                  className={cn(
-                    "h-1.5 w-1.5 rounded-full",
-                    file.isFixed ? "bg-muted-foreground" : "bg-primary",
-                  )}
-                />
-                {file.isFixed ? (
-                  <Package className="h-3 w-3" />
-                ) : (
-                  <FileCode className="h-3 w-3" />
-                )}
-                {file.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </ScrollArea>
-        {allFiles.map((file) => (
-          <TabsContent key={file.name} value={file.name} className="mt-4">
-            <div className="space-y-3">
-              <div className="flex items-start gap-2 flex-wrap">
-                {file.isFixed ? (
-                  <Badge variant="secondary" className="text-[10px] shrink-0">
-                    <Package className="h-3 w-3 mr-1" /> Shared engine
-                  </Badge>
-                ) : (
-                  <Badge className="text-[10px] shrink-0 bg-primary/10 text-primary border-0">
-                    <FileCode className="h-3 w-3 mr-1" /> Variant-specific
-                  </Badge>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  {file.description}
-                </p>
-              </div>
-              <div className="text-xs text-muted-foreground font-mono flex items-center gap-1">
-                <ArrowRight className="h-3 w-3" /> {file.path}
-              </div>
-              <CodeBlock
-                code={file.code}
-                language={file.language}
-                filename={file.path}
-              />
-            </div>
-          </TabsContent>
-        ))}
-      </Tabs>
+      <BuilderInstallPanel
+        transport={{
+          value: transport,
+          onChange: setTransport,
+          idPrefix: "tree-transport",
+        }}
+        subject="tree"
+        idPrefix="tree-builder"
+        generatedCount={allFiles.filter((f) => !f.isFixed).length}
+        sharedCount={allFiles.filter((f) => f.isFixed).length}
+        runtimeCommand={npmInstall}
+        devCommand={npmInstallDev}
+        notes={[...TREE_DEPENDENCIES.notes]}
+        cliScope={{ commandId: "tree-init", lockCommand: true, lockArgs: true }}
+      />
+
+      <BuilderFilesPanel
+        subject="tree"
+        files={allFiles}
+        activeFile={current.name}
+        onActiveFileChange={setActiveFile}
+      />
     </div>
   );
 }
@@ -1398,13 +1354,16 @@ export default function FlowBuilder() {
     setCanRedo(false);
   }, [active.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const draft = useBuilderDraft<TreeDraft>({
+  const workspace = useBuilderWorkspace<TreeDraft>({
     id: "tree",
     deps: [activeKey, tree, configPatch, layout],
     snapshot: () => ({ variant: activeKey, tree, configPatch, layout }),
     label: active.title,
+    // Switching variant is starting over, so the saved build you had open is
+    // released rather than left open to a stray Update.
+    identity: activeKey,
     validate: isTreeDraft,
-    onRestore: (saved) => {
+    onRestore: (saved, source) => {
       const known = saved.variant in treeTemplates;
 
       // Switching variant runs the reset effect above, which would clobber
@@ -1429,7 +1388,11 @@ export default function FlowBuilder() {
         setCanRedo(false);
       }
 
-      toast({ title: "Draft restored", description: "Picked up where you left off." });
+      // Reopening the last build is how the page loads now — only a click in
+      // the saved list is worth announcing.
+      if (source === "user") {
+        toast({ title: "Build opened", description: "Picked up where you left off." });
+      }
     },
   });
 
@@ -1508,7 +1471,8 @@ export default function FlowBuilder() {
             />
           }
           history={{ undo, redo, canUndo, canRedo }}
-          draft={draft.header}
+          workspace={workspace.header}
+          workspaceName={active.title}
         />
 
         <Tabs

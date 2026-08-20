@@ -1,14 +1,11 @@
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 
 import {
   draftKey,
   readDraft,
-  writeDraft,
   clearDraft,
-  serializeDraft,
   formatSavedAgo,
   DRAFT_MAX_AGE_MS,
-  DRAFT_MAX_BYTES,
   DRAFT_SCHEMA_VERSION,
 } from "@/components/shared/builder-draft";
 
@@ -30,17 +27,28 @@ import {
 
 const NOW = 1_700_000_000_000;
 
+/**
+ * Seeds a legacy draft directly.
+ *
+ * `writeDraft` is gone — `builder-workspace/` owns writing now, and this slot
+ * is only ever read (once, to migrate it). Writing the envelope by hand is also
+ * the more honest test: it pins the on-disk format these readers must keep
+ * understanding, rather than round-tripping through our own serializer.
+ */
+function seedDraft(id: "form" | "table" | "kanban" | "tree", value: unknown, savedAt = NOW, label?: string) {
+  localStorage.setItem(
+    draftKey(id),
+    JSON.stringify({ version: DRAFT_SCHEMA_VERSION, savedAt, label, value }),
+  );
+}
+
 beforeEach(() => {
   localStorage.clear();
 });
 
-afterEach(() => {
-  vi.restoreAllMocks();
-});
-
 describe("storage round-trip", () => {
-  it("writes a draft and reads the same value back", () => {
-    expect(writeDraft("form", { hello: "world" }, NOW, "Contact form")).toBe(true);
+  it("reads a stored draft back whole", () => {
+    seedDraft("form", { hello: "world" }, NOW, "Contact form");
 
     const offer = readDraft<{ hello: string }>("form", NOW + 1000);
     expect(offer).toEqual({
@@ -51,8 +59,8 @@ describe("storage round-trip", () => {
   });
 
   it("keeps one slot per builder", () => {
-    writeDraft("form", { which: "form" }, NOW);
-    writeDraft("table", { which: "table" }, NOW);
+    seedDraft("form", { which: "form" });
+    seedDraft("table", { which: "table" });
 
     expect(readDraft("form", NOW)?.value).toEqual({ which: "form" });
     expect(readDraft("table", NOW)?.value).toEqual({ which: "table" });
@@ -64,7 +72,7 @@ describe("storage round-trip", () => {
   });
 
   it("clears a slot", () => {
-    writeDraft("tree", { a: 1 }, NOW);
+    seedDraft("tree", { a: 1 });
     clearDraft("tree");
     expect(readDraft("tree", NOW)).toBeNull();
   });
@@ -83,7 +91,7 @@ describe("drafts that must not be offered", () => {
   });
 
   it("drops a draft older than the max age", () => {
-    writeDraft("form", { a: 1 }, NOW);
+    seedDraft("form", { a: 1 });
     expect(readDraft("form", NOW + DRAFT_MAX_AGE_MS + 1)).toBeNull();
   });
 
@@ -93,34 +101,12 @@ describe("drafts that must not be offered", () => {
   });
 
   it("drops a payload the builder's guard rejects", () => {
-    writeDraft("form", { nonsense: true }, NOW);
+    seedDraft("form", { nonsense: true });
     expect(readDraft("form", NOW, isFormDraft)).toBeNull();
   });
 
-  it("refuses to write a payload past the size cap", () => {
-    const huge = { blob: "x".repeat(DRAFT_MAX_BYTES + 1) };
-    expect(writeDraft("table", huge, NOW)).toBe(false);
-    expect(readDraft("table", NOW)).toBeNull();
-  });
 
-  it("reports failure rather than throwing when storage is unavailable", () => {
-    // Spy on the instance, not `Storage.prototype` — happy-dom's localStorage
-    // carries `setItem` as an own property, so a prototype spy never fires.
-    vi.spyOn(window.localStorage, "setItem").mockImplementation(() => {
-      throw new Error("QuotaExceededError");
-    });
 
-    expect(() => writeDraft("form", { a: 1 }, NOW)).not.toThrow();
-    expect(writeDraft("form", { a: 1 }, NOW)).toBe(false);
-  });
-
-  it("skips values that cannot be serialized", () => {
-    const cyclic: Record<string, unknown> = {};
-    cyclic.self = cyclic;
-
-    expect(serializeDraft(cyclic)).toBeNull();
-    expect(writeDraft("form", cyclic, NOW)).toBe(false);
-  });
 });
 
 describe("per-builder guards accept their own real state", () => {

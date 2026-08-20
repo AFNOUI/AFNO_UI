@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Loader2, X } from "lucide-react";
 
-import { code, data } from "@/registry/async-field/async-field-multi-select";
+import { files, data } from "@/registry/async-field/async-field-multi-select";
 
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -50,7 +50,7 @@ export function AsyncFieldMultiSelect() {
       variant="async-field-multi-select"
       title={data.title}
       code={snippet}
-      fullCode={code}
+      files={files}
     >
       <div className="space-y-3">
         <div className="flex flex-wrap gap-2">

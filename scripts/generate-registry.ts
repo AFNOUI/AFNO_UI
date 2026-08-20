@@ -65,9 +65,18 @@ type FormRegistryOutput = {
   };
 };
 
+/**
+ * Engine install deps per stack.
+ *
+ * `axios` and `@tanstack/react-query` are deliberately ABSENT: since Wave-9 no
+ * forms engine file imports either one (§ R-53), and they are CLI-gated
+ * opt-ins selected per variant with `--axios` / `--tanstack-query` (§ R-56).
+ * Listing them here would make every `afnoui form init` install a transport
+ * the generated code never imports — which is what it used to do.
+ */
 const STACK_INSTALL: Record<FormStackKind, StackInstallSpec> = {
   rhf: {
-    npmDependencies: ['zod', 'react-hook-form', '@hookform/resolvers', 'axios', 'date-fns', '@tanstack/react-query'],
+    npmDependencies: ['zod', 'react-hook-form', '@hookform/resolvers', 'date-fns'],
     npmDevDependencies: [],
     uiComponents: [
       'form',
@@ -92,7 +101,7 @@ const STACK_INSTALL: Record<FormStackKind, StackInstallSpec> = {
     ],
   },
   tanstack: {
-    npmDependencies: ['zod', '@tanstack/react-form', 'axios', 'date-fns', '@tanstack/react-query'],
+    npmDependencies: ['zod', '@tanstack/react-form', 'date-fns'],
     npmDevDependencies: [],
     uiComponents: [
       'label',
@@ -116,7 +125,7 @@ const STACK_INSTALL: Record<FormStackKind, StackInstallSpec> = {
     ],
   },
   action: {
-    npmDependencies: ['zod', 'axios', 'date-fns', '@tanstack/react-query'],
+    npmDependencies: ['zod', 'date-fns'],
     npmDevDependencies: [],
     uiComponents: [
       'label',
@@ -192,6 +201,40 @@ function buildShared(): FixedBucket {
         'Optional hydration utilities — applyHydration() for backend data.',
         'typescript'
       ),
+      // ── transport seam (engine-owned, dependency-free) ──────────────────
+      // These four files are what let the option hooks stay free of axios and
+      // @tanstack/react-query. Projects override them from their variant's
+      // services.ts / hooks.ts — see AI_AGENT_RULES § R-53 / § R-54.
+      makeEntry(
+        '/app/forms/transport/types.ts',
+        'transport/types.ts',
+        'Transport contracts: OptionsRequest, OptionsTransport, OptionsQueryAdapter.',
+        'typescript'
+      ),
+      makeEntry(
+        '/app/forms/transport/requestBuilder.ts',
+        'transport/requestBuilder.ts',
+        'Pure AsyncApiConfig → OptionsRequest translation (token grammar, pagination params).',
+        'typescript'
+      ),
+      makeEntry(
+        '/app/forms/transport/defaultTransport.ts',
+        'transport/defaultTransport.ts',
+        'Built-in fetch transport — the zero-dependency default. Swap via services.ts, do not edit.',
+        'typescript'
+      ),
+      makeEntry(
+        '/app/forms/transport/localStateAdapter.ts',
+        'transport/localStateAdapter.ts',
+        'Built-in React-state query adapter with the 5min/10min cache semantics react-query provided.',
+        'typescript'
+      ),
+      makeEntry(
+        '/app/forms/transport/context.tsx',
+        'transport/context.tsx',
+        'FormTransportProvider / useFormTransport — the injection seam for axios or react-query.',
+        'tsx'
+      ),
     ],
     hook: [
       makeEntry(
@@ -229,7 +272,7 @@ function buildShared(): FixedBucket {
       makeEntry(
         '/app/forms/utils/dependentApiRequest.ts',
         'dependentApiRequest.ts',
-        'Dependent API URL/header/payload substitution and axios config for async/infinite fetches.',
+        'Dependent API URL/header/payload substitution for async/infinite fetches (transport-free).',
         'typescript'
       ),
       makeEntry(

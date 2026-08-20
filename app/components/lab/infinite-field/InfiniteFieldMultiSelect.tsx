@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { Check, ChevronsUpDown, Loader2, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { code, data } from "@/registry/infinite-field/infinite-field-multi-select";
+import { files, data } from "@/registry/infinite-field/infinite-field-multi-select";
 
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,7 @@ import { ComponentInstall } from "@/components/lab/ComponentInstall";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-import { INFINITE_SOURCES, getInfiniteSourceByName, useInfiniteOptions } from "./shared";
+import { getInfiniteSourceByName, INFINITE_SOURCES, SEARCH_DEBOUNCE_MS, useInfiniteOptions } from "./shared";
 
 export function InfiniteFieldMultiSelect() {
   const [source, setSource] = useState(getInfiniteSourceByName(data.defaultSource));
@@ -26,16 +26,15 @@ export function InfiniteFieldMultiSelect() {
   const handleSearch = (v: string) => {
     setSearch(v);
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setDebouncedSearch(v), 300);
+    timerRef.current = setTimeout(() => setDebouncedSearch(v), SEARCH_DEBOUNCE_MS);
   };
 
-  const { data: qData, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteOptions(
+  const { options: allOptions, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteOptions(
     source.baseUrl,
     source.labelKey,
     source.valueKey,
     debouncedSearch
   );
-  const allOptions = qData?.pages.flatMap((p) => p.options) ?? [];
 
   const toggle = (val: string) =>
     setSelected((prev) => (prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val]));
@@ -64,7 +63,7 @@ export function InfiniteFieldMultiSelect() {
       variant="infinite-field-multi-select"
       title={data.title}
       code={snippet}
-      fullCode={code}
+      files={files}
     >
       <div className="space-y-3">
         <div className="flex flex-wrap gap-2">

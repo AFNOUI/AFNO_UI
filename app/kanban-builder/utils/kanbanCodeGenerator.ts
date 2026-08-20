@@ -9,6 +9,12 @@
  *   - Built-in <KanbanCard /> fallback (no extra code needed)
  */
 import type { KanbanBuilderConfig, KanbanCardData } from "@/kanban/types";
+import { DEFAULT_TRANSPORT, type TransportChoice } from "@/lib/codegen/transport";
+import {
+  emitConstantsFileForBoard,
+  emitServicesFile,
+  emitHooksFile,
+} from "./codegen/dataFiles";
 
 export interface GeneratedFile {
   name: string;
@@ -190,42 +196,13 @@ ${dialogImport}export const renderCardDialog: CardDialogRenderer = ${sources.dia
   return parts.join("\n");
 }
 
-function emitOnChangeHook(componentName: string): string {
-  return `import { useCallback } from "react";
-import type { KanbanCardData } from "./types";
-
-/**
- * Called whenever a card is dropped into a new position via DnD.
- * Replace the body with your real backend call (e.g. fetch PATCH).
- */
-export function use${componentName}CardChange() {
-  return useCallback((event: {
-    card: KanbanCardData;
-    fromColumnId: string;
-    toColumnId: string;
-    fromIndex: number;
-    toIndex: number;
-    cards: KanbanCardData[];
-  }) => {
-    console.log("[kanban] card moved:", event);
-  }, []);
-}
-
-export function use${componentName}LoadMore() {
-  return useCallback(async (event: { columnId: string; cursor?: string }) => {
-    console.log("[kanban] load more:", event);
-  }, []);
-}
-`;
-}
-
 function emitComponentFile(componentName: string, config: KanbanBuilderConfig): string {
   const columnDnd = !!config.enableColumnDnd;
   return `import { useState } from "react";
 import { KanbanBoard } from "@/components/kanban/KanbanBoard";
 import { boardConfig } from "./config";
 import { initialCards } from "./data";
-import { use${componentName}CardChange, use${componentName}LoadMore } from "./useCardChange";
+import { use${componentName}CardChange, use${componentName}LoadMore } from "./hooks";
 import type { KanbanCardData${columnDnd ? ", KanbanColumnConfig" : ""} } from "./types";
 
 /**
@@ -233,7 +210,7 @@ import type { KanbanCardData${columnDnd ? ", KanbanColumnConfig" : ""} } from ".
  * ${config.subtitle ?? ""}
  *
  * Drag-and-drop is powered by the project's custom Pointer DnD library
- * (no @dnd-kit dependency). Cards persist locally — wire \`useCardChange\`
+ * (no @dnd-kit dependency). Cards persist locally — wire \`services.ts\`
  * to your backend to make moves stick across reloads.${columnDnd ? `
  *
  * Column reordering is enabled: dragging a column header rearranges the
@@ -281,6 +258,8 @@ export function generateKanbanFiles(
    * title in the builder. Defaults to `pascalize(config.title)`.
    */
   componentNameOverride?: string,
+  /** Which HTTP client / query strategy to generate against (R-56). */
+  transport: TransportChoice = DEFAULT_TRANSPORT,
 ): GeneratedFile[] {
   const componentName = componentNameOverride ?? pascalize(config.title);
   const folder = `src/boards/${componentName}`;
@@ -321,12 +300,31 @@ export function generateKanbanFiles(
       code: emitDataFile(cards, hasPerCard),
     },
     {
-      name: "useCardChange.ts",
-      path: `${folder}/useCardChange.ts`,
-      description: "Hook fired on every drop — call your backend here to persist moves.",
+      name: "hooks.ts",
+      path: `${folder}/hooks.ts`,
+      description:
+        "React glue — the only caller of services.ts. Optimistic updates and rollback go here.",
       isFixed: false,
       language: "ts",
-      code: emitOnChangeHook(componentName),
+      code: emitHooksFile(componentName, transport),
+    },
+    {
+      name: "services.ts",
+      path: `${folder}/services.ts`,
+      description:
+        "Network layer — the only file that talks to your backend. Swap the stubs for real requests.",
+      isFixed: false,
+      language: "ts",
+      code: emitServicesFile(transport),
+    },
+    {
+      name: "constants.ts",
+      path: `${folder}/constants.ts`,
+      description:
+        "Tunables for this board — API base, paths, headers, cache windows (R-57).",
+      isFixed: false,
+      language: "ts",
+      code: emitConstantsFileForBoard(config.title, transport),
     },
     {
       name: "types.ts",

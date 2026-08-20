@@ -7,19 +7,14 @@ import {
   Eye,
   Sun,
   Zap,
-  List,
   Menu,
   Moon,
   Github,
   ChevronDown,
-  Boxes,
   Code2,
-  Rocket,
   Kanban,
   Layers,
   Table2,
-  Trash2,
-  Wrench,
   Loader2,
   Network,
   Palette,
@@ -34,7 +29,6 @@ import {
   RefreshCw,
   ArrowRight,
   ShieldCheck,
-  Stethoscope,
   CheckCircle2,
   MousePointer2,
 } from "lucide-react";
@@ -76,6 +70,10 @@ import {
   getAfnouiCommand,
 } from "@/components/shared/cliInstallCommands";
 import type { PackageManager } from "@/components/shared/cliInstallCommands";
+import {
+  CATALOG_COUNTS,
+  CliPlayground,
+} from "@/components/shared/cli-playground";
 
 const features = [
   {
@@ -318,203 +316,12 @@ const techStack = [
  * The install section renders one group at a time, so the page never dumps
  * ~25 terminal blocks on the reader at once.
  */
-const cliGroups = [
-  {
-    id: "setup",
-    icon: Rocket,
-    label: "Setup",
-    heading: "Get AfnoUI into your project",
-    blurb:
-      "Three commands take you from an empty project to components you own the source of. Run them in order the first time.",
-    items: [
-      {
-        cmd: "init",
-        icon: Sparkles,
-        label: "Initialize the design system",
-        note: "Scaffolds afnoui.json, sets up Tailwind CSS v4, CSS variables, and the cn helper. Add --dnd to include the drag-and-drop engine up front.",
-      },
-      {
-        cmd: "add button card dialog tabs",
-        icon: Layers,
-        label: "Add UI components",
-        note: "Writes component source, types, and variants into your project. Nothing becomes a runtime dependency.",
-      },
-      {
-        cmd: "add button/variants",
-        icon: Palette,
-        label: "Add a single variant",
-        note: "Pull one variant instead of a whole component — styles, sizes, states, and layout presets.",
-      },
-    ],
-  },
-  {
-    id: "engines",
-    icon: Boxes,
-    label: "Engine systems",
-    heading: "Install a complete system",
-    blurb:
-      "Each init installs the entire shared system for its category — engine files, types, and every runtime dependency its variants can need. Reach for one when you want the system before picking a variant; add already pulls the right engine in on its own.",
-    items: [
-      {
-        cmd: "form init",
-        icon: FormInput,
-        label: "Form system",
-        note: "Shared form types, hooks, and utils plus one stack. Defaults to React Hook Form — pass --tanstack, --action, or --stack rhf|tanstack|action. Installs Zod and the matching deps.",
-      },
-      {
-        cmd: "table init",
-        icon: Table2,
-        label: "Table system",
-        note: "Table engine, types, utils, default cell renderers, and the row-action layer.",
-      },
-      {
-        cmd: "kanban init",
-        icon: Kanban,
-        label: "Kanban system",
-        note: "Board and card runtime, card-renderer glue, and the drag-and-drop primitives it builds on.",
-      },
-      {
-        cmd: "tree init",
-        icon: Network,
-        label: "Tree system",
-        note: "TreeCanvas engine, layout computation, graph types, and the GraphToolbar.",
-      },
-      {
-        cmd: "dnd init",
-        icon: MousePointer2,
-        label: "Drag-and-drop primitives",
-        note: "The whole components/dnd/* engine — built on raw pointer events, with no third-party DnD library.",
-      },
-      {
-        cmd: "chart init",
-        icon: BarChart3,
-        label: "Chart system",
-        note: "Chart primitives plus every one of the 17 chart types in the registry.",
-      },
-    ],
-  },
-  {
-    id: "variants",
-    icon: Sparkles,
-    label: "Variants",
-    heading: "Add a ready-made variant",
-    blurb:
-      "350+ variants across every category. The matching engine and any npm packages the variant imports are installed alongside it, so a single command lands something that already compiles.",
-    items: [
-      {
-        cmd: "add forms/forms-contact",
-        icon: FormInput,
-        label: "Form template",
-        note: "10 templates — contact, login, payment, survey, multi-step, and more.",
-      },
-      {
-        cmd: "add tables/tables-server-crm",
-        icon: Table2,
-        label: "Data table",
-        note: "26 table variants, from simple lists to server-driven CRM grids.",
-      },
-      {
-        cmd: "add kanban/kanban-sprint-board",
-        icon: Kanban,
-        label: "Kanban board",
-        note: "16 board variants with drag-and-drop wired up out of the box.",
-      },
-      {
-        cmd: "add tree/tree-org",
-        icon: Network,
-        label: "Tree & node graph",
-        note: "30 tree variants — org charts, file trees, mind maps, flow graphs.",
-      },
-      {
-        cmd: "add charts/bar/charts-bar-grouped",
-        icon: BarChart3,
-        label: "Chart",
-        note: "93 chart variants across 17 types. The path is charts/<type>/<slug>.",
-      },
-      {
-        cmd: "add dnd/sortable-list",
-        icon: MousePointer2,
-        label: "Drag-and-drop pattern",
-        note: "9 patterns — sortable lists, multi-list transfer, trash zones, nested trees, and more.",
-      },
-    ],
-  },
-  {
-    id: "maintain",
-    icon: Wrench,
-    label: "Discover & maintain",
-    heading: "Browse the registry and keep it healthy",
-    blurb:
-      "Find what exists, upgrade what you have installed, and repair a project when something drifts.",
-    items: [
-      {
-        cmd: "list",
-        icon: List,
-        label: "List components",
-        note: "Every base component in the registry. Add --json for scriptable output.",
-      },
-      {
-        cmd: "list variants",
-        icon: Layers,
-        label: "List variants",
-        note: "Every category and variant slug across forms, tables, kanban, tree, charts, and dnd.",
-      },
-      {
-        cmd: "update button input",
-        icon: RefreshCw,
-        label: "Update components",
-        note: "Re-fetch and overwrite installed components from the registry.",
-      },
-      {
-        cmd: "doctor",
-        icon: Stethoscope,
-        label: "Check your setup",
-        note: "Verifies Tailwind, globals.css, the cn helper, and registry connectivity.",
-      },
-      {
-        cmd: "diagnose",
-        icon: Wrench,
-        label: "Repair the install",
-        note: "Clears stale install locks and expired registry cache entries.",
-      },
-      {
-        cmd: "clean",
-        icon: Trash2,
-        label: "Remove AfnoUI",
-        note: "Interactively removes components, the form system, variants, and afnoui.json.",
-      },
-    ],
-  },
-] as const;
-
-type CliGroupId = (typeof cliGroups)[number]["id"];
-
-/** Flags accepted by every command. */
-const globalFlags = [
-  {
-    flag: "--dry-run",
-    icon: Eye,
-    note: "Preview every write and install without touching disk or your package manager.",
-  },
-  {
-    flag: "--force",
-    icon: ShieldCheck,
-    note: "Overwrite managed files even where you have edited them.",
-  },
-  {
-    flag: "--debug",
-    icon: Terminal,
-    note: "Print stack traces, registry fetch URLs, and the detected package manager.",
-  },
-];
 
 export default function LandingPage() {
   const { theme, setTheme } = useTheme();
   const [pkgManager, setPkgManager] = useState<PackageManager>("npm");
-  const [activeGroup, setActiveGroup] = useState<CliGroupId>("setup");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  const group = cliGroups.find((g) => g.id === activeGroup) ?? cliGroups[0];
 
   return (
     <div className="min-h-screen bg-background">
@@ -836,15 +643,18 @@ export default function LandingPage() {
               Install Into Your Project
             </h2>
             <p className="text-lg text-muted-foreground">
-              Pick your package manager, then browse the commands by what you
-              are trying to do. Source is written into your project — never
-              added as a runtime dependency.
+              Start from a common task or build your own command — all{" "}
+              {CATALOG_COUNTS.variants} variants and{" "}
+              {CATALOG_COUNTS.baseComponents} primitives are here, with an
+              explanation of what each command will do before you run it. Source
+              is written into your project, never added as a runtime dependency.
             </p>
           </div>
 
           <div className="mx-auto max-w-5xl">
-            {/* Package manager selector */}
-            <div className="mb-4 flex justify-center">
+            {/* Package manager selector — chosen once, above the panel, and fed
+                into the playground so there is only ever one of these. */}
+            <div className="mb-6 flex justify-center">
               <div className="inline-flex rounded-full border border-border bg-card p-1 shadow-sm">
                 {PACKAGE_MANAGERS.map((pm) => (
                   <button
@@ -865,146 +675,45 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Command group selector */}
-            <div
-              role="tablist"
-              aria-label="Command groups"
-              className="mb-8 flex flex-wrap justify-center gap-2"
-            >
-              {cliGroups.map((group) => {
-                const Icon = group.icon;
-                const isActive = group.id === activeGroup;
-                return (
-                  <button
-                    key={group.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={isActive}
-                    onClick={() => setActiveGroup(group.id)}
-                    className={cn(
-                      "inline-flex items-center gap-2 rounded-lg border px-3.5 py-2 text-sm font-medium transition-all sm:px-4",
-                      isActive
-                        ? "border-primary/50 bg-primary/10 text-foreground shadow-sm"
-                        : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground"
-                    )}
-                  >
-                    <Icon
-                      className={cn(
-                        "h-4 w-4",
-                        isActive ? "text-primary" : "text-muted-foreground"
-                      )}
-                    />
-                    {group.label}
-                    <span
-                      className={cn(
-                        "rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums",
-                        isActive
-                          ? "bg-primary/20 text-primary"
-                          : "bg-muted text-muted-foreground"
-                      )}
-                    >
-                      {group.items.length}
-                    </span>
-                  </button>
-                );
-              })}
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-7 lg:p-8">
+              <CliPlayground
+                idPrefix="home"
+                packageManager={pkgManager}
+                onPackageManagerChange={setPkgManager}
+              />
             </div>
 
-            {/* Active group panel */}
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-8">
-              <div className="mb-7 border-b border-border pb-6">
-                <h3 className="mb-2 text-xl font-bold tracking-tight">
-                  {group.heading}
-                </h3>
-                <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                  {group.blurb}
-                </p>
-              </div>
 
-              {/* The package manager is chosen once above, so each bar hides
-                  its own tabs and follows the section-level selection. */}
-              <div className="grid gap-4 md:grid-cols-2">
-                {group.items.map((item) => (
-                  <CliInstallCommandBar
-                    key={item.cmd}
-                    icon={item.icon}
-                    title={item.label}
-                    description={item.note}
-                    packageManager={pkgManager}
-                    showPackageManagers={false}
-                    resolveCommand={(pm) => getAfnouiCommand(pm, item.cmd)}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Flags + consent model */}
-            <div className="mt-8 grid gap-5 lg:grid-cols-3">
-              <div className="rounded-2xl border border-border bg-card p-6 lg:col-span-2">
-                <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold">
-                  <Settings2 className="h-4 w-4 text-primary" /> Flags that work
-                  on any command
-                </h3>
-                <p className="mb-5 text-xs text-muted-foreground">
-                  Append these to any command above.
-                </p>
-                <div className="grid gap-4 sm:grid-cols-3">
-                  {globalFlags.map((f) => {
-                    const Icon = f.icon;
-                    return (
-                      <div key={f.flag} className="space-y-1.5">
-                        <code
-                          dir="ltr"
-                          className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-primary"
-                        >
-                          <Icon className="h-3.5 w-3.5" />
-                          {f.flag}
-                        </code>
-                        <p className="text-xs leading-relaxed text-muted-foreground">
-                          {f.note}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-primary/30 bg-primary/5 p-6">
-                <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
-                  <ShieldCheck className="h-4 w-4 text-primary" /> Your edits
-                  stay yours
-                </h3>
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  AfnoUI records a hash of every file it writes in{" "}
-                  <code dir="ltr" className="text-[11px]">
-                    afnoui.json
-                  </code>
-                  . If you have changed one of those files since, a re-install
-                  stops and asks before touching it — and only{" "}
-                  <code dir="ltr" className="text-[11px]">
-                    --force
-                  </code>{" "}
-                  overwrites. Files AfnoUI never wrote are left alone entirely.
-                </p>
-              </div>
-            </div>
-
-            {/* Full reference pointer */}
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border px-6 py-5 text-center sm:flex-row sm:text-start">
-              <p className="text-sm text-muted-foreground">
-                Every command, flag, and example in one place:
+            {/* The consent model — short, and the thing people most need to
+                trust before running an install command. */}
+            <div className="mt-5 flex flex-col gap-3 rounded-xl border border-primary/25 bg-primary/5 p-4 sm:flex-row sm:items-center">
+              <p className="flex-1 text-xs leading-relaxed text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5 font-semibold text-foreground">
+                  <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Your edits
+                  stay yours.
+                </span>{" "}
+                AfnoUI hashes every file it writes into{" "}
+                <code dir="ltr" className="text-[11px]">
+                  afnoui.json
+                </code>
+                . Change one, and a re-install stops and asks before touching it —
+                only{" "}
+                <code dir="ltr" className="text-[11px]">
+                  --force
+                </code>{" "}
+                overwrites. Files AfnoUI never wrote are left alone entirely.
               </p>
-              <div className="w-full sm:w-auto sm:min-w-[280px]">
-                <CliInstallCommandBar
-                  packageManager={pkgManager}
-                  showPackageManagers={false}
-                  resolveCommand={(pm) => getAfnouiCommand(pm, "help")}
-                />
-              </div>
+              <p className="text-xs text-muted-foreground sm:text-end">
+                Full reference:{" "}
+                <code dir="ltr" className="text-[11px] text-primary">
+                  npx afnoui help
+                </code>
+              </p>
             </div>
           </div>
         </div>
       </section>
+
 
       <Separator />
 

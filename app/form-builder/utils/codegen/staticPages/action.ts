@@ -21,7 +21,7 @@ export function generateStaticAction(config: FormConfig): string {
     `import { AlertCircle, X } from "lucide-react";`,
     `import { ActionFormProvider } from "@/components/forms/action-forms/ActionFormContext";`,
     ...fieldImports.map(f => `import { ${f.component} } from "@/components/forms/action-forms/fields/${f.file.replace('.tsx', '')}";`),
-    `import { formService } from "./formService";`,
+    `import { useFormSubmit } from "./hooks";`,
     `import { formSchema } from "./formSchema";`,
   ];
 
@@ -52,6 +52,7 @@ ${fieldsJSX}
 
 export default function MyFormPage() {
   const SUBMIT_EXCLUDED = ${submitExcluded};
+  const { submit } = useFormSubmit();
   const [values, setValues] = useState<Record<string, unknown>>(${JSON.stringify(defaults, null, 4).split('\n').map((l, i) => i === 0 ? l : '  ' + l).join('\n')});
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [globalError, setGlobalError] = useState<string | null>(null);
@@ -85,7 +86,7 @@ export default function MyFormPage() {
           if (k.startsWith(p)) delete payload[k];
         }
       }
-      await formService.submitForm(payload);
+      await submit(payload);
     } catch (error: any) {
       setGlobalError(error?.message || "An unexpected error occurred");
     } finally {

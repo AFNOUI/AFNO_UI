@@ -412,6 +412,181 @@ Rejected because:
 
 ---
 
+### 1.17 [Accepted] Wave-9: the engine layer is transport-free; transport lives in variant `services.ts`
+
+**Context.** The two-layer model (afnoui-managed engine vs user-owned variant)
+was being violated by the engine itself. An audit found user-changeable code in
+files that `afnoui add --force` overwrites:
+
+- `app/tables/tableServices.ts` — raw `fetch`, hardcoded `Content-Type`,
+  hardcoded `HTTP ${status}` error convention, default request bodies.
+- `app/tables/useRowApiActions.hook.ts` — hardcoded `toast` + rollback policy.
+- `app/forms/hooks/useInfiniteOptions.ts` — imported **both** `axios` and
+  `@tanstack/react-query`, with hardcoded `staleTime` / `gcTime` / query keys.
+- `app/forms/utils/dependentApiRequest.ts` — typed its public surface as
+  `AxiosRequestConfig`, making the engine's *types* axios-shaped.
+- 4 `action-forms` Combobox fields called `axios` inline **in the component**,
+  duplicating ~90 lines each of logic their rhf/tanstack twins got from the hook.
+
+Net effect: a project on axios + interceptors had to edit afnoui-managed files,
+and every async-form install pulled in axios **and** react-query whether or not
+it wanted them.
+
+**Decision.** Split by purity, not by file (R-54). The engine keeps the
+deterministic half — token grammar, request-descriptor building, response
+mapping, loading/pagination state machines. The variant owns the policy half —
+HTTP client, headers, caching, notifications. They meet at an injected port with
+a zero-dependency default (`fetch` + React state).
+
+Kanban, tree, dnd and charts engines were audited and found already
+transport-free; R-53 now keeps them that way rather than assuming it.
+
+**Alternative rejected.** Moving whole files to the variant layer. It would have
+handed users the token grammar and pagination state machine to maintain — code
+that is part of the builder's contract and must not drift per project.
+
+**Alternative rejected.** Keeping axios/react-query and making them peer
+dependencies. It does not fix the real problem: the *code* was unreachable for
+editing, not merely the dependency.
+
+**Consequences.**
+- Clean break, one wave. Engine props changed; existing installs must re-add.
+- `useAsyncOptions` / `useInfiniteOptions` kept identical names and return
+  shapes, so all 20 field files that consume them changed by **zero lines** —
+  only the 4 outliers that bypassed the hook were rewritten.
+- `localStateAdapter.ts` deliberately reimplements react-query's 5-min stale /
+  10-min gc / in-flight de-dupe, so dropping the dependency is not a behavioural
+  regression.
+- axios / react-query remain as CLI-gated generated code (R-56), not deletions.
+
+**Forbidden change**:
+- Do NOT add a transport import to an engine file to "simplify" it (R-53).
+- Do NOT let a variant component import `services.ts` directly (R-55).
+- Do NOT make the engine branch on whether axios/tanstack was selected — the
+  whole point is that it cannot tell.
+
+---
+
+### 1.18 [Accepted] `async-field` / `infinite-field` ship as R-55 bundles, not single files
+
+**Context**: the 12 snippets under `app/registry/{async-field,infinite-field}/`
+were the last place a default install still pulled a transport dependency.
+Each was one self-contained `.tsx` that imported `axios` +
+`@tanstack/react-query` outright, so `afnoui add async-field/<slug>` installed
+both with no flag passed. Not an R-53 violation — they are `registry:variant`
+files landing in user-owned `ui-variants/` — but it broke R-56's promise that a
+default install has **zero** transport dependencies.
+
+**Decision**: give them the same treatment as forms / tables, i.e. a real R-55
+bundle rather than a fetch-only rewrite of one big file:
+
+```
+ui-variants/<family>/<slug>/
+  <Component>.tsx   renders; imports ./hooks + ./constants, never ./services
+  hooks.ts          React state  | react-query adapter
+  services.ts       fetch        | axios
+  constants.ts      presets + every tunable (R-57)
+```
+
+**Why not the two alternatives considered**:
+- *Single file + whole-file transport overrides* — works with today's
+  mechanism, but the override unit is the whole ~200-line snippet, so the
+  registry would carry three near-identical copies of each. That is exactly the
+  "duplicate bundle" shape R-56 rejects.
+- *Leave them fetch-only* — cheapest, but then two variant families would be
+  the only ones where `--axios` / `--tanstack-query` silently do nothing.
+
+**The invariant that makes it cheap**: the hook's **name, argument list and
+return shape are identical** across the local-state and react-query
+implementations, so `<Component>.tsx` is byte-identical in all four
+combinations and appears in neither override set. Verified by sha: all four
+installed components hash the same. If a future edit makes the component differ
+per combo, the override payload silently triples — treat that as a regression.
+
+**Consequences**:
+- `afnoui add async-field/<slug>` now writes a folder of 4 files, not 1 file.
+- Default `npmDependencies` dropped from
+  `["@tanstack/react-query","axios","lucide-react"]` to `["lucide-react"]`.
+- `transport.axios` → `services.ts`; `transport.tanstack` → `hooks.ts` +
+  `constants.ts`. No CLI change was needed: `resolveRegistryOutputPath`'s
+  `ui-variants/` branch is a prefix replace, so nested paths already worked,
+  and the transport-override application in `operations.ts` was already
+  category-agnostic.
+- `app/components/lab/{async-field,infinite-field}/shared.*` were converted to
+  the same fetch + local-state runtime. The lab page renders that code *and*
+  displays the generated bundle beside it, so letting them diverge would show a
+  user one thing and run another.
+- `useInfiniteOptionsAutoScroll` was deleted. It existed only to give the
+  sentinel demos a distinct react-query cache key; without react-query each
+  hook instance owns its state, so it was the same hook twice.
+
+**Known gap (deliberate)**: `ComponentInstall` / `CodePreview` still take a
+single `fullCode` string, so the gallery shows the bundle as one concatenated
+block via `buildFieldVariantPreview`. Real per-file tabs belong to the
+export-tab consistency pass — `.ai-brain/TASK_QUEUE.md` item 3.
+
+**Caught while verifying this**: `forms.json`'s `stackInstall.{rhf,tanstack,
+action}.npmDependencies` still listed `axios` and `@tanstack/react-query`,
+hardcoded in `scripts/generate-registry.ts::STACK_INSTALL`. Wave-9 removed the
+*imports* from the forms engine but left the *declarations*, so every
+`afnoui form init` kept installing both — R-56 was false for reasons that had
+nothing to do with these 12 snippets. Removed; `tables.json` was already clean.
+
+The lesson: **an engine being import-free does not make an install
+dependency-free.** Grepping `app/**` for `axios` proves nothing about what the
+CLI installs. Check the registry JSON's dependency lists, or better, install
+into a *fresh* `test/` and read `test/package.json` — a stale one carries the
+old deps forward and hides the regression.
+
+**Forbidden change**:
+- Do NOT let the generated `<Component>.tsx` differ between transport combos.
+- Do NOT re-add a transport to `STACK_INSTALL` "so it's there if a variant
+  needs it". The per-variant `transport` block installs it on demand.
+- Do NOT read the cache with `Date.now()` during render in the local-state
+  hook — it trips `react-hooks/purity` under the React Compiler. Resolve the
+  cache inside the effect, as `app/forms/transport/localStateAdapter.ts` does.
+  This was caught by lint, not by `tsc`.
+
+---
+
+### 1.19 [Accepted] The site's CLI reference is a model of the CLI, verified — not a second copy of it
+
+**Context**: the homepage had a hand-written list of ~20 CLI command cards.
+Two of them printed slugs that do not exist —
+`charts/bar/charts-bar-grouped` (the real slug is `charts/bar/grouped`) and
+`button/variants` (`button/button-variants`) — so anyone who copied them got a
+404 from the registry. Nobody noticed because nothing checked. This is the same
+failure the tables gallery had in Wave-9, from the same cause: **command
+strings assembled by hand at the call site.**
+
+**Decision**: replace the cards with an interactive playground under
+`app/components/shared/cli-playground/`, built on three separations:
+
+| Layer | Source of truth | Can it drift? |
+|---|---|---|
+| Command / flag **surface** | `commandSpecs.ts`, verified against `afnoui-cli/src/cli/**` by `scripts/verify-cli-playground-flags.ts` | No — build fails |
+| Installable **slugs** | imported from `public/registry/{index,variants/index}.json` | No — impossible to offer a slug that is not there |
+| **Descriptions** | hand-written in `commandSpecs.ts` | **Yes** — this is the residual risk, and why R-58 exists |
+
+The third row is deliberate. Generating prose from `--help` would have made
+drift impossible, but `--help` is written for someone who already knows the
+CLI; the playground exists for someone who does not. Accepting a
+human-maintained description layer is the cost of that, and R-58 is the
+mitigation.
+
+**Why one section, not two**: the playground first shipped as a section of its
+own, below the existing "Install Into Your Project". Two CLI sections on one
+page made both look redundant. The curated cards became **presets that seed the
+builder**, so browsing and building share one surface — and a preset is now a
+starting point rather than a dead end.
+
+**Consequence for future work**: the same component serves builder and variant
+pages via its `scope` prop (`{ commandId, args, lockCommand }`), which is what
+finally kills per-page command assembly. Until those pages are migrated they
+keep their own bars, and can still disagree with each other.
+
+---
+
 ## Section 2 — The "Hacks" Library
 
 > Each entry is a non-standard piece of code. If you’re an AI tempted to "clean it up" — read the rationale first. Most of these protect against silent regressions.

@@ -19,7 +19,7 @@ the `afnoui` CLI (under `afnoui-cli/`) drops into consumer projects.
 - High-level orientation: `AGENTS.md` at repo root.
 - Architectural map: `.ai-brain/STRUCTURAL_MAP.md`.
 - Decision log + forbidden changes: `.ai-brain/THE_DECISION_LOG.md`.
-- Hard rules (R-00 — R-52) + forbidden table (F-01 — F-16):
+- Hard rules (R-00 — R-58) + forbidden table (F-01 — F-16):
   `.ai-brain/AI_AGENT_RULES.md`.
 - Exhaustive CLI reference: `.ai-brain/CLI_REFERENCE.md`.
 - Sprint status: `.ai-brain/CURRENT_SPRINT.md`.
@@ -42,7 +42,22 @@ when you apply or explain a rule. Don't paraphrase rules silently.
 4. **DnD drag-data is an intersection type.** `type X = { id: string } &
    Record<string, unknown>` — never `interface X { id: string }`. This is
    past mistake 3.14 — re-introducing it breaks `cd test && pnpm build`.
-5. **Production gate.** Before declaring "done":
+5. **Engine layer is transport-free.** No engine/shared file imports `axios`,
+   `@tanstack/react-query`, or any HTTP client. The engine builds a request
+   descriptor; the variant's `services.ts` sends it (§ R-53, R-54).
+6. **`component → hooks.ts → services.ts`.** In every variant, components never
+   import `services.ts` — only the hook layer calls services. Every variant
+   ships a `services.ts`, even when the body is a documented stub (§ R-55).
+7. **axios / TanStack Query are CLI-gated.** Default generated output is
+   `fetch` + local React state; the axios and react-query branches are selected
+   by CLI flags and marked `TODO(cli-gated)` (§ R-56).
+8. **CLI change ⇒ playground change, in the same commit.** Every command,
+   subcommand and flag in `afnoui-cli/src/cli/**` is modelled in
+   `app/components/shared/cli-playground/commandSpecs.ts` so the site can teach
+   the CLI. Adding a flag there and not here makes the site print commands that
+   do not match reality. `pnpm run verify:cli-playground` fails on flag drift in
+   either direction; it cannot check descriptions (§ R-58).
+9. **Production gate.** Before declaring "done":
    ```
    pnpm lint && pnpm test && pnpm run build:cli &&
    pnpm run verify:quick && pnpm run validate:variants &&
@@ -60,6 +75,7 @@ when you apply or explain a rule. Don't paraphrase rules silently.
 | `app/components/ui/dnd/**` | `build:tables-registry` AND `build:kanban-registry` AND `build:dnd-registry` |
 | `app/components/lab/dnd/variants/**` | `pnpm run build:variants-registry` + DnD verifier |
 | `afnoui-cli/src/**` | `cd afnoui-cli && npm test && npm run build` |
+| `afnoui-cli/src/cli/**` (a command or flag) | `app/components/shared/cli-playground/commandSpecs.ts` + `pnpm run verify:cli-playground` (§ R-58) |
 | Theme tokens / `app/utils/themeExport.ts` | `pnpm run verify:theme-export-sync` |
 | Moved a consumer-visible directory | DECISION-LOG supersede + `STRUCTURAL_MAP.md` + `AI_AGENT_RULES.md` + Wave-N sprint entry |
 
@@ -79,4 +95,9 @@ when you apply or explain a rule. Don't paraphrase rules silently.
 3. Add a test in `afnoui-cli/tests/unit/programWiring.test.ts`.
 4. Add an entry to `.ai-brain/CLI_REFERENCE.md` AND to the `help` command's
    table in `afnoui-cli/src/cli/commands/help.ts`.
-5. `cd afnoui-cli && npm test && npm run build`.
+5. **Model it in the site's playground** —
+   `app/components/shared/cli-playground/commandSpecs.ts`, plus
+   `FILE_TO_COMMAND_IDS` in `scripts/verify-cli-playground-flags.ts` for a new
+   command file (§ R-58).
+6. `cd afnoui-cli && npm test && npm run build`.
+7. `pnpm run verify:cli-playground` — fails if the flag sets disagree.

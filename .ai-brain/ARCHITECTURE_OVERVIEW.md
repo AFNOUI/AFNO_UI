@@ -282,6 +282,52 @@ Caught during the source scan and **fixed** (see commit alongside this doc):
 
 ---
 
+## 7b. The transport seam (Wave-9)
+
+The three-layer pipeline above answers *where code lands*. This answers *who is
+allowed to edit it*, which is the second axis of the same model.
+
+**The problem it fixes.** Engine files are hash-tracked and replaced by
+`afnoui add --force` / `update`. So any user-changeable code that lives in an
+engine file is a trap: the user edits it, the next update silently reverts them.
+Pre-Wave-9 the table row-action `fetch`, the toast policy, and the forms
+axios + react-query stack all sat in engine files.
+
+**The rule.** Split by purity, not by file (R-54):
+
+```
+ENGINE (afnoui-owned, never edited)          VARIANT (user-owned, edit freely)
+──────────────────────────────────           ─────────────────────────────────
+token grammar, request descriptors,     →    which client sends it, headers,
+response mapping, loading/pagination         auth, caching, toasts, rollback
+state machines                               policy, error copy
+        │                                            │
+        └──────── injected port (React context) ─────┘
+                  default = fetch + React state
+```
+
+**Where it is implemented.**
+
+| Engine | Pure half | Port + default |
+|---|---|---|
+| forms | `app/forms/transport/requestBuilder.ts`, `utils/dependentApiRequest.ts` | `transport/context.tsx` → `defaultTransport.ts` (fetch) + `localStateAdapter.ts` (React state) |
+| tables | `app/tables/transport/requestBuilder.ts` | `transport/context.tsx` → `defaultTransport.ts` (fetch) + bundled toast notifier |
+| kanban / tree / dnd / charts | n/a — engines make no network calls | variant `services.ts` only |
+
+**Consumer-side shape** (R-55): `component → hooks.ts → services.ts`, one
+direction, and only the hook layer may call services.
+
+**Why the default is `fetch` + React state** (R-56): a bare install must add no
+transport dependency. `localStateAdapter.ts` reimplements react-query's 5-min
+stale / 10-min gc / in-flight de-dupe precisely so removing the dependency is not
+a behavioural regression. The axios and react-query paths still exist as
+CLI-gated generated code — selected by a flag, never hand-written, and marked
+`TODO(cli-gated)`.
+
+Full rationale and the rejected alternatives: `THE_DECISION_LOG.md § 1.17`.
+
+---
+
 ## 8. Where to look next
 
 | I want to… | Open |

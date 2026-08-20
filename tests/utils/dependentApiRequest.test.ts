@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  buildAxiosConfigForAsyncApi,
   DEPENDENCY_VALUE_TOKEN,
   flattenPayloadToQueryParams,
   resolveAsyncApiConfigForFetch,
@@ -9,6 +8,7 @@ import {
   substituteDependencyToken,
   substitutePathParamPlaceholders,
 } from "@/forms/utils/dependentApiRequest";
+import { buildOptionsRequest } from "@/forms/transport/requestBuilder";
 import type { AsyncApiConfig } from "@/forms/types/types";
 
 describe("dependentApiRequest / serializeWatchValue", () => {
@@ -152,7 +152,7 @@ describe("dependentApiRequest / flattenPayloadToQueryParams", () => {
   });
 });
 
-describe("dependentApiRequest / buildAxiosConfigForAsyncApi", () => {
+describe("dependentApiRequest / buildOptionsRequest", () => {
   const baseGet: AsyncApiConfig = {
     url: "https://x/{value}",
     method: "GET",
@@ -160,18 +160,18 @@ describe("dependentApiRequest / buildAxiosConfigForAsyncApi", () => {
   };
 
   it("GET: payload becomes params; dynamicParams override/extend", () => {
-    const cfg = buildAxiosConfigForAsyncApi(
+    const cfg = buildOptionsRequest(
       { ...baseGet, payload: { countryId: "{value}", limit: 10 }, _watchValue: "NP" },
       { search: "kath" },
     );
     expect(cfg.url).toBe("https://x/NP");
     expect(cfg.method).toBe("GET");
     expect(cfg.params).toEqual({ countryId: "NP", limit: 10, search: "kath" });
-    expect(cfg.data).toBeUndefined();
+    expect(cfg.body).toBeUndefined();
   });
 
   it("GET without payload: just dynamicParams", () => {
-    const cfg = buildAxiosConfigForAsyncApi(
+    const cfg = buildOptionsRequest(
       { ...baseGet, _watchValue: "X" },
       { p: 1 },
     );
@@ -179,7 +179,7 @@ describe("dependentApiRequest / buildAxiosConfigForAsyncApi", () => {
   });
 
   it("POST: payload becomes JSON body with dynamicParams merged", () => {
-    const cfg = buildAxiosConfigForAsyncApi(
+    const cfg = buildOptionsRequest(
       {
         ...baseGet,
         method: "POST",
@@ -189,28 +189,28 @@ describe("dependentApiRequest / buildAxiosConfigForAsyncApi", () => {
       },
       { page: 1 },
     );
-    expect(cfg.data).toEqual({ country: "NP", limit: 10, page: 1 });
+    expect(cfg.body).toEqual({ country: "NP", limit: 10, page: 1 });
     expect(cfg.params).toBeUndefined();
   });
 
   it("POST without user payload: injects { value: <watch> }", () => {
-    const cfg = buildAxiosConfigForAsyncApi(
+    const cfg = buildOptionsRequest(
       { ...baseGet, method: "POST", url: "https://x", _watchValue: "NP" },
       { page: 1 },
     );
-    expect(cfg.data).toEqual({ value: "NP", page: 1 });
+    expect(cfg.body).toEqual({ value: "NP", page: 1 });
   });
 
   it("POST without user payload AND empty watch: no injected value", () => {
-    const cfg = buildAxiosConfigForAsyncApi(
+    const cfg = buildOptionsRequest(
       { ...baseGet, method: "POST", url: "https://x" },
       { page: 1 },
     );
-    expect(cfg.data).toEqual({ page: 1 });
+    expect(cfg.body).toEqual({ page: 1 });
   });
 
   it("POST with array payload: passes through verbatim", () => {
-    const cfg = buildAxiosConfigForAsyncApi(
+    const cfg = buildOptionsRequest(
       {
         ...baseGet,
         method: "POST",
@@ -220,11 +220,11 @@ describe("dependentApiRequest / buildAxiosConfigForAsyncApi", () => {
       },
       { ignored: 1 },
     );
-    expect(cfg.data).toEqual(["NP", "x"]);
+    expect(cfg.body).toEqual(["NP", "x"]);
   });
 
   it("DELETE without payload: behaves like GET (params)", () => {
-    const cfg = buildAxiosConfigForAsyncApi({
+    const cfg = buildOptionsRequest({
       ...baseGet,
       method: "DELETE",
       url: "https://x",
@@ -232,45 +232,45 @@ describe("dependentApiRequest / buildAxiosConfigForAsyncApi", () => {
     });
     expect(cfg.method).toBe("DELETE");
     expect(cfg.params).toEqual({});
-    expect(cfg.data).toBeUndefined();
+    expect(cfg.body).toBeUndefined();
   });
 
   it("DELETE WITH meaningful payload: JSON body", () => {
-    const cfg = buildAxiosConfigForAsyncApi({
+    const cfg = buildOptionsRequest({
       ...baseGet,
       method: "DELETE",
       url: "https://x",
       payload: { id: "{value}" },
       _watchValue: "NP",
     });
-    expect(cfg.data).toEqual({ id: "NP" });
+    expect(cfg.body).toEqual({ id: "NP" });
     expect(cfg.params).toBeUndefined();
   });
 
   it("PUT: same as POST", () => {
-    const cfg = buildAxiosConfigForAsyncApi({
+    const cfg = buildOptionsRequest({
       ...baseGet,
       method: "PUT",
       url: "https://x",
       payload: { x: "{value}" },
       _watchValue: "NP",
     });
-    expect(cfg.data).toEqual({ x: "NP" });
+    expect(cfg.body).toEqual({ x: "NP" });
   });
 
   it("PATCH: same as POST", () => {
-    const cfg = buildAxiosConfigForAsyncApi({
+    const cfg = buildOptionsRequest({
       ...baseGet,
       method: "PATCH",
       url: "https://x",
       payload: { x: "{value}" },
       _watchValue: "NP",
     });
-    expect(cfg.data).toEqual({ x: "NP" });
+    expect(cfg.body).toEqual({ x: "NP" });
   });
 
   it("propagates substituted headers", () => {
-    const cfg = buildAxiosConfigForAsyncApi({
+    const cfg = buildOptionsRequest({
       ...baseGet,
       headers: { "X-Country": "{value}" },
       _watchValue: "NP",
@@ -279,7 +279,7 @@ describe("dependentApiRequest / buildAxiosConfigForAsyncApi", () => {
   });
 
   it("substitutes /:id segment in url + keeps query untouched", () => {
-    const cfg = buildAxiosConfigForAsyncApi({
+    const cfg = buildOptionsRequest({
       ...baseGet,
       url: "https://x/:id/cities?stable=1",
       _watchValue: "NP",

@@ -58,7 +58,7 @@ CLI ships it to consumers.** When adding a file, put it where its role dictates.
 
 | Role | Lives in | Ships to consumer? | Notes |
 |---|---|---|---|
-| **Installable engine** (runtime the user gets) | `app/tables/**`, `app/kanban/**`, `app/forms/{rhf,tanstack,action}/**`, `app/components/ui/**`, `app/components/ui/dnd/**` | ✅ via a registry generator | Engine renderers/hooks/services colocate here (e.g. `app/tables/defaultCellRenderer.tsx`, `app/tables/useRowApiActions.hook.ts`, `app/kanban/defaultCardRenderer.tsx`). |
+| **Installable engine** (runtime the user gets) | `app/tables/**`, `app/kanban/**`, `app/forms/{rhf,tanstack,action}/**`, `app/components/ui/**`, `app/components/ui/dnd/**` | ✅ via a registry generator | Engine renderers/hooks/services colocate here (e.g. `app/tables/defaultCellRenderer.tsx`, `app/tables/useRowApiActions.ts`, `app/kanban/defaultCardRenderer.tsx`). |
 | **Sandbox utilities** (shipped, neutral) | `app/utils/*` | ✅ to consumer `utils/<file>` | `cellJsRunner.ts`, `rowDialogTemplate.ts`, etc. (DECISION 1.11). |
 | **Builder UI + codegen** (website only) | `app/{table,kanban,form,ui}-builder/**` | ❌ never shipped | The visual builders + pure `(config) => string` emitters. |
 | **Sample data / templates** | `app/<domain>-builder/data/*.ts(x)` | ❌ | e.g. `tableBuilderTemplates.ts`, `kanbanCardRendererTemplates.tsx` (builder-only demo renderers — NOT in `app/kanban/`). |
@@ -71,6 +71,23 @@ CLI ships it to consumers.** When adding a file, put it where its role dictates.
 `scripts/build-tables-registry.ts`; the rest of the table engine (renderers,
 services, row-action hook, types) lives in `app/tables/`. Kanban is fully
 consolidated under `app/kanban/`. New table engine files go in `app/tables/`.
+
+**Transport seam (Wave-9, R-53 → R-56).** The engine layer is transport-free.
+Each engine that talks to a network ships a `transport/` folder holding the
+*pure* half plus a zero-dependency default, and takes the real implementation
+through React context:
+
+```
+app/forms/transport/     types.ts  requestBuilder.ts  defaultTransport.ts (fetch)
+                         localStateAdapter.ts (React state)  context.tsx
+app/tables/transport/    types.ts  requestBuilder.ts  defaultTransport.ts (fetch)
+                         context.tsx
+```
+
+`app/forms/hooks/useInfiniteOptions.ts` and `app/tables/useRowApiActions.ts`
+consume that context and import **no** HTTP client. Kanban / tree / dnd / charts
+engines make no network calls at all — keep it that way (R-55). The variant
+layer supplies the implementation via `component → hooks.ts → services.ts`.
 
 **Anti-drift rules:** never use Vite `?raw` imports (`@/x?raw`) — Next.js has no
 loader for them; the build scripts read source via Node `fs` and embed it. Never
