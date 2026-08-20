@@ -10,8 +10,11 @@ import { DEFAULT_TRANSPORT, type TransportChoice } from "@/lib/codegen/transport
  * callers and every Export tab silently rendered the fetch default.
  *
  * The contract worth protecting is what it *says*, not how it looks: the two
- * axes stay independent, the dependency and flag text match the selection, and
- * an inert picker admits it rather than silently no-opping.
+ * axes stay independent, and the dependency and flag text match the selection.
+ * A config that would make the picker inert (a client-side table generating
+ * no services.ts) isn't handled here — the caller (`BuilderInstallPanel`)
+ * simply omits the `transport` slot in that case, so the whole step never
+ * renders. A control nobody can make do anything is worse than no control.
  */
 
 const AXIOS_TANSTACK: TransportChoice = { http: "axios", query: "tanstack" };
@@ -115,23 +118,6 @@ describe("TransportPicker — what it promises to install", () => {
         setup(AXIOS_TANSTACK);
         // `afnoui transport` is the whole reason switching doesn't need --force
         expect(document.body.textContent).toContain("afnoui transport");
-    });
-});
-
-describe("TransportPicker — inert state", () => {
-    it("stays silent when the choice actually does something", () => {
-        setup();
-        expect(screen.queryByText(/Nothing to send yet/i)).toBeNull();
-    });
-
-    it("admits when the choice would change nothing, and says what to do", () => {
-        // a client-side table generates no services.ts, so the picker is a no-op.
-        // A live control that silently does nothing is worse than no control.
-        setup(DEFAULT_TRANSPORT, {
-            inactiveReason: "This table is fully client-side, so no services.ts is generated.",
-        });
-        expect(screen.getByText(/Nothing to send yet/i)).toBeDefined();
-        expect(document.body.textContent).toContain("fully client-side");
     });
 });
 

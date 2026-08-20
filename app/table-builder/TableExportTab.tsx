@@ -22,20 +22,35 @@ export function TableExportTab({ config, rendererSources }: TableExportTabProps)
   const [transport, setTransport] = useState<TransportChoice>(DEFAULT_TRANSPORT);
   const hasColumns = config.columns.filter(c => c.visible).length > 0;
 
+  // Picking "API / Server-side" here is meant to be the one switch that
+  // matters — force sort to source from the API rather than requiring a
+  // separate trip to Builder tab → Settings → Data Source first. `sort` has
+  // no "enabled" gate (`resolveSource`), so this alone is always enough to
+  // make `generatesDataLayer` true; it doesn't touch anything the Builder
+  // tab's own per-feature overrides (`config.sources`) already set.
+  const effectiveConfig = useMemo(
+    () =>
+      dataMode === "api" && config.sortMode !== "api"
+        ? { ...config, sortMode: "api" as const }
+        : config,
+    [config, dataMode],
+  );
+
   const generated = useMemo(
-    () => generateAllFiles(config, dataMode, { rendererSources, transport }),
-    [config, dataMode, rendererSources, transport],
+    () => generateAllFiles(effectiveConfig, dataMode, { rendererSources, transport }),
+    [effectiveConfig, dataMode, rendererSources, transport],
   );
   const sharedNeeded = useMemo(
-    () => [...SHARED_TABLE_FILES, ...getOptionalEngineFiles(config)].map(f => ({ ...f, isFixed: true })),
-    [config],
+    () => [...SHARED_TABLE_FILES, ...getOptionalEngineFiles(effectiveConfig)].map(f => ({ ...f, isFixed: true })),
+    [effectiveConfig],
   );
   const allFiles = useMemo(() => [...generated, ...sharedNeeded], [generated, sharedNeeded]);
   const [activeFile, setActiveFile] = useState<string>(allFiles[0]?.name ?? "");
   // A client-side table emits no services.ts, so the transport opt-ins would be
   // dependencies nothing imports. Report what the generated code actually needs.
-  const effectiveTransport = generatesDataLayer(config, dataMode) ? transport : DEFAULT_TRANSPORT;
-  const depReport = useMemo(() => getDependencyReport(config, effectiveTransport), [config, effectiveTransport]);
+  const hasDataLayer = generatesDataLayer(effectiveConfig, dataMode);
+  const effectiveTransport = hasDataLayer ? transport : DEFAULT_TRANSPORT;
+  const depReport = useMemo(() => getDependencyReport(effectiveConfig, effectiveTransport), [effectiveConfig, effectiveTransport]);
 
   if (!hasColumns) {
     return (
@@ -53,7 +68,25 @@ export function TableExportTab({ config, rendererSources }: TableExportTabProps)
 
   return (
     <div className="space-y-6">
-      {/* Data Source */}
+      <BuilderInstallPanel
+        // Static tables generate no services.ts / useTableData.ts, so
+        // transport would change neither the command nor any generated file
+        // — omit the slot entirely rather than show a control that no-ops.
+        transport={hasDataLayer ? { value: transport, onChange: setTransport, idPrefix: "table-transport" } : undefined}
+        subject="table"
+        idPrefix="table-builder"
+        generatedCount={generated.length}
+        sharedCount={sharedNeeded.length}
+        runtimeCommand={depReport.npmInstall}
+        devCommand={depReport.npmInstallDev}
+        notes={depReport.notes}
+        cliScope={{ commandId: "table-init", lockCommand: true, lockArgs: true }}
+      />
+
+      {/* Data Source only changes what's generated below (services.ts /
+          useTableData.ts appear or not) — `table init` has no flags at all,
+          so this never changes the command above. Lives next to the file
+          browser it affects instead of inside the install card. */}
       <Card className="border-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm">Data Source</CardTitle>
@@ -84,26 +117,6 @@ export function TableExportTab({ config, rendererSources }: TableExportTabProps)
           </RadioGroup>
         </CardContent>
       </Card>
-
-
-      <BuilderInstallPanel
-        transport={{
-          value: transport,
-          onChange: setTransport,
-          idPrefix: "table-transport",
-          inactiveReason: generatesDataLayer(config, dataMode)
-            ? undefined
-            : "This table is fully client-side, so no services.ts / useTableData.ts is generated. Choose API / Server-side above and set at least one feature (search, sort, filter or pagination) to load from the API.",
-        }}
-        subject="table"
-        idPrefix="table-builder"
-        generatedCount={generated.length}
-        sharedCount={sharedNeeded.length}
-        runtimeCommand={depReport.npmInstall}
-        devCommand={depReport.npmInstallDev}
-        notes={depReport.notes}
-        cliScope={{ commandId: "table-init", lockCommand: true, lockArgs: true }}
-      />
 
       <BuilderFilesPanel
         subject="table"

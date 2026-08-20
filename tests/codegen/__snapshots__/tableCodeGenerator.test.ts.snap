@@ -114,14 +114,14 @@ exports[`tableCodeGenerator / generateAllFiles (per template × per dataMode) > 
     "path": "src/components/tables/services.ts",
   },
   {
-    "codeBytes": 5129,
+    "codeBytes": 5127,
     "isFixed": false,
     "language": "ts",
     "name": "tableConfig.ts",
     "path": "src/components/tables/tableConfig.ts",
   },
   {
-    "codeBytes": 2444,
+    "codeBytes": 3571,
     "isFixed": false,
     "language": "ts",
     "name": "useRowInteractions.ts",
@@ -147,14 +147,14 @@ exports[`tableCodeGenerator / generateAllFiles (per template × per dataMode) > 
     "path": "src/components/tables/DataTable.tsx",
   },
   {
-    "codeBytes": 5129,
+    "codeBytes": 5127,
     "isFixed": false,
     "language": "ts",
     "name": "tableConfig.ts",
     "path": "src/components/tables/tableConfig.ts",
   },
   {
-    "codeBytes": 2444,
+    "codeBytes": 3571,
     "isFixed": false,
     "language": "ts",
     "name": "useRowInteractions.ts",

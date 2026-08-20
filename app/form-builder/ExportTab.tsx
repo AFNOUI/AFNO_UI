@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { BuilderFilesPanel, BuilderInstallPanel } from "@/components/shared/builder-export";
+import { BuilderFilesPanel, BuilderInstallPanel, type ConfigStep } from "@/components/shared/builder-export";
 import { DEFAULT_TRANSPORT, transportNpmDependencies, type TransportChoice } from "@/lib/codegen/transport";
 import {
   generateAllFiles, generateInstallCommand,
@@ -99,15 +99,20 @@ export function ExportTab({ formConfig }: ExportTabProps) {
     );
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Library Selector */}
-      <Card className="border-border">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Form Library</CardTitle>
-          <CardDescription className="text-xs">Choose which form library to generate code for</CardDescription>
-        </CardHeader>
-        <CardContent>
+  // Form Library changes the printed command — `form init --stack tanstack`
+  // and the packages step both follow it — so it lives *inside* "Install &
+  // set up" as a config step, same rule as transport. Implementation Style,
+  // Schema Approach and Backend Hydration only change what's generated in
+  // the files below and never touch the command, so they stay as their own
+  // cards below the panel instead.
+  const configSteps: ConfigStep[] = [
+    {
+      id: "library",
+      icon: Code2,
+      title: "Form Library",
+      hint: "Choose which form library to generate code for.",
+      content: (
+        <div>
           <div className="flex flex-wrap gap-2">
             {(Object.keys(libraryMeta) as FormLibrary[]).map(lib => {
               const meta = libraryMeta[lib];
@@ -131,9 +136,46 @@ export function ExportTab({ formConfig }: ExportTabProps) {
           <p className="text-[10px] text-muted-foreground mt-2">
             {libraryMeta[formLibrary].desc}
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      ),
+    },
+  ];
 
+  return (
+    <div className="space-y-6">
+      <BuilderInstallPanel
+        subject="form"
+        configSteps={configSteps}
+        transport={{
+          value: transport,
+          onChange: setTransport,
+          idPrefix: "form-transport",
+        }}
+        idPrefix="form-builder"
+        generatedCount={generatedFiles.filter((f) => !f.isFixed).length}
+        sharedCount={generatedFiles.filter((f) => f.isFixed).length}
+        runtimeCommand={coreDepsCommand}
+        extraCommands={[{ label: "UI components (Radix UI)", command: installCmd }]}
+        notes={[
+          `Uses ${usedTypes.length} field type${usedTypes.length === 1 ? "" : "s"} and ${requiredComponents.fieldComponents.length} field component${requiredComponents.fieldComponents.length === 1 ? "" : "s"}: ${requiredComponents.fieldComponents.map((c) => c.file).join(", ")}.`,
+          "Copy the field components from the tabs below into `@/components/forms/fields/`.",
+          schemaMode === "runtime"
+            ? "Schema is built automatically at runtime from formConfig.ts."
+            : "Schema is pre-compiled in formSchema.ts for type safety.",
+          ...(hydratedFields.length > 0
+            ? [`${hydratedFields.length} field(s) are hydrated from the backend via applyHydration().`]
+            : []),
+        ]}
+        cliScope={{
+          commandId: "form-init",
+          lockCommand: true,
+          lockArgs: true,
+          flags: { stack: formLibrary },
+        }}
+      />
+
+      {/* Source-code-only choices live below "Install & set up" — they never
+          change the command above, only the generated files further down. */}
       <Card className="border-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm">Implementation Style</CardTitle>
@@ -245,36 +287,6 @@ export function ExportTab({ formConfig }: ExportTabProps) {
           </CardContent>
         </Card>
       )}
-
-      <BuilderInstallPanel
-        subject="form"
-        transport={{
-          value: transport,
-          onChange: setTransport,
-          idPrefix: "form-transport",
-        }}
-        idPrefix="form-builder"
-        generatedCount={generatedFiles.filter((f) => !f.isFixed).length}
-        sharedCount={generatedFiles.filter((f) => f.isFixed).length}
-        runtimeCommand={coreDepsCommand}
-        extraCommands={[{ label: "UI components (Radix UI)", command: installCmd }]}
-        notes={[
-          `Uses ${usedTypes.length} field type${usedTypes.length === 1 ? "" : "s"} and ${requiredComponents.fieldComponents.length} field component${requiredComponents.fieldComponents.length === 1 ? "" : "s"}: ${requiredComponents.fieldComponents.map((c) => c.file).join(", ")}.`,
-          "Copy the field components from the tabs below into `@/components/forms/fields/`.",
-          schemaMode === "runtime"
-            ? "Schema is built automatically at runtime from formConfig.ts."
-            : "Schema is pre-compiled in formSchema.ts for type safety.",
-          ...(hydratedFields.length > 0
-            ? [`${hydratedFields.length} field(s) are hydrated from the backend via applyHydration().`]
-            : []),
-        ]}
-        cliScope={{
-          commandId: "form-init",
-          lockCommand: true,
-          lockArgs: true,
-          flags: { stack: formLibrary },
-        }}
-      />
 
       <BuilderFilesPanel
         subject="form"

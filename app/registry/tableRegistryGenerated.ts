@@ -11,7 +11,7 @@ export interface TableRegistryFile {
   description: string;
 }
 
-export const tableRegistryGeneratedAt = "2026-08-19T07:53:49.204Z";
+export const tableRegistryGeneratedAt = "2026-08-20T06:05:32.906Z";
 
 export const tableInstall = {
   "npmDependencies": [
@@ -127,6 +127,7 @@ import {
 import {
   useTablePreview,
   aggregate as aggregateValues,
+  NUMERIC_COLUMN_TYPES,
 } from "./useTablePreview";
 import {
   TableColumnConfig,
@@ -1212,6 +1213,7 @@ export function TablePreview({
                   <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
                     placeholder="Search…"
+                    title="Plain text matches as before. Numeric columns also accept >80, <80, =80, !=80. Any column accepts /regex/ (e.g. /^a/i)."
                     className="ps-8 h-8 text-xs w-44"
                     value={search}
                     onChange={(e) => {
@@ -1459,7 +1461,7 @@ export function TablePreview({
                           ? {
                               ...sticky,
                               zIndex: 3,
-                              background: "hsl(var(--muted) / 0.4)",
+                              background: "hsl(var(--background))",
                             }
                           : undefined;
                         return (
@@ -1510,24 +1512,67 @@ export function TablePreview({
                           // render placeholders; don't repeat content (checkbox should not show again)
                           <TableHead key={\`fp-\${i}\`} className="w-9" />
                         ))}
-                        {visibleCols.map((col) => (
-                          <TableHead key={col.id} className="py-1.5 px-2">
-                            {col.filterable ? (
-                              <Input
-                                value={columnFilters[col.key] || ""}
-                                onChange={(e) => {
-                                  setColumnFilters((p) => ({
-                                    ...p,
-                                    [col.key]: e.target.value,
-                                  }));
-                                  setPage(0);
-                                }}
-                                placeholder="Filter…"
-                                className="h-7 text-[11px]"
-                              />
-                            ) : null}
-                          </TableHead>
-                        ))}
+                        {visibleCols.map((col) => {
+                          const width = columnWidths[col.id] || col.width;
+                          const startCols = config.enablePinnedColumns
+                            ? visibleCols.filter((c) => c.pinned === "start")
+                            : [];
+                          const endCols = config.enablePinnedColumns
+                            ? visibleCols.filter((c) => c.pinned === "end")
+                            : [];
+                          const startOffsets = computePinOffsets(startCols, columnWidths);
+                          const endOffsets = computePinOffsets([...endCols].reverse(), columnWidths);
+                          const pinIdx =
+                            col.pinned === "start"
+                              ? startCols.findIndex((c) => c.id === col.id)
+                              : col.pinned === "end"
+                                ? endCols.findIndex((c) => c.id === col.id)
+                                : -1;
+                          const pinOffset =
+                            col.pinned === "start" && pinIdx >= 0
+                              ? startOffsets[pinIdx]
+                              : col.pinned === "end" && pinIdx >= 0
+                                ? endOffsets[endCols.length - 1 - pinIdx]
+                                : undefined;
+                          const sticky = config.enablePinnedColumns
+                            ? pinStyle(
+                                col.pinned ?? null,
+                                pinOffset,
+                                config.direction,
+                                col.pinned === "start" && pinIdx === startCols.length - 1,
+                                col.pinned === "end" && pinIdx === 0,
+                              )
+                            : undefined;
+                          const widthStyle = width
+                            ? { width: \`\${width}px\`, minWidth: \`\${width}px\` }
+                            : undefined;
+                          const filterSticky = sticky
+                            ? { ...sticky, background: "hsl(var(--background))" }
+                            : undefined;
+                          return (
+                            <TableHead key={col.id} style={{ ...widthStyle, ...filterSticky }} className="py-1.5 px-2">
+                              {col.filterable ? (
+                                <Input
+                                  value={columnFilters[col.key] || ""}
+                                  onChange={(e) => {
+                                    setColumnFilters((p) => ({
+                                      ...p,
+                                      [col.key]: e.target.value,
+                                    }));
+                                    setPage(0);
+                                  }}
+                                  placeholder="Filter…"
+                                  title={
+                                    NUMERIC_COLUMN_TYPES.has(col.type)
+                                      ? "Plain text matches as before. Also accepts >80, <80, =80, !=80, or /regex/."
+                                      : "Plain text matches as before. Also accepts /regex/ (e.g. /^a/i)."
+                                  }
+                                  className="h-7 text-[11px]"
+                                />
+                              ) : null}
+                            </TableHead>
+                          );
+                        })}
                       </TableRow>
                     )}
                   </TableHeader>
@@ -1874,6 +1919,62 @@ export function resolveSource<TKey extends "search" | "filter" | "sort" | "pagin
   return config.sortMode;
 }
 
+/** Column types whose values are meaningfully comparable as numbers. */
+export const NUMERIC_COLUMN_TYPES = new Set<TableColumnConfig["type"]>(["number", "currency", "progress", "rating"]);
+
+const COMPARISON_QUERY = /^(>=|<=|!=|==|=|>|<)\\s*(-?\\d+(?:\\.\\d+)?)$/;
+
+/**
+ * One search/filter query, matched against one cell's raw value. Both the
+ * global search box and per-column filters call this — same rules
+ * everywhere, so a query behaves identically whichever box it's typed into.
+ *
+ * - \`/pattern/flags\` — a regular expression. An invalid pattern (e.g. a
+ *   stray \`/\`) falls back to a plain substring match rather than throwing or
+ *   silently hiding every row.
+ * - \`>80\`, \`<80\`, \`>=80\`, \`<=80\`, \`=80\`, \`==80\`, \`!=80\` — numeric comparison,
+ *   only recognized when \`columnType\` is one of \`NUMERIC_COLUMN_TYPES\`; on
+ *   any other column these read as literal text instead (so a "text" column
+ *   containing the literal string "=80" still matches on it).
+ * - Anything else — case-insensitive substring match, same as before this
+ *   existed. A bare "80" against a number column still substring-matches
+ *   (so it also catches "1800"), rather than requiring "=80".
+ */
+export function matchesFilter(rawValue: unknown, query: string, columnType?: TableColumnConfig["type"]): boolean {
+  const q = query.trim();
+  if (!q) return true;
+
+  const regexLiteral = /^\\/(.+)\\/([a-z]*)$/i.exec(q);
+  if (regexLiteral) {
+    try {
+      const re = new RegExp(regexLiteral[1], regexLiteral[2]);
+      return re.test(String(rawValue ?? ""));
+    } catch {
+      // Invalid pattern — fall through to a plain substring match below.
+    }
+  }
+
+  if (columnType && NUMERIC_COLUMN_TYPES.has(columnType)) {
+    const comparison = COMPARISON_QUERY.exec(q);
+    if (comparison) {
+      const [, op, numStr] = comparison;
+      const value = Number(rawValue);
+      if (Number.isNaN(value)) return false;
+      const target = Number(numStr);
+      switch (op) {
+        case ">": return value > target;
+        case "<": return value < target;
+        case ">=": return value >= target;
+        case "<=": return value <= target;
+        case "!=": return value !== target;
+        default: return value === target; // "=" or "=="
+      }
+    }
+  }
+
+  return String(rawValue ?? "").toLowerCase().includes(q.toLowerCase());
+}
+
 /** Pure aggregation utility — no dom, no react. */
 export function aggregate<TRow extends TableRow>(
   rows: TRow[],
@@ -1952,17 +2053,15 @@ export function useTablePreview<TRow extends TableRow>({
   const filtered = useMemo<TRow[]>(() => {
     let data = rows;
     if (config.enableSearch && search) {
-      const q = search.toLowerCase();
       data = data.filter(row =>
-        visibleCols.some(col => String(row[col.key] ?? "").toLowerCase().includes(q)),
+        visibleCols.some(col => matchesFilter(row[col.key], search, col.type)),
       );
     }
     if (config.enableColumnFilters) {
       Object.entries(columnFilters).forEach(([key, val]) => {
         if (val) {
-          data = data.filter(row =>
-            String(row[key] ?? "").toLowerCase().includes(val.toLowerCase()),
-          );
+          const col = visibleCols.find(c => c.key === key);
+          data = data.filter(row => matchesFilter(row[key], val, col?.type));
         }
       });
     }

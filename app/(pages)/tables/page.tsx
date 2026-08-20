@@ -3,6 +3,8 @@
 import {
   Info,
   Code2,
+  Zap,
+  Clock,
   Sparkles,
   ChevronDown,
 } from "lucide-react";
@@ -21,7 +23,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
@@ -32,6 +35,7 @@ import {
   generateAllFiles,
   generatesDataLayer,
   getDependencyReport,
+  type DataMode,
 } from "@/table-builder/utils/tableCodeGenerator";
 import { TablePreview } from "@/table-builder/TablePreview";
 import { tableTemplates } from "@/table-builder/data/tableBuilderTemplates";
@@ -75,21 +79,33 @@ function tableTemplateKeyToRegistryVariant(key: string): string {
 
 function CodePanel({ variantKey }: { variantKey: string }) {
   const t = tableTemplates[variantKey];
-  const dataMode =
-    t.config.sortMode === "api" || t.config.paginationMode === "api"
-      ? "api"
-      : "static";
-
-  // Plain derivation — the React Compiler memoizes this; a manual useMemo here
-  // could not be preserved (the body reads `t.rendererSources`, not in the deps).
+  // Seeded from the template, but user-selectable — same Data Source choice
+  // as the table builder. `key={variantKey}` on the call site remounts this
+  // (and resets the choice) whenever the active variant changes.
+  const [dataMode, setDataMode] = useState<DataMode>(
+    t.config.sortMode === "api" || t.config.paginationMode === "api" ? "api" : "static",
+  );
   const [transport, setTransport] = useState<TransportChoice>(DEFAULT_TRANSPORT);
-  const generatedFiles = generateAllFiles(t.config, dataMode, {
+
+  // Picking "API / Server-side" is meant to be the one switch that matters —
+  // force sort to source from the API rather than requiring a separate trip
+  // to Builder tab → Settings → Data Source first (same reasoning as
+  // `TableExportTab`).
+  const effectiveConfig = useMemo(
+    () =>
+      dataMode === "api" && t.config.sortMode !== "api"
+        ? { ...t.config, sortMode: "api" as const }
+        : t.config,
+    [t.config, dataMode],
+  );
+
+  const generatedFiles = generateAllFiles(effectiveConfig, dataMode, {
     rendererSources: t.rendererSources,
     transport,
   }).map((f) => ({ ...f, isFixed: false }));
   const sharedFiles = [
     ...SHARED_TABLE_FILES,
-    ...getOptionalEngineFiles(t.config),
+    ...getOptionalEngineFiles(effectiveConfig),
   ].map((f) => ({
     code: f.code,
     name: f.name,
@@ -100,10 +116,11 @@ function CodePanel({ variantKey }: { variantKey: string }) {
   }));
   const allFiles = [...generatedFiles, ...sharedFiles];
 
-  const effectiveTransport = generatesDataLayer(t.config, dataMode) ? transport : DEFAULT_TRANSPORT;
+  const hasDataLayer = generatesDataLayer(effectiveConfig, dataMode);
+  const effectiveTransport = hasDataLayer ? transport : DEFAULT_TRANSPORT;
   const depReport = useMemo(
-    () => getDependencyReport(t.config, effectiveTransport),
-    [t.config, effectiveTransport],
+    () => getDependencyReport(effectiveConfig, effectiveTransport),
+    [effectiveConfig, effectiveTransport],
   );
   const [activeFile, setActiveFile] = useState<string>(allFiles[0]?.name ?? "");
   const current = allFiles.find((f) => f.name === activeFile) ?? allFiles[0];
@@ -112,14 +129,14 @@ function CodePanel({ variantKey }: { variantKey: string }) {
     <div className="space-y-4">
 
       <BuilderInstallPanel
-        transport={{
-          value: transport,
-          onChange: setTransport,
-          idPrefix: `tables-${variantKey}-transport`,
-          inactiveReason: generatesDataLayer(t.config, dataMode)
-            ? undefined
-            : "This variant is fully client-side, so it generates no services.ts / useTableData.ts for a transport to affect.",
-        }}
+        // Static variants generate no services.ts / useTableData.ts, so
+        // transport would change neither the command nor a generated file —
+        // omit the slot rather than show a control that no-ops.
+        transport={
+          hasDataLayer
+            ? { value: transport, onChange: setTransport, idPrefix: `tables-${variantKey}-transport` }
+            : undefined
+        }
         subject="table"
         idPrefix={`tables-${variantKey}-cli`}
         generatedCount={allFiles.filter((f) => !f.isFixed).length}
@@ -138,6 +155,41 @@ function CodePanel({ variantKey }: { variantKey: string }) {
           },
         }}
       />
+
+      {/* Data Source only changes what's generated below — `add` already
+          carries axios/tanstack-query as flags (above), but the static/API
+          choice itself isn't a flag on any command, so it lives next to the
+          file browser it affects instead of inside the install card. */}
+      <Card className="border-border">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Data Source</CardTitle>
+          <CardDescription className="text-xs">
+            Choose how data is loaded — only the matching helpers are generated.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RadioGroup value={dataMode} onValueChange={(v) => setDataMode(v as DataMode)} className="grid sm:grid-cols-2 gap-3">
+            <Label htmlFor={`tables-${variantKey}-dm-static`} className="flex items-start gap-3 p-3 rounded-lg border border-border cursor-pointer hover:bg-muted/30 transition-colors [&:has([data-state=checked])]:border-primary [&:has([data-state=checked])]:bg-primary/5">
+              <RadioGroupItem value="static" id={`tables-${variantKey}-dm-static`} className="mt-0.5" />
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Zap className="h-3.5 w-3.5 text-primary" /><span className="text-sm font-semibold">Static Data</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">Pass <code className="bg-muted px-1 rounded">Row[]</code> as a prop. Sort/filter/paginate happens client-side.</p>
+              </div>
+            </Label>
+            <Label htmlFor={`tables-${variantKey}-dm-api`} className="flex items-start gap-3 p-3 rounded-lg border border-border cursor-pointer hover:bg-muted/30 transition-colors [&:has([data-state=checked])]:border-primary [&:has([data-state=checked])]:bg-primary/5">
+              <RadioGroupItem value="api" id={`tables-${variantKey}-dm-api`} className="mt-0.5" />
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Clock className="h-3.5 w-3.5 text-primary" /><span className="text-sm font-semibold">API / Server-side</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">Generates <code className="bg-muted px-1 rounded">useTableData</code> with refetch + feature-aware mutators.</p>
+              </div>
+            </Label>
+          </RadioGroup>
+        </CardContent>
+      </Card>
 
       <BuilderFilesPanel
         subject="table"
@@ -308,7 +360,7 @@ export default function DataTableVariants() {
               </span>
               <div className="h-px flex-1 bg-border" />
             </div>
-            <CodePanel variantKey={activeKey} />
+            <CodePanel key={activeKey} variantKey={activeKey} />
           </div>
         </div>
       </div>

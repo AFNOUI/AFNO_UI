@@ -307,7 +307,7 @@ export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
                             </label>
                           </TooltipTrigger>
                           <TooltipContent
-                            side="left"
+                            side="top"
                             className="max-w-[220px] text-[11px]"
                           >
                             {desc}

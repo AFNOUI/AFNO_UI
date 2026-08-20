@@ -23,6 +23,62 @@ export function resolveSource<TKey extends "search" | "filter" | "sort" | "pagin
   return config.sortMode;
 }
 
+/** Column types whose values are meaningfully comparable as numbers. */
+export const NUMERIC_COLUMN_TYPES = new Set<TableColumnConfig["type"]>(["number", "currency", "progress", "rating"]);
+
+const COMPARISON_QUERY = /^(>=|<=|!=|==|=|>|<)\s*(-?\d+(?:\.\d+)?)$/;
+
+/**
+ * One search/filter query, matched against one cell's raw value. Both the
+ * global search box and per-column filters call this — same rules
+ * everywhere, so a query behaves identically whichever box it's typed into.
+ *
+ * - `/pattern/flags` — a regular expression. An invalid pattern (e.g. a
+ *   stray `/`) falls back to a plain substring match rather than throwing or
+ *   silently hiding every row.
+ * - `>80`, `<80`, `>=80`, `<=80`, `=80`, `==80`, `!=80` — numeric comparison,
+ *   only recognized when `columnType` is one of `NUMERIC_COLUMN_TYPES`; on
+ *   any other column these read as literal text instead (so a "text" column
+ *   containing the literal string "=80" still matches on it).
+ * - Anything else — case-insensitive substring match, same as before this
+ *   existed. A bare "80" against a number column still substring-matches
+ *   (so it also catches "1800"), rather than requiring "=80".
+ */
+export function matchesFilter(rawValue: unknown, query: string, columnType?: TableColumnConfig["type"]): boolean {
+  const q = query.trim();
+  if (!q) return true;
+
+  const regexLiteral = /^\/(.+)\/([a-z]*)$/i.exec(q);
+  if (regexLiteral) {
+    try {
+      const re = new RegExp(regexLiteral[1], regexLiteral[2]);
+      return re.test(String(rawValue ?? ""));
+    } catch {
+      // Invalid pattern — fall through to a plain substring match below.
+    }
+  }
+
+  if (columnType && NUMERIC_COLUMN_TYPES.has(columnType)) {
+    const comparison = COMPARISON_QUERY.exec(q);
+    if (comparison) {
+      const [, op, numStr] = comparison;
+      const value = Number(rawValue);
+      if (Number.isNaN(value)) return false;
+      const target = Number(numStr);
+      switch (op) {
+        case ">": return value > target;
+        case "<": return value < target;
+        case ">=": return value >= target;
+        case "<=": return value <= target;
+        case "!=": return value !== target;
+        default: return value === target; // "=" or "=="
+      }
+    }
+  }
+
+  return String(rawValue ?? "").toLowerCase().includes(q.toLowerCase());
+}
+
 /** Pure aggregation utility — no dom, no react. */
 export function aggregate<TRow extends TableRow>(
   rows: TRow[],
@@ -101,17 +157,15 @@ export function useTablePreview<TRow extends TableRow>({
   const filtered = useMemo<TRow[]>(() => {
     let data = rows;
     if (config.enableSearch && search) {
-      const q = search.toLowerCase();
       data = data.filter(row =>
-        visibleCols.some(col => String(row[col.key] ?? "").toLowerCase().includes(q)),
+        visibleCols.some(col => matchesFilter(row[col.key], search, col.type)),
       );
     }
     if (config.enableColumnFilters) {
       Object.entries(columnFilters).forEach(([key, val]) => {
         if (val) {
-          data = data.filter(row =>
-            String(row[key] ?? "").toLowerCase().includes(val.toLowerCase()),
-          );
+          const col = visibleCols.find(c => c.key === key);
+          data = data.filter(row => matchesFilter(row[key], val, col?.type));
         }
       });
     }

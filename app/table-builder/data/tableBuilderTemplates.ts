@@ -472,7 +472,7 @@ export const tableTemplates: Record<string, TableTemplate> = {
         { id: "c5", key: "stage", label: "Stage", type: "dropdown", sortable: true, filterable: true, visible: true, align: "left",
           options: [{label:"Lead",value:"Lead"},{label:"Qualified",value:"Qualified"},{label:"Proposal",value:"Proposal"},{label:"Negotiation",value:"Negotiation"},{label:"Closed",value:"Closed"}] },
         { id: "c6", key: "score", label: "Score", type: "progress", sortable: true, filterable: false, visible: true, align: "center" },
-        { id: "c7", key: "priority", label: "Priority", type: "status-dot", sortable: true, filterable: true, visible: true, align: "left",
+        { id: "c7", key: "priority", label: "Priority", type: "dropdown", sortable: true, filterable: true, visible: true, align: "left",
           options: [{label:"High",value:"High",color:"hsl(0 84% 60%)"},{label:"Medium",value:"Medium",color:"hsl(38 92% 50%)"},{label:"Low",value:"Low",color:"hsl(var(--muted-foreground))"}] },
         { id: "c8", key: "lastContact", label: "Last Contact", type: "date", sortable: true, filterable: false, visible: true, align: "left" },
         { id: "c9", key: "actions", label: "", type: "actions", sortable: false, filterable: false, visible: true, align: "right" },

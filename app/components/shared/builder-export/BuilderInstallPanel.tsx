@@ -20,7 +20,7 @@
  *   3. anything else the family needs you to know
  */
 
-import { Database, Package, Terminal } from "lucide-react";
+import { Database, Package, Terminal, type LucideIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,13 +32,34 @@ import type { TransportChoice } from "@/lib/codegen/transport";
 
 import type { DependencyCommand } from "./types";
 
-/** The transport axes, when the family has a data layer for them to affect. */
+/**
+ * The transport axes, when the family has a data layer for them to affect.
+ * Pass `undefined` (omit the whole prop) rather than passing a slot that
+ * would be inert — tables do this for configs that generate no `services.ts`
+ * / `useTableData.ts`, since the choice would change neither the generated
+ * files nor the CLI command. A control nobody can make do anything is worse
+ * than no control.
+ */
 export interface TransportSlot {
     value: TransportChoice;
     onChange: (next: TransportChoice) => void;
     idPrefix: string;
-    /** Set when this config emits no network layer, so the choice is inert. */
-    inactiveReason?: string;
+}
+
+/**
+ * A per-family config choice (form library, implementation style, schema
+ * approach, data source, …) rendered as its own numbered step, ahead of
+ * transport/CLI/packages. The panel owns the step chrome (numbering, icon,
+ * title, hint); the family supplies only `content` — usually a `RadioGroup`
+ * it already had lying around above the old "Install & set up" card.
+ */
+export interface ConfigStep {
+    /** Unique among this panel's `configSteps` — drives numbering only. */
+    id: string;
+    icon: LucideIcon;
+    title: string;
+    hint?: string;
+    content: React.ReactNode;
 }
 
 interface BuilderInstallPanelProps {
@@ -59,7 +80,14 @@ interface BuilderInstallPanelProps {
     notes?: string[];
     /** The noun used in the subtitle: "table", "form", "board", "tree". */
     subject: string;
-    /** Rendered as the first step. Omit on families with no data layer. */
+    /**
+     * Rendered first, ahead of transport — the family's own config choices
+     * (form library, implementation style, schema approach, data source, …).
+     * These used to live in standalone cards above "Install & set up"; now
+     * they're steps inside it so every builder reads the same way.
+     */
+    configSteps?: ConfigStep[];
+    /** Rendered after `configSteps`. Omit on families with no data layer. */
     transport?: TransportSlot;
 }
 
@@ -74,6 +102,7 @@ export function BuilderInstallPanel({
     extraCommands,
     notes,
     subject,
+    configSteps,
     transport,
 }: BuilderInstallPanelProps) {
     // `add <category>/<variant>` installs the whole bundle — every file below
@@ -86,13 +115,16 @@ export function BuilderInstallPanel({
 
     // Numbered from whichever steps this surface actually shows. Computed as a
     // list rather than a running counter — a variable reassigned during render
-    // is rejected by the React Compiler.
-    const steps = [
-        ...(transport ? (["transport"] as const) : []),
-        ...(cliScope ? (["cli"] as const) : []),
-        "packages" as const,
+    // is rejected by the React Compiler. `configSteps` come first: choosing
+    // *what* you're generating (a library, a data source, …) precedes
+    // choosing *how it talks to a backend* (transport).
+    const steps: string[] = [
+        ...(configSteps?.map((step) => step.id) ?? []),
+        ...(transport ? ["transport"] : []),
+        ...(cliScope ? ["cli"] : []),
+        "packages",
     ];
-    const stepNumber = (id: (typeof steps)[number]) => steps.indexOf(id) + 1;
+    const stepNumber = (id: string) => steps.indexOf(id) + 1;
 
     return (
         <Card className="border-border">
@@ -116,6 +148,12 @@ export function BuilderInstallPanel({
             </CardHeader>
 
             <CardContent className="space-y-5">
+                {configSteps?.map((step) => (
+                    <Step key={step.id} index={stepNumber(step.id)} icon={step.icon} title={step.title} hint={step.hint}>
+                        {step.content}
+                    </Step>
+                ))}
+
                 {transport && (
                     <Step
                         index={stepNumber("transport")}

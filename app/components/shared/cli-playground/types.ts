@@ -89,8 +89,7 @@ export interface CliFlagSpec {
     relevantWhen?: (ctx: CommandContext) => boolean;
     /**
      * Shown, but with an explanation that it currently changes nothing. A live
-     * control that silently no-ops is worse than no control — the same lesson
-     * `TransportPicker.inactiveReason` exists for.
+     * control that silently no-ops is worse than no control.
      */
     inertWhen?: (ctx: CommandContext) => string | null;
 }

@@ -48,13 +48,6 @@ interface TransportPickerProps {
     /** Prefix for the radio ids, so two pickers can coexist on one page. */
     idPrefix?: string;
     /**
-     * Set when the current config emits no network layer, so the choice would
-     * change nothing. The control stays visible (people should learn the option
-     * exists) but says plainly that it is inert and what to change to use it —
-     * a live control that silently no-ops is worse than no control.
-     */
-    inactiveReason?: string;
-    /**
      * Render the axes without the surrounding Card and heading. Set when the
      * picker sits inside `BuilderInstallPanel`, which supplies its own numbered
      * step header — a card inside a card reads as a separate concern.
@@ -68,7 +61,6 @@ export function TransportPicker({
     onChange,
     installCommand,
     idPrefix = "transport",
-    inactiveReason,
     bare,
     className,
 }: TransportPickerProps) {
@@ -77,11 +69,6 @@ export function TransportPicker({
 
     const body = (
             <div className="space-y-4">
-                {inactiveReason && (
-                    <p className="text-[11px] rounded-lg border border-dashed border-border bg-muted/30 p-2.5 text-muted-foreground">
-                        <span className="font-medium text-foreground">Nothing to send yet.</span> {inactiveReason}
-                    </p>
-                )}
                 <div>
                     <p className="text-[11px] font-medium text-muted-foreground mb-2">
                         HTTP client — used by <code className="bg-muted px-1 rounded">services.ts</code>
@@ -196,12 +183,7 @@ export function TransportPicker({
     if (bare) {
         return (
             <div className={className}>
-                <CompactTransport
-                    value={value}
-                    onChange={onChange}
-                    idPrefix={idPrefix}
-                    inactiveReason={inactiveReason}
-                />
+                <CompactTransport value={value} onChange={onChange} idPrefix={idPrefix} />
             </div>
         );
     }
@@ -234,8 +216,7 @@ function CompactTransport({
     value,
     onChange,
     idPrefix,
-    inactiveReason,
-}: Pick<TransportPickerProps, "value" | "onChange" | "idPrefix" | "inactiveReason">) {
+}: Pick<TransportPickerProps, "value" | "onChange" | "idPrefix">) {
     const deps = transportNpmDependencies(value);
 
     return (
@@ -283,13 +264,6 @@ function CompactTransport({
                     </>
                 )}
             </p>
-
-            {inactiveReason && (
-                <p className="rounded-lg border border-dashed border-border bg-muted/30 p-2.5 text-[11px] text-muted-foreground">
-                    <span className="font-medium text-foreground">Nothing to send yet.</span>{" "}
-                    {inactiveReason}
-                </p>
-            )}
         </div>
     );
 }

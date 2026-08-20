@@ -18,7 +18,7 @@ export interface TreeOptionalGroup {
   files: TreeRegistryFile[];
 }
 
-export const treeRegistryGeneratedAt = "2026-08-19T07:53:49.826Z";
+export const treeRegistryGeneratedAt = "2026-08-20T06:05:33.443Z";
 
 export const treeInstall = {
   "npmDependencies": [

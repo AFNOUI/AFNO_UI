@@ -182,7 +182,11 @@ export function ApiConfigPanel({ config, onChange }: ApiConfigPanelProps) {
                 <Select value={action.columnKey} onValueChange={v => updateAction(idx, { columnKey: v })}>
                   <SelectTrigger className="h-6 text-[10px]"><SelectValue placeholder="Column" /></SelectTrigger>
                   <SelectContent>
-                    {interactiveCols.map(c => <SelectItem key={c.id} value={c.key} className="text-xs">{c.label}</SelectItem>)}
+                    {/* `label` is deliberately "" for an actions column (no header
+                        text needed there) — but that same empty string renders as
+                        invisible text once it's a Column choice, making the
+                        trigger look blank even when correctly selected. */}
+                    {interactiveCols.map(c => <SelectItem key={c.id} value={c.key} className="text-xs">{c.label || c.key}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <Select value={action.trigger} onValueChange={v => updateAction(idx, { trigger: v as TableRowActionConfig["trigger"] })}>
