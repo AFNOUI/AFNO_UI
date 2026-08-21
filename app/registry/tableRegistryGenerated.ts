@@ -11,7 +11,7 @@ export interface TableRegistryFile {
   description: string;
 }
 
-export const tableRegistryGeneratedAt = "2026-08-20T06:05:32.906Z";
+export const tableRegistryGeneratedAt = "2026-08-21T07:43:14.411Z";
 
 export const tableInstall = {
   "npmDependencies": [
@@ -862,7 +862,6 @@ const DndTableCtx = React.createContext<{
   isDragging: boolean;
   hoverIndex: number | null;
   slotHeight: number;
-  previewNode: React.ReactNode;
   draggedId: string | null;
   colSpan: number;
 } | null>(null);
@@ -875,15 +874,9 @@ function DndGhostRow({ index }: { index: number }) {
     <TableRow aria-hidden="true" className="pointer-events-none border-0">
       <TableCell colSpan={ctx.colSpan} className="p-0 border-0">
         <div
-          className="mx-1 my-0.5 animate-in fade-in zoom-in-95 duration-150"
+          className="mx-1 my-0.5 animate-in fade-in zoom-in-95 duration-150 rounded-md border-2 border-dashed border-primary/60 bg-primary/10 ring-1 ring-primary/20"
           style={{ height: \`\${height}px\` }}
-        >
-          {ctx.previewNode ? (
-            <div className="opacity-45 saturate-75">{ctx.previewNode}</div>
-          ) : (
-            <div className="h-full rounded-md border-2 border-dashed border-primary/60 bg-primary/10 ring-1 ring-primary/20" />
-          )}
-        </div>
+        />
       </TableCell>
     </TableRow>
   );
@@ -919,21 +912,28 @@ function DndTableBody({
     onDrop: handleDrop,
   });
   const { active } = useDndContext();
+  const activeIndex = active ? rowIds.indexOf(active.id as string) : -1;
+  const targetIndex =
+    hoverIndex === null || activeIndex === -1
+      ? null
+      : hoverIndex > activeIndex
+        ? hoverIndex + 1
+        : hoverIndex;
+  const shouldShowTarget =
+    isOver && targetIndex !== null && targetIndex !== activeIndex;
   const ctxValue = useMemo(
     () => ({
-      isDragging: !!isDragging && isOver,
-      hoverIndex: isOver ? hoverIndex : null,
+      isDragging: !!isDragging && shouldShowTarget,
+      hoverIndex: shouldShowTarget ? targetIndex : null,
       slotHeight: slotSize?.height ?? 0,
-      previewNode: active?.previewNode ?? null,
       draggedId: active?.id ?? null,
       colSpan,
     }),
     [
       active?.id,
-      active?.previewNode,
       isDragging,
-      isOver,
-      hoverIndex,
+      shouldShowTarget,
+      targetIndex,
       slotSize?.height,
       colSpan,
     ],
@@ -1039,10 +1039,6 @@ export function TablePreview({
       | undefined,
   });
 
-  // ─── Virtualization: only safe when no grouping (group rows + collapsibles
-  // mess with virtualizer flat-index assumptions) and no DnD (sortable needs
-  // every row mounted to register sensors). Expand rows are fine because we
-  // estimate per-row height based on expanded state.
   const virtualizationActive =
     !!config.enableVirtualization &&
     !grouped &&

@@ -214,6 +214,16 @@ export const CLI_COMMANDS: CliCommandSpec[] = [
                 installs: ["@tanstack/react-query"],
                 relevantWhen: (ctx) => argsIncludeTransportCapable(ctx.args),
             },
+            {
+                id: "static",
+                flag: "--static",
+                kind: "boolean",
+                label: "Static JSX page",
+                note: "Hand-unroll each field as literal JSX instead of a formConfig.ts read by a generic renderer.",
+                detail:
+                    "**The default (nothing passed) is JSON Config** — a `formConfig.ts` field array plus a generic `<ReactHookForm config={...}/>` that reads it at runtime. `--static` skips `formConfig.ts` and the runtime dispatcher entirely, at the cost of the page being longer and needing a manual edit per field. Falls back to the config version, with a warning, if the variant ships no static bundle.",
+                relevantWhen: (ctx) => argsIncludeCategory(ctx.args, "forms"),
+            },
         ],
         globalFlags: ["dry-run", "force", "debug"],
         docsHref: "/docs",

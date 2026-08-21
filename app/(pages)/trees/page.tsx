@@ -2,27 +2,21 @@
 
 import {
   Info,
-  Sparkles,
+  Code2,
   Workflow,
   RotateCcw,
-  ChevronDown,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import {
-  DropdownMenu,
-  DropdownMenuItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+// import { Label } from "@/components/ui/label"; // RTL disabled for now
 import { Button } from "@/components/ui/button";
+// import { Switch } from "@/components/ui/switch"; // RTL disabled for now
 import { Card, CardContent } from "@/components/ui/card";
 
-import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
 import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
+import { VariantPicker } from "@/components/shared/VariantPicker";
 
 import {
   GraphToolbar,
@@ -43,17 +37,6 @@ import { generateTreeFiles } from "@/tree-builder/utils/treeCodeGenerator";
 import { BuilderFilesPanel, BuilderInstallPanel } from "@/components/shared/builder-export";
 import { DEFAULT_TRANSPORT, transportNpmDependencies, type TransportChoice } from "@/lib/codegen/transport";
 import { SHARED_TREE_FILES, OPTIONAL_TREE_FILES, TREE_DEPENDENCIES } from "@/tree-builder/utils/treeSharedFiles";
-
-const complexityColors: Record<string, string> = {
-  basic:
-    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-  intermediate:
-    "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-  advanced:
-    "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
-  expert:
-    "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-};
 
 /** Mirrors `treeTemplateKeyToVariantSlug` in scripts/build-variants-registry.ts. */
 function toKebabCase(value: string): string {
@@ -272,6 +255,8 @@ export default function TreeBuilder() {
     [],
   );
   const [activeKey, setActiveKey] = useState(defaultTreeKey);
+  // RTL disabled for now — uncomment alongside the toggle below when ready.
+  // const [direction, setDirection] = useState<"ltr" | "rtl">("ltr");
   const active = variants.find((v) => v.key === activeKey) ?? variants[0];
 
   return (
@@ -294,59 +279,32 @@ export default function TreeBuilder() {
               </p>
             </div>
           </div>
-          <Badge variant="secondary" className="gap-1">
-            <Sparkles className="h-3 w-3" /> No external graph library
-          </Badge>
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* RTL disabled for now — uncomment alongside the state above.
+            <div className="flex items-center gap-2">
+              <Label htmlFor="rtl-toggle" className="text-xs">
+                RTL
+              </Label>
+              <Switch
+                id="rtl-toggle"
+                checked={direction === "rtl"}
+                onCheckedChange={(v) => setDirection(v ? "rtl" : "ltr")}
+              />
+            </div>
+            */}
+            <Button variant="outline" size="sm" className="gap-2 h-9" asChild>
+              <a href="/tree-builder">
+                <Code2 className="h-3.5 w-3.5" /> Build your own
+              </a>
+            </Button>
+          </div>
         </div>
 
-        <div className="w-full">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full md:w-[360px] justify-between"
-              >
-                <span className="flex items-center gap-2 truncate">
-                  {active.title}
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "text-[9px] h-4 px-1 capitalize border",
-                      complexityColors[active.complexity],
-                    )}
-                  >
-                    {active.complexity}
-                  </Badge>
-                </span>
-                <ChevronDown className="h-4 w-4 opacity-60 shrink-0" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-[calc(100vw-2rem)] max-w-md max-h-[60vh] overflow-y-auto">
-              {variants.map((v) => (
-                <DropdownMenuItem
-                  key={v.key}
-                  onClick={() => setActiveKey(v.key)}
-                  className={cn(
-                    "text-xs",
-                    activeKey === v.key &&
-                      "bg-primary/10 text-primary font-medium",
-                  )}
-                >
-                  <span className="flex-1 truncate">{v.title}</span>
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "text-[9px] h-4 px-1 capitalize border ms-2",
-                      complexityColors[v.complexity],
-                    )}
-                  >
-                    {v.complexity}
-                  </Badge>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <VariantPicker
+          variants={variants.map((v) => ({ key: v.key, label: v.title, complexity: v.complexity }))}
+          activeKey={activeKey}
+          onSelect={setActiveKey}
+        />
 
         <Card className="border-border">
           <CardContent className="py-3 px-4 flex items-start gap-3">
@@ -368,6 +326,7 @@ export default function TreeBuilder() {
         </Card>
 
         <div className="rounded-xl border border-border p-3 sm:p-4 bg-background">
+          {/* `config: { ...active.config, dir: direction }` once the RTL toggle is back. */}
           <LivePreview key={active.key} template={active} />
         </div>
 

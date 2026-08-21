@@ -2,20 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "@/hooks/use-toast";
-import { ChevronDown } from "lucide-react";
-
-import { cn } from "@/lib/utils";
-
-import {
-  DropdownMenu,
-  DropdownMenuItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 import { ComponentInstall } from "@/components/lab/ComponentInstall";
+import { VariantPicker } from "@/components/shared/VariantPicker";
 
 import type { FormConfig, ReactHookFormZodSchema } from "@/forms/types/types";
 
@@ -63,12 +52,6 @@ const VARIANTS: FormVariantEntry[] = [
 ];
 
 type SubmissionEntry = { data: Record<string, unknown>; at: Date };
-
-const libraryLabels: Record<FormsCodePanelLibrary, string> = {
-  rhf: "React Hook Form",
-  action: "useActionState",
-  tanstack: "TanStack Form",
-};
 
 export function FormsVariantsSwitcher() {
   const [activeKey, setActiveKey] = useState("job");
@@ -132,90 +115,11 @@ export function FormsVariantsSwitcher() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-1 p-1 bg-muted/50 rounded-lg border border-border w-fit">
-        {(Object.keys(libraryLabels) as FormsCodePanelLibrary[]).map((lib) => (
-          <button
-            key={lib}
-            type="button"
-            onClick={() => setLibrary(lib)}
-            className={cn(
-              "px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap",
-              library === lib
-                ? "bg-background text-foreground shadow-sm border border-border"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {libraryLabels[lib]}
-          </button>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-1 p-1 bg-muted/50 rounded-lg border border-border w-fit">
-        {([
-          { key: "config" as ImplementationMode, label: "JSON Config" },
-          { key: "static" as ImplementationMode, label: "Static JSX" },
-        ]).map((mode) => (
-          <button
-            key={mode.key}
-            type="button"
-            onClick={() => setImplementationMode(mode.key)}
-            className={cn(
-              "px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap",
-              implementationMode === mode.key
-                ? "bg-background text-foreground shadow-sm border border-border"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {mode.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Large screens: horizontal scroll when many tabs */}
-      <div className="hidden md:block w-full min-w-0">
-
-        <ScrollArea className="rounded-xl border border-border bg-muted/50" >
-          <ScrollBar orientation="horizontal" />
-          <div className="flex w-max flex-nowrap items-center gap-1.5 p-2">
-            {VARIANTS.map((v) => (
-              <button
-                key={v.key}
-                type="button"
-                onClick={() => setActiveKey(v.key)}
-                className={cn(
-                  "shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-all whitespace-nowrap",
-                  activeKey === v.key
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                {v.label}
-              </button>
-            ))}
-          </div>
-        </ScrollArea></div>
-
-      {/* Small screens: dropdown */}
-      <div className="md:hidden">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="w-full justify-between">
-              <span>{active.label}</span>
-              <ChevronDown className="h-4 w-4 opacity-60" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[200px]">
-            {VARIANTS.map((v) => (
-              <DropdownMenuItem
-                key={v.key}
-                onClick={() => setActiveKey(v.key)}
-                className={cn(activeKey === v.key && "bg-primary/10 text-primary font-medium")}
-              >
-                {v.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <VariantPicker
+        variants={VARIANTS.map((v) => ({ key: v.key, label: v.label }))}
+        activeKey={activeKey}
+        onSelect={setActiveKey}
+      />
 
       <ComponentInstall
         category="forms"
@@ -235,31 +139,37 @@ export function FormsVariantsSwitcher() {
               submittedAt={currentSubmission?.at ?? null}
             />
           </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="h-px flex-1 bg-border" />
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest px-2">
-                Source Code
-              </span>
-              <div className="h-px flex-1 bg-border" />
-            </div>
-
-
-
-            <FormsCodePanel
-              code={pageSource}
-              library={library}
-              config={active.formConfig}
-              implementationMode={implementationMode}
-              exportedSchemaCode={active.exportedSchemaCode}
-              transport={transport}
-              onTransportChange={setTransport}
-              variant={active.variant}
-            />
-          </div>
         </div>
       </ComponentInstall>
+
+      {/* Outside ComponentInstall/CodePreview on purpose — CodePreview only
+          renders its children while its own "Preview" tab is active, which
+          buried this whole install-bar + multi-file source browser inside a
+          tab-gated preview box and hid it under the unrelated "Snippet"/
+          "Component" tabs. It's the real install surface for this variant,
+          so it always stays visible, sibling to the preview card above. */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest px-2">
+            Source Code
+          </span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
+        <FormsCodePanel
+          code={pageSource}
+          library={library}
+          config={active.formConfig}
+          implementationMode={implementationMode}
+          exportedSchemaCode={active.exportedSchemaCode}
+          transport={transport}
+          onTransportChange={setTransport}
+          onLibraryChange={setLibrary}
+          onImplementationModeChange={setImplementationMode}
+          variant={active.variant}
+        />
+      </div>
     </div>
   );
 }
