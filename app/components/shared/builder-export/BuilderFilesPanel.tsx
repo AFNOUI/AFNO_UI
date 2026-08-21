@@ -10,15 +10,16 @@
  *
  * The distinction the panel is built around — **generated per export** versus
  * **shared engine, copy once** — is the one thing a reader has to understand
- * here, so it is carried consistently in three places: the dot on the tab, the
- * badge above the code, and the legend in the header.
+ * here, so it's now the panel's actual layout, not just a color: generated
+ * and shared files sit in two labeled groups instead of one 20+ item strip
+ * where a reader has to check each chip's dot to tell which is which. Each
+ * group wraps in a plain grid (no forced horizontal scroll — the variant
+ * picker had the same "wrap fighting scroll" bug, fixed the same way there).
  */
 
 import { ArrowRight, FileCode, Package } from "lucide-react";
 
-import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -40,6 +41,39 @@ interface BuilderFilesPanelProps {
     children?: React.ReactNode;
 }
 
+function FileGroupList({
+    label,
+    icon: Icon,
+    files,
+}: {
+    label: string;
+    icon: typeof FileCode;
+    files: ExportFile[];
+}) {
+    if (files.length === 0) return null;
+    return (
+        <div className="space-y-1.5">
+            <p className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+                <Icon className="h-3 w-3" />
+                {label}
+                <span className="text-muted-foreground/60">({files.length})</span>
+            </p>
+            <TabsList className="h-auto flex-wrap justify-start gap-1 bg-muted/50 p-1.5">
+                {files.map((file) => (
+                    <TabsTrigger
+                        key={file.name}
+                        value={file.name}
+                        className="gap-1.5 text-xs data-[state=active]:bg-background"
+                    >
+                        <Icon className="h-3 w-3" />
+                        {file.name}
+                    </TabsTrigger>
+                ))}
+            </TabsList>
+        </div>
+    );
+}
+
 export function BuilderFilesPanel({
     files,
     activeFile,
@@ -51,6 +85,9 @@ export function BuilderFilesPanel({
     const current = files.find((file) => file.name === activeFile) ?? files[0];
     if (!current) return null;
 
+    const generatedFiles = files.filter((file) => !file.isFixed);
+    const sharedFiles = files.filter((file) => file.isFixed);
+
     return (
         <Card className="border-border">
             <CardHeader className="pb-3">
@@ -58,46 +95,21 @@ export function BuilderFilesPanel({
                     <FileCode className="h-5 w-5 text-primary" />
                     <CardTitle className="text-base">{title}</CardTitle>
                 </div>
-                <CardDescription className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-                    <span className="inline-flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                        generated per {subject}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                        shared engine — copy once
-                    </span>
+                <CardDescription className="text-xs">
+                    Generated files are yours to copy and edit; shared engine files are installed once and reused.
                 </CardDescription>
             </CardHeader>
 
             <CardContent>
                 {children}
 
-                <Tabs value={current.name} onValueChange={onActiveFileChange}>
-                    <ScrollArea className="w-full">
-                        <TabsList className="h-auto flex-wrap gap-1 bg-muted/50 p-1">
-                            {files.map((file) => (
-                                <TabsTrigger
-                                    key={file.name}
-                                    value={file.name}
-                                    className="gap-1.5 text-xs data-[state=active]:bg-background"
-                                >
-                                    <span
-                                        className={cn(
-                                            "h-1.5 w-1.5 rounded-full",
-                                            file.isFixed ? "bg-muted-foreground" : "bg-primary",
-                                        )}
-                                    />
-                                    {file.isFixed ? (
-                                        <Package className="h-3 w-3" />
-                                    ) : (
-                                        <FileCode className="h-3 w-3" />
-                                    )}
-                                    {file.name}
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
-                    </ScrollArea>
+                <Tabs value={current.name} onValueChange={onActiveFileChange} className="space-y-3">
+                    <FileGroupList
+                        label={`Generated per ${subject}`}
+                        icon={FileCode}
+                        files={generatedFiles}
+                    />
+                    <FileGroupList label="Shared engine — copy once" icon={Package} files={sharedFiles} />
 
                     {files.map((file) => (
                         <TabsContent key={file.name} value={file.name} className="mt-4">

@@ -4,27 +4,17 @@ import {
   Info,
   Code2,
   Sparkles,
-  ChevronDown,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { cn } from "@/lib/utils";
-
-import {
-  DropdownMenu,
-  DropdownMenuItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
+// import { Label } from "@/components/ui/label"; // RTL disabled for now
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { ScrollArea } from "@/components/ui/scroll-area";
+// import { Switch } from "@/components/ui/switch"; // RTL disabled for now
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { PageBreadcrumb } from "@/components/shared/PageBreadcrumb";
+import { VariantPicker } from "@/components/shared/VariantPicker";
 import { VariantJsonConfigPanel } from "@/components/shared/VariantJsonConfigPanel";
 
 import { ComponentInstall } from "@/components/lab/ComponentInstall";
@@ -43,17 +33,6 @@ import {
   type KanbanBuilderConfig,
 } from "@/kanban-builder/data/kanbanBuilderTemplates";
 import { KanbanBoard } from "@/kanban/KanbanBoard";
-
-const complexityColors: Record<string, string> = {
-  intermediate:
-    "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-  expert:
-    "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-  advanced:
-    "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
-  basic:
-    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-};
 
 /** Maps camelCase template keys to `afnoui add kanban/<slug>` (mirrors `tables/tables-*` on Table Variants). */
 const kanbanVariantSlugOverrides: Partial<Record<string, string>> = {};
@@ -217,11 +196,12 @@ export default function KanbanVariants() {
     [],
   );
   const [activeKey, setActiveKey] = useState(variants[0].key);
-  const [direction, setDirection] = useState<"ltr" | "rtl">("ltr");
+  // RTL toggle disabled for now — uncomment alongside the switch below when
+  // ready. Until then this still honours a template's own RTL default (e.g.
+  // the Sprint Timeline board), just without the manual override.
+  // const [direction, setDirection] = useState<"ltr" | "rtl">("ltr");
   const active = variants.find((v) => v.key === activeKey) ?? variants[0];
-  // Honour template direction (e.g. RTL Sprint Timeline) but allow manual override.
-  const effectiveDirection =
-    active.config.direction === "rtl" || direction === "rtl" ? "rtl" : "ltr";
+  const effectiveDirection = active.config.direction === "rtl" ? "rtl" : "ltr";
   const effectiveConfig: KanbanBuilderConfig = useMemo(
     () => ({ ...active.config, direction: effectiveDirection }),
     [active, effectiveDirection],
@@ -256,6 +236,7 @@ export default function KanbanVariants() {
             </div>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
+            {/* RTL disabled for now — uncomment alongside the state above.
             <div className="flex items-center gap-2">
               <Label htmlFor="rtl-toggle" className="text-xs">
                 RTL
@@ -266,6 +247,7 @@ export default function KanbanVariants() {
                 onCheckedChange={(v) => setDirection(v ? "rtl" : "ltr")}
               />
             </div>
+            */}
             <Button variant="outline" size="sm" className="gap-2 h-9" asChild>
               <a href="/kanban-builder">
                 <Code2 className="h-3.5 w-3.5" /> Build your own
@@ -274,84 +256,11 @@ export default function KanbanVariants() {
           </div>
         </div>
 
-        <div className="w-full">
-          <div className="hidden md:block">
-            <ScrollArea className="w-full">
-              <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-muted/50 rounded-xl border border-border">
-                {variants.map((v) => (
-                  <button
-                    key={v.key}
-                    onClick={() => setActiveKey(v.key)}
-                    className={cn(
-                      "px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex items-center gap-2",
-                      activeKey === v.key
-                        ? "bg-primary text-primary-foreground shadow-md"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted",
-                    )}
-                  >
-                    {v.title}
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-[9px] h-4 px-1 capitalize border",
-                        complexityColors[v.complexity],
-                        activeKey === v.key &&
-                          "bg-background/20 text-primary-foreground border-primary-foreground/30",
-                      )}
-                    >
-                      {v.complexity}
-                    </Badge>
-                  </button>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-          <div className="md:hidden">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full justify-between">
-                  <span className="flex items-center gap-2 truncate">
-                    {active.title}
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-[9px] h-4 px-1 capitalize border",
-                        complexityColors[active.complexity],
-                      )}
-                    >
-                      {active.complexity}
-                    </Badge>
-                  </span>
-                  <ChevronDown className="h-4 w-4 opacity-60 shrink-0" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-[calc(100vw-2rem)] max-w-md">
-                {variants.map((v) => (
-                  <DropdownMenuItem
-                    key={v.key}
-                    onClick={() => setActiveKey(v.key)}
-                    className={cn(
-                      "text-xs",
-                      activeKey === v.key &&
-                        "bg-primary/10 text-primary font-medium",
-                    )}
-                  >
-                    <span className="flex-1 truncate">{v.title}</span>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-[9px] h-4 px-1 capitalize border ms-2",
-                        complexityColors[v.complexity],
-                      )}
-                    >
-                      {v.complexity}
-                    </Badge>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+        <VariantPicker
+          variants={variants.map((v) => ({ key: v.key, label: v.title, complexity: v.complexity }))}
+          activeKey={activeKey}
+          onSelect={setActiveKey}
+        />
 
         <Card className="border-border">
           <CardContent className="py-3 px-4 flex items-start gap-3">
