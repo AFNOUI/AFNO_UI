@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Layers, Braces } from "lucide-react";
 
-import { BuilderFilesPanel, BuilderInstallPanel } from "@/components/shared/builder-export";
+import { cn } from "@/lib/utils";
+import { BuilderFilesPanel, BuilderInstallPanel, type ConfigStep } from "@/components/shared/builder-export";
 
 
 
@@ -53,6 +55,50 @@ const libraryDeps: Record<
   return out;
 })();
 
+const libraryLabels: Record<FormsCodePanelLibrary, string> = {
+  rhf: "React Hook Form",
+  action: "useActionState",
+  tanstack: "TanStack Form",
+};
+
+const implementationModeLabels: Record<ImplementationMode, string> = {
+  config: "JSON Config",
+  static: "Static JSX",
+};
+
+/** The segmented-pill look every stack/mode picker on the forms pages shares. */
+function SegmentedPicker<T extends string>({
+  value,
+  options,
+  labels,
+  onChange,
+}: {
+  value: T;
+  options: readonly T[];
+  labels: Record<T, string>;
+  onChange: (next: T) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-1 p-1 bg-muted/50 rounded-lg border border-border w-fit">
+      {options.map((opt) => (
+        <button
+          key={opt}
+          type="button"
+          onClick={() => onChange(opt)}
+          className={cn(
+            "px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap",
+            value === opt
+              ? "bg-background text-foreground shadow-sm border border-border"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {labels[opt]}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function FormsCodePanel({
   code,
   config,
@@ -61,6 +107,8 @@ export function FormsCodePanel({
   implementationMode = "config",
   transport = DEFAULT_TRANSPORT,
   onTransportChange,
+  onLibraryChange,
+  onImplementationModeChange,
   variant,
 }: {
   code: string;
@@ -72,6 +120,10 @@ export function FormsCodePanel({
   transport?: TransportChoice;
   /** When passed, the transport axes render as step 1 of the install panel. */
   onTransportChange?: (next: TransportChoice) => void;
+  /** When passed, the form-stack picker renders as its own config step. */
+  onLibraryChange?: (next: FormsCodePanelLibrary) => void;
+  /** When passed, the JSON-Config/Static-JSX picker renders as its own config step. */
+  onImplementationModeChange?: (next: ImplementationMode) => void;
   /**
    * Registry slug of the variant on show. Present on the gallery, where the
    * whole bundle is installable — so the command is `add forms/<slug>`, which
@@ -133,6 +185,49 @@ export function FormsCodePanel({
     );
   }
 
+  // Config steps come first in the panel, ahead of transport/CLI/packages —
+  // choosing *what* is being generated (stack, implementation style) precedes
+  // choosing *how it talks to a backend*. `--static` is an `add`-only flag, so
+  // the implementation-mode step only makes sense once a variant is on show.
+  const configSteps: ConfigStep[] = [
+    ...(onLibraryChange
+      ? [
+          {
+            id: "library",
+            icon: Layers,
+            title: "Form stack",
+            hint: "Which form library the generated fields are wired to. Changes the code below and the live preview above.",
+            content: (
+              <SegmentedPicker
+                value={library}
+                options={["rhf", "action", "tanstack"] as const}
+                labels={libraryLabels}
+                onChange={onLibraryChange}
+              />
+            ),
+          },
+        ]
+      : []),
+    ...(onImplementationModeChange && variant
+      ? [
+          {
+            id: "implementation-mode",
+            icon: Braces,
+            title: "Implementation mode",
+            hint: "JSON Config reads a formConfig.ts at runtime through a generic renderer. Static JSX hand-unrolls each field instead — no formConfig.ts, no runtime dispatcher.",
+            content: (
+              <SegmentedPicker
+                value={implementationMode}
+                options={["config", "static"] as const}
+                labels={implementationModeLabels}
+                onChange={onImplementationModeChange}
+              />
+            ),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <div className="space-y-4">
       {/* Same two panels as every builder Export tab and every other variant
@@ -140,6 +235,7 @@ export function FormsCodePanel({
           CLI hint and its own file browser, all worded differently. */}
       <BuilderInstallPanel
         subject="form"
+        configSteps={configSteps.length > 0 ? configSteps : undefined}
         transport={
           onTransportChange
             ? {
@@ -163,6 +259,7 @@ export function FormsCodePanel({
                 args: [`forms/${variant}`],
                 flags: {
                   stack: library,
+                  static: implementationMode === "static",
                   axios: transport.http === "axios",
                   tanstackQuery: transport.query === "tanstack",
                 },

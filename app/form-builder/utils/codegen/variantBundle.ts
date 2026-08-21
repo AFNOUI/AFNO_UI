@@ -2,7 +2,7 @@ import { DEFAULT_TRANSPORT, type TransportChoice } from "@/lib/codegen/transport
 import type { FormConfig } from "@/forms/types/types";
 
 import { generateAllFiles } from "./generateAllFiles";
-import type { FormLibrary, FormVariantStackFile } from "./types";
+import type { FormLibrary, FormVariantStackFile, ImplementationMode } from "./types";
 
 /** `forms-contact` → `ContactForm`, `forms-job-application` → `JobApplicationForm` */
 export function variantPageComponentName(variantSlug: string): string {
@@ -59,6 +59,8 @@ export function buildFormVariantStackFiles(
   variantSlug: string,
   /** Which HTTP client / query strategy to generate against (R-56). */
   transport: TransportChoice = DEFAULT_TRANSPORT,
+  /** "config" (default, generic `<ReactHookForm config={...}/>`) or "static" (hand-unrolled JSX, no formConfig.ts/dispatcher). */
+  implementationMode: ImplementationMode = "config",
 ): FormVariantStackFile[] {
   const pageComponent = variantPageComponentName(variantSlug);
   const pageFileName = `${pageComponent}.tsx`;
@@ -66,7 +68,7 @@ export function buildFormVariantStackFiles(
 
   const bundle = generateAllFiles(config, "compile-time", {
     library,
-    implementationMode: "config",
+    implementationMode,
     importStyle: "alias",
     transport,
   }).filter((f) => !f.isFixed);

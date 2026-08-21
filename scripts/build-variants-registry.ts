@@ -4,6 +4,7 @@ import { pathToFileURL } from "url";
 
 import type { FormLibrary } from "../app/registry/formRegistry";
 import { buildFormVariantStackFiles } from "../app/form-builder/utils/formCodeGenerator";
+import { DEFAULT_TRANSPORT } from "../app/lib/codegen/transport";
 import { buildChartVariantCode, chartVariantSources } from "../app/components/lab/charts/chartVariantSources";
 import {
   dndVariantFilePath,
@@ -60,6 +61,8 @@ type VariantRegistryItem = {
   variant: string;
   files: VariantRegistryItemFile[];
   stacks?: Record<string, VariantRegistryItemFile[]>;
+  /** Same form variant, hand-unrolled JSX (no formConfig.ts/dispatcher) — installed via `--static`. */
+  staticStacks?: Record<string, VariantRegistryItemFile[]>;
   /** Optional engine feature groups this variant needs (e.g. `["toolbar"]`). */
   features?: string[];
   /**
@@ -330,9 +333,24 @@ async function buildVariantsRegistry() {
           continue;
         }
         const stacks: Record<string, VariantRegistryItemFile[]> = {};
+        const staticStacks: Record<string, VariantRegistryItemFile[]> = {};
         for (const lib of ["rhf", "tanstack", "action"] as FormLibrary[]) {
           const bundle = buildFormVariantStackFiles(mod.formConfig, lib, variantSlug);
           stacks[lib] = bundle.map((f) => ({
+            path: f.path,
+            type: "registry:form-variant",
+            content: f.content,
+          }));
+          // Same variant, hand-unrolled JSX instead of a formConfig.ts + runtime
+          // dispatcher — installed via `afnoui add forms/<slug> --static`.
+          const staticBundle = buildFormVariantStackFiles(
+            mod.formConfig,
+            lib,
+            variantSlug,
+            DEFAULT_TRANSPORT,
+            "static",
+          );
+          staticStacks[lib] = staticBundle.map((f) => ({
             path: f.path,
             type: "registry:form-variant",
             content: f.content,
@@ -353,6 +371,7 @@ async function buildVariantsRegistry() {
           variant: variantSlug,
           files: [],
           stacks,
+          staticStacks,
           ...(formTransport ? { transport: formTransport } : {}),
         };
       } catch (err) {

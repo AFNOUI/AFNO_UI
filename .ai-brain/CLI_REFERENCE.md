@@ -48,7 +48,7 @@ These attach to the root program and propagate to every sub-command.
 | Command | Purpose | Key flags |
 |---|---|---|
 | `init` | Scaffold `afnoui.json`, install Tailwind + base UI primitives + globals.css | `--dnd`, `--force`, `--dry-run` |
-| `add [components...]` | Install one or more base components and/or variant bundles | `--stack`, `--react-hook-form`, `--tanstack`, `--action` |
+| `add [components...]` | Install one or more base components and/or variant bundles | `--stack`, `--react-hook-form`, `--tanstack`, `--action`, `--static`, `--axios`, `--tanstack-query` |
 | `form init` | Install shared form types + ONE stack (RHF / TanStack / Action) | `--stack`, `--react-hook-form`, `--tanstack`, `--action` |
 | `update [components...]` | Re-fetch + overwrite base components (always `--force`) | (global only) |
 | `transport [variant]` | Switch an installed variant's transport, or list current choices | `--axios`, `--fetch`, `--tanstack-query`, `--local-state`, `--yes` |
@@ -151,6 +151,15 @@ Variant registry entries may carry `npmDependencies` (auto-detected from the var
 | `--tanstack` | Same as `--stack tanstack` |
 | `--action` | Same as `--stack action` |
 
+**Implementation-mode flag (applies ONLY to `forms/<slug>` arguments):**
+
+| Flag | Page installed |
+|---|---|
+| _(none)_ | JSON Config — a `formConfig.ts` field array + generic `<ReactHookForm config={...}/>` that reads it at runtime (default) |
+| `--static` | Static JSX — each field hand-unrolled as literal JSX in the page component; no `formConfig.ts`, no runtime dispatcher |
+
+Falls back to the JSON Config version (with a warning) if a variant ships no static bundle for the requested stack.
+
 **Examples:**
 
 ```bash
@@ -161,6 +170,7 @@ npx afnoui add button card dialog input
 npx afnoui add forms/forms-contact                          # RHF (default)
 npx afnoui add forms/forms-job-application --tanstack       # TanStack Form
 npx afnoui add forms/forms-payment --stack action           # React 19 ActionForm
+npx afnoui add forms/forms-contact --static                 # hand-unrolled JSX page
 
 # Tables / Kanban / Charts / DnD
 npx afnoui add tables/tables-server-crm
