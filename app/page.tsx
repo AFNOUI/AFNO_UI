@@ -565,13 +565,18 @@ export default function LandingPage() {
             Open Source · React + TypeScript
           </Badge>
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight mb-6 leading-[1.1]">
+            <span className="mb-3 block text-2xl font-bold tracking-tight text-primary sm:text-3xl md:text-4xl">
+              AfnoUI
+            </span>
             Build Forms, Tables
             <br />
             &amp; Boards <span className="text-primary">Visually</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-            A complete React component system with five visual builders — forms,
-            tables, kanban, trees, and schemas — plus a 17-type chart library, a
+            AfnoUI (<code className="font-mono text-base md:text-lg">afnoui</code>
+            ) is a complete React component system with five visual builders —
+            forms, tables, kanban, trees, and schemas — plus a 17-type chart
+            library, a
             drag-and-drop engine with no third-party dependency, a live theme
             lab, and a CLI that writes production TypeScript straight into your
             project. Built on Radix UI and Tailwind CSS v4.
