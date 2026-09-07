@@ -42,6 +42,21 @@ export const siteConfig = {
     bing: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ?? "",
     yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION ?? "",
   },
+  // Brand aliases for JSON-LD `alternateName`. Order matters: the solid
+  // one-word token comes FIRST because it is the query we want Google to bind
+  // to this entity. Google tokenizes the camelCase `AfnoUI` into "afno" + "ui",
+  // so the split spelling already ranks; the solid form does not, and until
+  // "afnoui" is a recognized entity Google spell-corrects it to afni/afnuu.
+  // Only the SOLID one-word spellings — this is the query we need to win.
+  //
+  // The split form ("Afno UI") is deliberately absent. Google tokenizes the
+  // camelCase `AfnoUI` in our visible copy into "afno" + "ui", so that query
+  // already ranks on its own and needs no help; listing it here would only
+  // spend alias slots reinforcing the spelling we do NOT want to be found by.
+  // Generic tokens ("UI"/"ui") are excluded too: a brand alias must be a name,
+  // and claiming a category word in markup reads as keyword-stuffing under
+  // Google's structured-data policies.
+  brandAliases: ["afnoui", "AfnoUI", "AFNOUI", "Afnoui"],
   // Broad keyword set spanning React UI-library and AI-search intents.
   keywords: [
     "AfnoUI",

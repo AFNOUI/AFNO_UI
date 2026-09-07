@@ -17,6 +17,9 @@ import {
  */
 export function buildRootJsonLd() {
   const u = siteConfig.url;
+  // Declared on every entity node (Organization / WebSite / SoftwareApplication)
+  // so the alias set reinforces one entity rather than only the software node.
+  const alternateName = [...siteConfig.brandAliases];
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -24,6 +27,7 @@ export function buildRootJsonLd() {
         "@type": "Organization",
         "@id": `${u}/#organization`,
         name: siteConfig.name,
+        alternateName,
         url: u,
         logo: `${u}/icon`,
         sameAs: siteProfiles,
@@ -33,6 +37,7 @@ export function buildRootJsonLd() {
         "@id": `${u}/#website`,
         url: u,
         name: siteConfig.name,
+        alternateName,
         description: siteConfig.description,
         publisher: { "@id": `${u}/#organization` },
         inLanguage: "en",
@@ -41,7 +46,7 @@ export function buildRootJsonLd() {
         "@type": ["SoftwareApplication", "WebApplication"],
         "@id": `${u}/#software`,
         name: siteConfig.name,
-        alternateName: "Afno UI",
+        alternateName,
         description: siteConfig.description,
         url: u,
         applicationCategory: "DeveloperApplication",
